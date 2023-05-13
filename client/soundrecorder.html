@@ -1,0 +1,58 @@
+<button id="start">Start Recording</button>
+<button id="stop" disabled>Stop Recording</button>
+
+<script>
+let mediaRecorder;
+let chunks = [];
+let localStream;
+
+const startButton = document.getElementById('start');
+startButton.addEventListener('click', function() {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      localStream = stream;
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      mediaRecorder.ondataavailable = function(e) {
+        chunks.push(e.data);
+      };
+
+      this.disabled = true;
+      document.getElementById('stop').disabled = false;
+    })
+    .catch(error => console.error('Media error:', error));
+});
+
+const stopButton = document.getElementById('stop');
+stopButton.addEventListener('click', function() {
+  mediaRecorder.stop();
+  localStream.getTracks()[0].stop(); // stop the audio input
+
+  this.disabled = true;
+  document.getElementById('start').disabled = false;
+
+  // Combine the chunks into a single Blob
+  const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
+
+  // Create a FormData object to hold the Blob
+  const formData = new FormData();
+  formData.append('audio', blob);
+
+  // Use Fetch API to send the data to the server
+  fetch('http://34.212.240.25:5000/upload', { method: 'POST', body: formData })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      return response.text();
+    })
+    .then(data => {
+      console.log('Audio data was sent successfully:', data);
+    })
+    .catch(error => {
+      console.error('There was an error sending the audio data:', error);
+    });
+});
+</script>
+
