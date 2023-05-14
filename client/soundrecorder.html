@@ -1,58 +1,62 @@
-<button id="start">Start Recording</button>
-<button id="stop" disabled>Stop Recording</button>
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="start">Start</button>
+<button id="stop">Stop</button>
 
 <script>
-let mediaRecorder;
 let chunks = [];
-let localStream;
+let mediaRecorder;
+let intervalId;
 
-const startButton = document.getElementById('start');
-startButton.addEventListener('click', function() {
+document.getElementById('start').onclick = () => {
   navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      localStream = stream;
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
+  .then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
 
-      mediaRecorder.ondataavailable = function(e) {
-        chunks.push(e.data);
-      };
+    mediaRecorder.start();
 
-      this.disabled = true;
-      document.getElementById('stop').disabled = false;
-    })
-    .catch(error => console.error('Media error:', error));
-});
+    mediaRecorder.ondataavailable = e => {
+      chunks.push(e.data);
 
-const stopButton = document.getElementById('stop');
-stopButton.addEventListener('click', function() {
-  mediaRecorder.stop();
-  localStream.getTracks()[0].stop(); // stop the audio input
-
-  this.disabled = true;
-  document.getElementById('start').disabled = false;
-
-  // Combine the chunks into a single Blob
-  const blob = new Blob(chunks, { type: 'audio/ogg; codecs=opus' });
-
-  // Create a FormData object to hold the Blob
-  const formData = new FormData();
-  formData.append('audio', blob);
-
-  // Use Fetch API to send the data to the server
-  fetch('http://34.212.240.25:5000/upload', { method: 'POST', body: formData })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Network response was not ok');
+      if (mediaRecorder.state == 'recording') {
+        mediaRecorder.stop();
       }
-      return response.text();
-    })
-    .then(data => {
-      console.log('Audio data was sent successfully:', data);
-    })
-    .catch(error => {
-      console.error('There was an error sending the audio data:', error);
-    });
-});
+    };
+
+    mediaRecorder.onstop = e => {
+      let blob = new Blob(chunks, { 'type' : 'audio/flac' });
+      chunks = [];
+
+      let formData = new FormData();
+      formData.append('audio', blob);
+
+      fetch('/upload', { method: 'POST', body: formData });
+
+      if (stream.active) {
+        mediaRecorder.start();
+      }
+    };
+
+    intervalId = setInterval(() => {
+      if (mediaRecorder.state == 'recording') {
+        mediaRecorder.stop();
+      }
+    }, 10000);  // stop recording every 10 seconds
+  })
+  .catch(err => console.error('getUserMedia error', err));
+};
+
+document.getElementById('stop').onclick = () => {
+  if (mediaRecorder && mediaRecorder.state == 'recording') {
+    mediaRecorder.stop();
+  }
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+};
 </script>
 
+</body>
+</html>
