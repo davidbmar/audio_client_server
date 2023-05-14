@@ -9,8 +9,10 @@
 let chunks = [];
 let mediaRecorder;
 let intervalId;
+let shouldContinueRecording = false;
 
 document.getElementById('start').onclick = () => {
+  shouldContinueRecording = true;
   navigator.mediaDevices.getUserMedia({ audio: true })
   .then(stream => {
     mediaRecorder = new MediaRecorder(stream);
@@ -34,7 +36,7 @@ document.getElementById('start').onclick = () => {
 
       fetch('/upload', { method: 'POST', body: formData });
 
-      if (stream.active) {
+      if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
       }
     };
@@ -49,6 +51,7 @@ document.getElementById('start').onclick = () => {
 };
 
 document.getElementById('stop').onclick = () => {
+  shouldContinueRecording = false;
   if (mediaRecorder && mediaRecorder.state == 'recording') {
     mediaRecorder.stop();
   }
