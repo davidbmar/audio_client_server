@@ -34,7 +34,7 @@ document.getElementById('start').onclick = () => {
       let formData = new FormData();
       formData.append('audio', blob);
 
-      fetch('/upload', { method: 'POST', body: formData });
+      fetch('http://34.212.240.25:5000/upload', { method: 'POST', body: formData }) 
 
       if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
