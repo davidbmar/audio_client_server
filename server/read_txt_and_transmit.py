@@ -29,10 +29,12 @@ for file in files:
         # do something with the file content
         content = f.read()
         print(content)
+        response = requests.post('http://localhost:5000/upload', json={"file_contents": content})
+        print(response.text)
 
-files_to_send = ["file1.txt", "file2.txt", "file3.txt"]  # replace with your actual file paths
-file_contents = read_files(files_to_send)
-
-response = requests.post('http://localhost:5000/upload', json={"file_contents": file_contents})
-
-print(response.text)
+#files_to_send = ["file1.txt", "file2.txt", "file3.txt"]  # replace with your actual file paths
+#file_contents = read_files(files_to_send)
+#
+#response = requests.post('http://localhost:5000/upload', json={"file_contents": file_contents})
+#
+##print(response.text)
