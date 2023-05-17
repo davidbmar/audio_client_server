@@ -7,6 +7,7 @@ app = Flask(__name__)
 def upload():
     file_contents = request.json['file_contents']
     # do something with file_contents...
+    print("recieved {}".format(file_contents))
     return 'Files received'
 
 if __name__ == '__main__':
