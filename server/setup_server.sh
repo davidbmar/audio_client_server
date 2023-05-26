@@ -36,23 +36,13 @@ sudo apt-get install ffmpeg
 ffmpeg -version
 
 #install Whisper_jax
-pip install git+https://github.com/sanchit-gandhi/whisper-jax.git
-pip install --upgrade --no-deps --force-reinstall git+https://github.com/sanchit-gandhi/whisper-jax.git
+#pip install git+https://github.com/sanchit-gandhi/whisper-jax.git
+#pip install --upgrade --no-deps --force-reinstall git+https://github.com/sanchit-gandhi/whisper-jax.git
 
 pip install --upgrade pip
-pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-
-
+#pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 #ok download my api.
-
-
-
-
-
-sudo apt-get update
-sudo apt-get install kmod
-
+#sudo apt-get install kmod
 # download the latest version of CUDA
-
-sudo sh cuda_12.1.1_530.30.02_linux.run
+#sudo sh cuda_12.1.1_530.30.02_linux.run
 
