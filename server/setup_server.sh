@@ -22,27 +22,22 @@ sudo apt-get install vim
 # pip (Python install package manager)
 sudo pip install flask
 
+#install fast_whisper
+pip install watchdog
+sudo apt-get install inotify-tools
+
 
 #######
 #install whisper
-pip install -U openai-whisper
-pip install setuptools-rust
-sudo apt update && sudo apt install ffmpeg
+#pip install -U openai-whisper
+#pip install setuptools-rust
+#sudo apt update && sudo apt install ffmpeg
 
-sudo apt-get update
-sudo apt-get install ffmpeg
+#sudo apt-get update
+#sudo apt-get install ffmpeg
 
 #check that ffmpeg installed correctly.  
-ffmpeg -version
+#ffmpeg -version
 
-#install Whisper_jax
-#pip install git+https://github.com/sanchit-gandhi/whisper-jax.git
-#pip install --upgrade --no-deps --force-reinstall git+https://github.com/sanchit-gandhi/whisper-jax.git
-
-pip install --upgrade pip
-#pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
-#ok download my api.
-#sudo apt-get install kmod
-# download the latest version of CUDA
-#sudo sh cuda_12.1.1_530.30.02_linux.run
+#pip install --upgrade pip
 
