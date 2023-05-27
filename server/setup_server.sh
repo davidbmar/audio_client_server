@@ -23,6 +23,7 @@ sudo apt-get install vim
 sudo pip install flask
 
 #install fast_whisper
+pip install faster-whisper
 pip install watchdog
 sudo apt-get install inotify-tools
 
