@@ -4,12 +4,32 @@
 
 <button id="start">Start</button>
 <button id="stop">Stop</button>
+<br>
+<br>
+<label for="timeInterval">Sound Clip Length (ms):</label>
+<br>
+<br>
+<input id="timeInterval" type="number" value="10000">
+<br>
+<br>
+<label for="urlInput">Upload URL:</label>
+<input id="urlInput" type="text" value="http://34.212.240.25:5000/upload">
+<br>
+<br>
+<button id="update">Update</button>
 
 <script>
 let chunks = [];
 let mediaRecorder;
 let intervalId;
 let shouldContinueRecording = false;
+let uploadURL = document.getElementById('urlInput').value;
+let timeInterval = parseInt(document.getElementById('timeInterval').value);
+
+document.getElementById('update').onclick = () => {
+  uploadURL = document.getElementById('urlInput').value;
+  timeInterval = parseInt(document.getElementById('timeInterval').value);
+};
 
 document.getElementById('start').onclick = () => {
   shouldContinueRecording = true;
@@ -34,7 +54,7 @@ document.getElementById('start').onclick = () => {
       let formData = new FormData();
       formData.append('audio', blob);
 
-      fetch('http://34.212.240.25:5000/upload', { method: 'POST', body: formData }) 
+      fetch(uploadURL, { method: 'POST', body: formData }) 
 
       if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
@@ -45,7 +65,7 @@ document.getElementById('start').onclick = () => {
       if (mediaRecorder.state == 'recording') {
         mediaRecorder.stop();
       }
-    }, 10000);  // stop recording every 10 seconds
+    }, timeInterval);  // stop recording every timeInterval
   })
   .catch(err => console.error('getUserMedia error', err));
 };
