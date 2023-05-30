@@ -54,3 +54,8 @@ class SpeechTranscriber:
         except KeyboardInterrupt:
             observer.stop()
         observer.join()
+        
+      
+if __name__ == "__main__":
+    transcriber = SpeechTranscriber()
+    transcriber.start()
