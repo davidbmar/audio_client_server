@@ -6,54 +6,51 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from faster_whisper import WhisperModel
 
-model_size = "large-v2"
+class SpeechTranscriber:
+    def __init__(self, model_size="large-v2", device="cuda", compute_type="float16",
+                 observed_dir="./uploaded_audio_files", log_file="transcriptions.txt",
+                 seen_file="previously_seen.txt"):
+        self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
+        self.observed_dir = observed_dir
+        self.log_file = log_file
+        self.seen_file = seen_file
+        self.setup_files()
 
-# Run on GPU with FP16
-model = WhisperModel(model_size,device="cuda", compute_type="float16")
+    def setup_files(self):
+        if not os.path.isfile(self.seen_file):
+            open(self.seen_file, 'a').close()
 
-def whisper(file):
-    segments, info = model.transcribe(file,language="en", beam_size=5)
+        if shutil.which('inotifywait') is None:
+            raise SystemExit("inotify-tools could not be found, please install it.")
 
-    #print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
-
-    for segment in segments:
-    #    print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
-        print("%s" % segment.text.replace("\n", ""))
-
-class MyHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        self.process(event)
-
-    def on_moved(self, event):
-        self.process(event)
+    def transcribe(self, file):
+        segments, info = self.model.transcribe(file, language="en", beam_size=5)
+        with open(self.log_file, 'a') as f:
+            for segment in segments:
+                transcription = segment.text.replace('\n', '') + '\n'
+                print(transcription, end='')  # print to console
+                f.write(transcription)  # write to log file
 
     def process(self, event):
         if not event.is_directory and re.search(r'\.flac$', event.src_path):
             full_path = event.src_path
-            with open(previously_seen_file, 'r+') as f:
+            with open(self.seen_file, 'r+') as f:
                 if full_path not in f.read():
-                    whisper(full_path)
+                    self.transcribe(full_path)
                     f.write(full_path + '\n')
 
-previously_seen_file = "previously_seen.txt"
-dir_to_watch = "./uploaded_audio_files"  # replace with your directory
+    def start(self):
+        event_handler = FileSystemEventHandler()
+        event_handler.on_created = self.process
+        event_handler.on_moved = self.process
 
-# Check if previously_seen_file exists, create if not
-if not os.path.isfile(previously_seen_file):
-    open(previously_seen_file, 'a').close()
+        observer = Observer()
+        observer.schedule(event_handler, path=self.observed_dir, recursive=True)
+        observer.start()
 
-# Check if inotifywait is installed
-if shutil.which('inotifywait') is None:
-    raise SystemExit("inotify-tools could not be found, please install it.")
-
-observer = Observer()
-observer.schedule(MyHandler(), path=dir_to_watch, recursive=True)
-observer.start()
-
-try:
-    while True:
-        time.sleep(1)
-except KeyboardInterrupt:
-    observer.stop()
-observer.join()
-
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            observer.stop()
+        observer.join()
