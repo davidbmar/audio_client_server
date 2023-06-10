@@ -22,6 +22,13 @@ sudo apt-get install vim -y
 # pip (Python install package manager)
 sudo pip install flask
 
+# cuda info
+nvcc --version
+# so weget the cudnn something like this below:
+wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/libcudnn8_8.5.0.96-1+cuda11.7_amd64.deb
+sudo dpkg -i libcudnn8_8.5.0.96-1+cuda11.7_amd64.deb
+
+
 #install fast_whisper
 pip install faster-whisper
 pip install watchdog
