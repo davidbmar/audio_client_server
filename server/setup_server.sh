@@ -27,6 +27,9 @@ pip install faster-whisper
 pip install watchdog
 sudo apt-get install inotify-tools -y
 
+pip install --ignore-installed Flask
+
+
 
 #######
 #install whisper
