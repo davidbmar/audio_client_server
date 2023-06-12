@@ -26,6 +26,7 @@ def upload_file():
     filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.flac')
     file.save(os.path.join('./uploaded_audio_files/', filename))
     s3_operations.upload_file("./uploaded_audio_files/"+filename, 'audioclientserver', object_name=filename)
+    s3_operations.upload_file('./transcriptions.txt', 'audioclientserver', object_name=None)
     return 'File uploaded successfully', 200
 
 def create_dirs(directory_path):
