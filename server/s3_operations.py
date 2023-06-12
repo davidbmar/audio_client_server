@@ -79,7 +79,7 @@ def delete_all_objects(bucket_name):
 
 
 if __name__ == "__main__":
-    upload_file('/Users/davidmar/maps/Austin.png', 'audioclientserver', object_name='myfile2.png')
+    upload_file('transcriptions.txt', 'audioclientserver', object_name='transcriptions.txt')
     #list_s3_buckets()
     print("list of bucket")
     list_s3_bucket_contents('audioclientserver')

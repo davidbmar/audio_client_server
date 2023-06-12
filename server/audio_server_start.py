@@ -1,10 +1,11 @@
 from datetime import datetime
 from flask import Flask, request
 import os
+import logging
+import s3_operations
 
 app = Flask(__name__)
 
-import logging
 
 # Set up a file handler for the logger
 file_handler = logging.FileHandler('flask.log')
@@ -24,6 +25,7 @@ def upload_file():
     # Generate a filename based on the current time
     filename = datetime.now().strftime('%Y-%m-%d_%H-%M-%S.flac')
     file.save(os.path.join('./uploaded_audio_files/', filename))
+    s3_operations.upload_file("./uploaded_audio_files/"+filename, 'audioclientserver', object_name=filename)
     return 'File uploaded successfully', 200
 
 def create_dirs(directory_path):

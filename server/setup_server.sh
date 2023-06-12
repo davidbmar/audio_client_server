@@ -21,6 +21,7 @@ sudo apt-get install vim -y
 # the server needs flask, so on Linux you will install this with 
 # pip (Python install package manager)
 sudo pip install flask
+sudo pip install boto3
 
 # cuda info
 nvcc --version
