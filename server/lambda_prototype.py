@@ -2,11 +2,12 @@
 import boto3
 import requests
 import json
+import time
 
 # Create a session using your AWS credentials
-sqs = boto3.client('sqs', region_name='us-west-2')  # replace with your region
+sqs = boto3.client('sqs', region_name='us-east-2')  # replace with your region
 
-queue_url = 'https://sqs.us-west-2.amazonaws.com/123456789012/myqueue'  # replace with your queue URL
+queue_url = 'https://us-east-2.queue.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_nonfifo'
 
 def process_messages():
     while True:
