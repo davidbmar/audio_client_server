@@ -10,6 +10,8 @@ def process_s3_object():
     s3_object_key = data['Records'][0]['s3']['object']['key']
     # Now retrieve the object from S3 and process it as needed
     # ...
+    print ("s3_bucket:",s3_bucket)
+    print ("s3_object_key:",s3_object_key)
     return '', 204  # Return a 204 No Content response
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 import boto3
 import requests
 import json
@@ -21,11 +21,16 @@ def process_messages():
 
         if 'Messages' in response:  # when the queue is exhausted, the response dict contains no 'Messages' key
             for message in response['Messages']:  # iterate over messages
-                # print the message body
-                event_data = json.loads(message['Body'])
+                try:
+                    event_data = json.loads(message['Body'])
+                except json.JSONDecodeError as e:
+                    print(f"JSONDecodeError: {e} for input {message['Body']}")
+                print(json.dumps(event_data,indent=4))
+
+
 
                 # send to flask server
-                url = 'http://myflaskserver.com:5000/process_s3_object'  # replace with your flask server url
+                url = 'http://localhost:5000/process_s3_object'  # replace with your flask server url
                 headers = {'Content-Type': 'application/json'}
                 server_response = requests.post(url, data=json.dumps(event_data), headers=headers)
 
