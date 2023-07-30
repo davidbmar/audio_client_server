@@ -1,13 +1,31 @@
 #!/usr/bin/python3
 from flask import Flask, request
+import boto3
+import os
 
-app = Flask(__name__)
-
-@app.route('/process_s3_object', methods=['POST'])
-def process_s3_object():
-
+#This flask app
+#Here's a high level description of what these two scripts (lambda_prototye.py) and (s3_pull) are doing:
 #
-#Below is an example of the EventRecord:
+#(lambda_prototype) polls an SQS queue for new messages. When it receives a message, it parses the message body as JSON to extract the S3 event data. It then prints the event data, and makes an HTTP POST request to the Flask server running on localhost:5000, passing the event data as the request body. After posting to Flask, it deletes the message from the SQS queue.
+#
+#The Flask server (s3_pull) has one route defined:
+#
+#/process_s3_object: This endpoint accepts POST requests with S3 event data in the request body. It extracts the S3 bucket, object key, and event time from the data. It prints these values, and then returns a 204 No Content response.
+#So in summary:
+#
+#(lambda_protype) is an SQS poller that passes S3 event data to the Flask server
+#(s3_pull) is a simple Flask app with one route to process S3 events
+#When an S3 event occurs, it is placed in SQS
+#The poller extracts it from SQS and sends it to Flask
+#Flask extracts the S3 details and prints them
+#This allows S3 events to be processed asynchronously. When an S3 event occurs, it gets queued in SQS. The poller continually checks SQS and forwards events to Flask for processing. Flask processes each event as they arrive from SQS.
+#
+#The main flow is:
+#
+#S3 Event -> SQS Queue -> SQS Poller -> Flask Server
+#
+#
+#Below is an example of the EventRecord
 #{
 #    "Records": [
 #        {
@@ -48,9 +66,16 @@ def process_s3_object():
 #}
 #
 
+app = Flask(__name__)
 
+# Configure download directory
+DOWNLOAD_DIR = './s3-downloads' 
 
+s3 = boto3.client('s3')
 
+@app.route('/process_s3_object', methods=['POST'])
+
+def process_s3_object():
     data = request.json
     s3_bucket = data['Records'][0]['s3']['bucket']['name']
     s3_object_key = data['Records'][0]['s3']['object']['key']
@@ -60,6 +85,13 @@ def process_s3_object():
     print ("s3_bucket:",s3_bucket)
     print ("s3_object_key:",s3_object_key)
     print ("eventTime:",eventTime)
+
+    if not os.path.exists(DOWNLOAD_DIR):
+       os.makedirs(DOWNLOAD_DIR)
+
+    # Download object from S3 to the local directory
+    s3.download_file(s3_bucket, s3_object_key, f"{DOWNLOAD_DIR}/{s3_object_key}")
+
     return '', 204  # Return a 204 No Content response
 
 if __name__ == "__main__":
