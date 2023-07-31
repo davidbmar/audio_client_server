@@ -1,10 +1,6 @@
-#!/usr/bin/python
-
 import os
 import re
 import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
@@ -20,7 +16,7 @@ class SpeechTranscriber:
     def setup_files(self):
         if not os.path.isfile(self.seen_file):
             open(self.seen_file, 'a').close()
-            raise SystemExit("inotify-tools could not be found, please install it.")
+            raise SystemExit("previously_seen.txt file created, restart the program.")
 
     def transcribe(self, file):
         segments, info = self.model.transcribe(file, language="en", beam_size=5)
@@ -30,30 +26,24 @@ class SpeechTranscriber:
                 print(transcription, end='')  # print to console
                 f.write(transcription)  # write to log file
 
-    def process(self, event):
-        if not event.is_directory and re.search(r'\.flac$', event.src_path):
-            full_path = event.src_path
-            with open(self.seen_file, 'r+') as f:
-                if full_path not in f.read():
-                    self.transcribe(full_path)
-                    f.write(full_path + '\n')
-
     def start(self):
-        event_handler = FileSystemEventHandler()
-        event_handler.on_created = self.process
-        event_handler.on_moved = self.process
-
-        observer = Observer()
-        observer.schedule(event_handler, path=self.observed_dir)
-        observer.start()
-
         try:
             while True:
-                time.sleep(1)
+                # Poll the directory
+                for filename in os.listdir(self.observed_dir):
+                    full_path = os.path.join(self.observed_dir, filename)
+                    if re.search(r'\.flac$', filename):
+                        with open(self.seen_file, 'r') as f:
+                            if full_path not in f.read():
+                                self.transcribe(full_path)
+                                with open(self.seen_file, 'a') as seen_file:
+                                    seen_file.write(full_path + '\n')
+
+                time.sleep(1)  # Wait for a second before polling again
         except KeyboardInterrupt:
-            observer.stop()
-        observer.join()
+            print("Transcriber stopped.")
 
 if __name__ == "__main__":
     transcriber = SpeechTranscriber()
     transcriber.start()
+
