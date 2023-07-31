@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Directory to watch for new .flac files
-dir_to_watch="./uploaded_audio_files"
+dir_to_watch="./s3-downloads"
 
 # File to store previously seen files
 previously_seen_file="previously_seen.txt"
