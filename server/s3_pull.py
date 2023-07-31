@@ -70,6 +70,8 @@ app = Flask(__name__)
 
 # Configure download directory
 DOWNLOAD_DIR = './s3-downloads' 
+if not os.path.exists(DOWNLOAD_DIR):
+    os.makedirs(DOWNLOAD_DIR)
 
 s3 = boto3.client('s3')
 
@@ -85,9 +87,6 @@ def process_s3_object():
     print ("s3_bucket:",s3_bucket)
     print ("s3_object_key:",s3_object_key)
     print ("eventTime:",eventTime)
-
-    if not os.path.exists(DOWNLOAD_DIR):
-       os.makedirs(DOWNLOAD_DIR)
 
     # Download object from S3 to the local directory
     s3.download_file(s3_bucket, s3_object_key, f"{DOWNLOAD_DIR}/{s3_object_key}")
