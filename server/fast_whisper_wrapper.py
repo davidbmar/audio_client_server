@@ -8,7 +8,7 @@ from watchdog.events import FileSystemEventHandler
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
-    def __init__(self, model_size="small", device="cuda", compute_type="float16",
+    def __init__(self, model_size="large-v2", device="cuda", compute_type="float16",
                  observed_dir="./s3-downloads", log_file="transcriptions.txt",
                  seen_file="previously_seen.txt"):
         self.model = WhisperModel(model_size, device=device, compute_type=compute_type)
