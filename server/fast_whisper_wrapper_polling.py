@@ -2,6 +2,7 @@
 import os
 import re
 import time
+import s3_operations
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
@@ -23,7 +24,7 @@ class SpeechTranscriber:
     def transcribe(self, file):
         """Transcribes a given .flac file and writes the result to the log file."""
         segments, info = self.model.transcribe(file, language="en", beam_size=5)
-        with open(self.log_file, 'a') as f:
+        with open(file+".txt", 'a') as f:
             for segment in segments:
                 transcription = segment.text.replace('\n', '') + '\n'
                 print(transcription, end='')  # Print to console
@@ -38,6 +39,7 @@ class SpeechTranscriber:
                     self.transcribe(full_path)
                     with open(self.seen_file, 'a') as seen_file:
                         seen_file.write(full_path + '\n')
+ 
 
     def start(self):
         """Main loop that continuously polls the directory for new .flac files."""
