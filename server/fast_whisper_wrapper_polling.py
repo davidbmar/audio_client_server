@@ -27,6 +27,7 @@ class SpeechTranscriber:
         with open(file+".txt", 'a') as f:
             for segment in segments:
                 transcription = segment.text.replace('\n', '') + '\n'
+                print("file:"+file)
                 print(transcription, end='')  # Print to console
                 f.write(transcription)  # Write to log file
 
