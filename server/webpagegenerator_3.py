@@ -3,12 +3,12 @@ import boto3
 from datetime import datetime, timedelta
 import pytz
 
-# Time range in hours (e.g., 1 for the last hour, 2 for the last 2 hours, etc.)
-TIME_RANGE_HOURS = 80
+# Time range in hours that we want to list from S3 (e.g., 1 for the last hour, 2 for the last 2 hours, etc.)
+TIME_RANGE_HOURS = 80  
 
 bucket_name = 'presigned-url-audio-uploads'
 prefix = ''
-time_threshold = 300  # e.g., 5 minutes
+time_threshold = 300  # e.g., 5 minutes to group by, so if theres a transcription seciton this enables us to group until we see a time_threshold of X of no recordings.
 
 s3_client = boto3.client('s3')
 
