@@ -1,6 +1,10 @@
 #!/usr/bin/python3
 import boto3
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
+
+# Time range in hours (e.g., 1 for the last hour, 2 for the last 2 hours, etc.)
+TIME_RANGE_HOURS = 80
 
 bucket_name = 'presigned-url-audio-uploads'
 prefix = ''
@@ -11,10 +15,13 @@ s3_client = boto3.client('s3')
 paginator = s3_client.get_paginator('list_objects_v2')
 pages = paginator.paginate(Bucket=bucket_name, Prefix=prefix)
 
-# Collect all objects
+# Time cutoff for filtering objects, making it timezone-aware
+time_cutoff = datetime.now(pytz.utc) - timedelta(hours=TIME_RANGE_HOURS)
+
+# Collect all objects within the specified time range
 objects = []
 for page in pages:
-    objects.extend(page['Contents'])
+    objects.extend([obj for obj in page['Contents'] if obj["LastModified"] > time_cutoff])
 
 # Sort objects by LastModified
 objects.sort(key=lambda x: x["LastModified"])
