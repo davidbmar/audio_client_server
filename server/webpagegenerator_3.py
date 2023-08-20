@@ -3,8 +3,23 @@ import boto3
 from datetime import datetime, timedelta
 import pytz
 
+def download_and_print_text(bucket_name, object_key):
+    # Create an S3 client
+    s3_client = boto3.client('s3')
+
+    # Download the file to a temporary location
+    temp_file_path = "/tmp/"+object_key
+    s3_client.download_file(bucket_name, object_key, temp_file_path)
+
+    # Read and return the content of the file
+    with open(temp_file_path, 'r') as file:
+        content = file.read()
+        return content
+
+
+
 # Time range in hours that we want to list from S3 (e.g., 1 for the last hour, 2 for the last 2 hours, etc.)
-TIME_RANGE_HOURS = 80  
+TIME_RANGE_HOURS = 280  
 
 bucket_name = 'presigned-url-audio-uploads'
 prefix = ''
@@ -57,5 +72,8 @@ for group in groups:
     print("TXT Files\t\tFLAC Files")
     for txt, flac in zip(txt_files, flac_files):
         print(f"{txt}\t\t{flac}")
+        content = download_and_print_text(bucket_name, txt)
+        print(content) 
+
     print()  # Carriage return after each group
 
