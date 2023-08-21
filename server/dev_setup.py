@@ -10,3 +10,6 @@ echo "  and use the info to automatically write to ~/.aws/credentials"
 echo "  the aws_access_key"
 echo "  the aws_secret_access_key"
 echo "  the default region, us-east-2"
+echo "git"
+echo "git remote set-url origin https://<TOKEN>@github.com/davidbmar/audio_client_server.git
+git push"
