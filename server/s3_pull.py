@@ -91,7 +91,17 @@ def process_s3_object():
     # Download object from S3 to the local directory
     s3.download_file(s3_bucket, s3_object_key, f"{DOWNLOAD_DIR}/{s3_object_key}")
 
+    # Modify this instead of the signal to be its in the directory we are chaning the consumer to pull from a sqs queue.
+    file_ready(s3_object_key)
+
     return '', 204  # Return a 204 No Content response
+
+def file_ready(file_info):
+    sqs = boto3.client('sqs')
+    queue_url = 'fast_whisper_wrapper_sqs_queue'
+    # Send the file information to the queue
+    sqs.send_message(QueueUrl=queue_url, MessageBody=file_info)
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000)
