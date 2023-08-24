@@ -97,10 +97,13 @@ def process_s3_object():
     return '', 204  # Return a 204 No Content response
 
 def file_ready(file_info):
-    sqs = boto3.client('sqs')
-    queue_url = 'fast_whisper_wrapper_sqs_queue'
+    sqs = boto3.client('sqs',region_name='us-east-2')
+
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/fast_whisper_wrapper_sqs_queue.fifo'
+
     # Send the file information to the queue
-    sqs.send_message(QueueUrl=queue_url, MessageBody=file_info)
+    message_group_id=1 # for now 1, as there is no user id. #todo change later.
+    sqs.send_message(QueueUrl=queue_url, MessageBody=file_info, MessageGroupId=message_group_id)
 
 
 if __name__ == "__main__":
