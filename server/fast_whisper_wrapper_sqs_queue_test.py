@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import boto3
 
-def send_message_to_queue(file_info, queue_url='fast_whisper_wrapper_sqs_queue'):
+def send_message_to_queue(file_info, queue_url='https://sqs.us-east-2.amazonaws.com/635071011057/fast_whisper_wrapper_sqs_queue.fifo'):
     """
     Sends a message to the specified SQS queue.
 

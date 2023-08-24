@@ -46,7 +46,7 @@ class SpeechTranscriber:
 
     def start(self):  
         sqs = boto3.client('sqs')  # Connect to SQS
-        queue_url = 'fast_whisper_wrapper_sqs_queue'
+        queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/fast_whisper_wrapper_sqs_queue.fifo'
         try:
             while True:
                 # Receive messages from the queue
