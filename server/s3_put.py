@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 import boto3
 import s3_operations
+import time
+import os
 
 def consume_from_queue_and_upload_to_s3(queue_url,region_name='us-east-2'):
     sqs = boto3.client('sqs',region_name=region_name)

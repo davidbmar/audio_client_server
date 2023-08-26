@@ -20,7 +20,8 @@ class SpeechTranscriber:
         """Send filename to the new SQS queue."""
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
-            MessageBody=filename
+            MessageBody=filename,
+            MessageGroupId='MessageGroupIDUserA'
         )
         print(f"Sent {filename} to new SQS queue for final files")
 
@@ -40,7 +41,9 @@ class SpeechTranscriber:
         os.rename(temp_file_name, final_file_name)
 
         # Send the final file name to the new SQS queue
-        self.send_to_final_file_queue(final_file_name)
+        # Extract only the base filename and send it to the queue.
+        final_file_base_name = os.path.basename(final_file_name)
+        self.send_to_final_file_queue(final_file_base_name)
 
     def process_file(self, filename):
         full_path = os.path.join(self.download_dir, filename)
