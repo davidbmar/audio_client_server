@@ -102,7 +102,7 @@ def file_ready(file_info):
     queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/fast_whisper_wrapper_sqs_queue.fifo'
 
     # Send the file information to the queue
-    message_group_id=1 # for now 1, as there is no user id. #todo change later.
+    message_group_id="user1" # for now 1, as there is no user id. #todo change later.
     sqs.send_message(QueueUrl=queue_url, MessageBody=file_info, MessageGroupId=message_group_id)
 
 
