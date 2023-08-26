@@ -3,9 +3,13 @@ import boto3
 from datetime import datetime, timedelta
 import pytz
 
-def download_and_print_text(bucket_name, object_key):
+def download_and_print_text(bucket_name, object_key, region_name='us-east-2'):
+    # Check for a valid object key
+    if object_key == "-":
+        return None  # Or return "**" or some other placeholder you'd like
+
     # Create an S3 client
-    s3_client = boto3.client('s3')
+    s3_client = boto3.client('s3',region_name=region_name)
 
     # Download the file to a temporary location
     temp_file_path = "/tmp/"+object_key
@@ -19,7 +23,7 @@ def download_and_print_text(bucket_name, object_key):
 
 
 # Time range in hours that we want to list from S3 (e.g., 1 for the last hour, 2 for the last 2 hours, etc.)
-TIME_RANGE_HOURS = 280  
+TIME_RANGE_HOURS = 40  
 
 bucket_name = 'presigned-url-audio-uploads'
 prefix = ''
