@@ -1,4 +1,4 @@
-#!/usr/bin/pypthon
+#!/usr/bin/python3
 import boto3
 import s3_operations
 
