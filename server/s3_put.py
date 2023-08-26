@@ -1,32 +1,34 @@
-#!/usr/bin/python
-import sys
+#!/usr/bin/pypthon
+import boto3
 import s3_operations
-import time
-import os
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
 
-class NewFileHandler(FileSystemEventHandler):
-    def on_created(self, event):
-        # Only print out when a new .txt file is created
-        if not event.is_directory and event.src_path.endswith('.txt'):
-            print(f'New .txt file created: {os.path.basename(event.src_path)}')
-            file_with_path=event.src_path
-            file_basename=os.path.basename(event.src_path)
-            s3_operations.upload_file(file_with_path,"presigned-url-audio-uploads", object_name=file_basename)
+def consume_from_queue_and_upload_to_s3(queue_url,region_name='us-east-2'):
+    sqs = boto3.client('sqs',region_name=region_name)
+    s3_bucket = 'presigned-url-audio-uploads'
 
+    while True:
+        messages = sqs.receive_message(
+            QueueUrl=queue_url,
+            MaxNumberOfMessages=1,
+        )
 
+        if 'Messages' in messages:
+            for message in messages['Messages']:
+                filename = message['Body']
+                file_path = os.path.join('s3-downloads', filename)
+
+                print(f'Uploading {filename} to S3')
+                s3_operations.upload_file(file_path, s3_bucket, object_name=filename)
+
+                # Delete the message from the queue
+                sqs.delete_message(
+                    QueueUrl=queue_url,
+                    ReceiptHandle=message['ReceiptHandle']
+                )
+
+        time.sleep(1)
 
 if __name__ == "__main__":
-    path = 's3-downloads'
-    event_handler = NewFileHandler()
-    observer = Observer()
-    observer.schedule(event_handler, path, recursive=True)
-    observer.start()
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/audio_client_server_s3_put.fifo'
+    consume_from_queue_and_upload_to_s3(queue_url)
 
