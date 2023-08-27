@@ -4,6 +4,7 @@
     <title>WebSocket S3 Client</title>
     <script type="text/javascript">
         var ws;
+        var heartbeatInterval;
 
         function connectWebSocket() {
             // Connect to WebSocket server
@@ -11,18 +12,31 @@
             
             ws.onopen = function() {
                 console.log("Connected to the server");
+                
+                // Start the heartbeat interval when the connection opens
+                heartbeatInterval = setInterval(function() {
+                    ws.send(JSON.stringify({'heartbeat': 'ping'}));
+                }, 5000); // 5 seconds
             };
 
             ws.onmessage = function(event) {
                 // Parse received JSON message
                 var data = JSON.parse(event.data);
                 
+                if (data.heartbeat) {
+                    // This is a heartbeat message, don't do anything special
+                    return;
+                }
+
                 // Update UI or fetch new file from S3
                 console.log("New file to fetch from S3: " + data.new_file);
             };
 
             ws.onclose = function() {
                 console.log("Connection is closed");
+
+                // Clear the heartbeat interval when the connection closes
+                clearInterval(heartbeatInterval);
             };
         }
     </script>
