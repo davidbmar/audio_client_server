@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket S3 Client</title>
+    <script type="text/javascript">
+        var ws;
+
+        function connectWebSocket() {
+            // Connect to WebSocket server
+            ws = new WebSocket("ws://[Your_EC2_Public_IP]:8765/");
+            
+            ws.onopen = function() {
+                console.log("Connected to the server");
+            };
+
+            ws.onmessage = function(event) {
+                // Parse received JSON message
+                var data = JSON.parse(event.data);
+                
+                // Update UI or fetch new file from S3
+                console.log("New file to fetch from S3: " + data.new_file);
+            };
+
+            ws.onclose = function() {
+                console.log("Connection is closed");
+            };
+        }
+    </script>
+</head>
+<body onload="connectWebSocket()">
+    <h1>WebSocket S3 Client</h1>
+</body>
+</html>
+
