@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket S3 Client</title>
+    <script type="text/javascript">
+        var ws;
+        var heartbeatInterval;
+
+        function connectWebSocket() {
+            // Connect to WebSocket server
+            ws = new WebSocket("ws://3.22.47.41:8765/");
+            
+            ws.onopen = function() {
+                console.log("Connected to the server");
+                
+                // Start heartbeat
+                heartbeatInterval = setInterval(function() {
+                    ws.send(JSON.stringify({'heartbeat': 'ping'}));
+                }, 5000); // 5 seconds
+            };
+
+            ws.onmessage = async function(event) {
+                // Parse received JSON message
+                var data = JSON.parse(event.data);
+                
+                if (data.heartbeat) {
+                    // Heartbeat message, do nothing
+                    return;
+                }
+
+                const new_file = data.new_file;
+                
+                // Construct URLs based on the bucket URL and file name
+                const textFileURL = `https://audioclientserver-transcribedobjects-public.s3.amazonaws.com/${new_file}.txt`;  // Replace 'your-bucket-name'
+                const audioFileURL = `https://audioclientserver-transcribedobjects-public.s3.amazonaws.com/${new_file}.flac`; // Replace 'your-bucket-name'
+
+                // Fetch text content
+                let textContent;
+                try {
+                    const response = await fetch(textFileURL);
+                    textContent = await response.text();
+                } catch (err) {
+                    console.log('Error fetching text:', err);
+                    return;
+                }
+
+                // Update UI with new message and audio control
+                const table = document.getElementById('messageTable');
+                const row = table.insertRow(-1);
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+
+                cell1.innerHTML = textContent;
+                cell2.innerHTML = `<audio controls><source src="${audioFileURL}" type="audio/flac"></audio>`;
+            };
+
+            ws.onclose = function() {
+                console.log("Connection is closed");
+                clearInterval(heartbeatInterval);
+            };
+        }
+    </script>
+</head>
+<body onload="connectWebSocket()">
+    <h1>WebSocket S3 Client</h1>
+    <table id="messageTable">
+        <tr>
+            <th>Message</th>
+            <th>Play Audio</th>
+        </tr>
+    </table>
+</body>
+</html>
+
