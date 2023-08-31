@@ -30,7 +30,11 @@ policy = {
 }
 
 # Apply the bucket policy
-s3.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(policy))
+try:
+    s3.put_bucket_policy(Bucket=bucket_name, Policy=json.dumps(policy))
+except boto3.exceptions.botocore.client.ClientError as e:
+    print(f"An error occurred: {e}")
+
 
 # Enable static website hosting
 website_configuration = {

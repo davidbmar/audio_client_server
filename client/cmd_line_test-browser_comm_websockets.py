@@ -37,14 +37,14 @@ def send_batch_messages(message_list):
 
 if __name__ == '__main__':
     # Add the first 5 files at once
-    first_files = ["file9.txt", "file10.txt", "file11.txt", "file12.txt", "file13.txt"]
+    first_files = ["audio-1693015227340.flac.txt","audio-1693015228779.flac.txt","audio-1693015231835.flac.txt","audio-1693015237340.flac.txt","audio-1693015238779.flac.txt"]
     send_batch_messages(first_files)
 
     # Pause to simulate a delay (optional)
     time.sleep(1)
 
     # Add the next 3 files one at a time
-    next_files = ["file14.txt", "file15.txt", "file16.txt"]
+    next_files = ["audio-1693015241836.flac.txt","audio-1693015247340.flac.txt","audio-1693015248780.flac.txt","audio-1693015251837.flac.txt","audio-1693015257340.flac.txt","audio-1693015258457.flac.txt"]
     for f in next_files:
         send_message(f)
         time.sleep(1)  # Wait for 5 seconds before sending the next file
