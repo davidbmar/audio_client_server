@@ -6,7 +6,8 @@ import os
 
 def consume_from_queue_and_upload_to_s3(queue_url,region_name='us-east-2'):
     sqs = boto3.client('sqs',region_name=region_name)
-    s3_bucket = 'presigned-url-audio-uploads'
+    #s3_bucket = 'presigned-url-audio-uploads'
+    s3_bucket = 'audioclientserver-transcribedobjects-public'
 
     while True:
         messages = sqs.receive_message(
