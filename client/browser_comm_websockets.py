@@ -49,8 +49,11 @@ async def handler(websocket, path):
 logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(filename='browser_comm_websockets.server.log', level=logging.INFO)
 
-# Initialize SQS client
+
+# Initialize SQS and S3 clients
 sqs = boto3.client('sqs', region_name='us-east-2')
+s3 = boto3.client('s3', region_name='us-east-2')
+
 queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/audio_client_server-browser_comm_websockets-sqs_queue.fifo'
 
 try:  # Added a try-except block around server initialization
