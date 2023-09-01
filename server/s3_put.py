@@ -4,6 +4,23 @@ import s3_operations
 import time
 import os
 
+# Initialize the SQS client
+sqs = boto3.client('sqs', region_name='us-east-2')
+
+# The URL of your SQS queue
+queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/audio_client_server-browser_comm_websockets-sqs_queue.fifo'
+
+# MessageGroupId for the FIFO queue
+message_group_id = str(int(time.time()))  # Current time as an integer
+
+def send_message(message_body):
+    """Send a single message to the SQS FIFO queue."""
+    sqs.send_message(
+        QueueUrl=queue_url,
+        MessageBody=message_body,
+        MessageGroupId=message_group_id  # Required for FIFO queues
+    )
+
 def consume_from_queue_and_upload_to_s3(queue_url,region_name='us-east-2'):
     sqs = boto3.client('sqs',region_name=region_name)
     #s3_bucket = 'presigned-url-audio-uploads'
@@ -28,6 +45,10 @@ def consume_from_queue_and_upload_to_s3(queue_url,region_name='us-east-2'):
                     QueueUrl=queue_url,
                     ReceiptHandle=message['ReceiptHandle']
                 )
+
+                # Signal to the webclient to pull the 
+                send_message(filename)
+
 
         time.sleep(1)
 
