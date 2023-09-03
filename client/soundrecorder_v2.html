@@ -7,8 +7,6 @@
 <br>
 <br>
 <label for="timeInterval">Sound Clip Length (ms):</label>
-<br>
-<br>
 <input id="timeInterval" type="number" value="10000">
 <br>
 <br>
@@ -16,19 +14,36 @@
 <input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
 <br>
 <br>
+<label for="sequenceInput">Starting Sequence Number:</label>
+<input id="sequenceInput" type="number" value="1">
+<br>
+<br>
 <button id="update">Update</button>
 
 <script>
+// Initialize variables
 let chunks = [];
 let mediaRecorder;
 let intervalId;
 let shouldContinueRecording = false;
 let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
+let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Initialize sequence number from the input
+
+// Function to generate file name using the date and sequence number
+const generateFileName = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const sequence = String(sequenceNumber++).padStart(6, '0');  // Increment sequence number
+  return `${year}-${month}-${day}-${sequence}.flac`;
+};
 
 document.getElementById('update').onclick = () => {
   uploadURL = document.getElementById('urlInput').value;
   timeInterval = parseInt(document.getElementById('timeInterval').value);
+  sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Update the sequence number from the input
 };
 
 document.getElementById('start').onclick = () => {
@@ -41,38 +56,38 @@ document.getElementById('start').onclick = () => {
     mediaRecorder.ondataavailable = e => {
       chunks.push(e.data);
 
-      if (mediaRecorder.state == 'recording') {
+      if (mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
       }
     };
 
     mediaRecorder.onstop = async e => {
-      let blob = new Blob(chunks, { 'type' : 'audio/flac' });
+      const blob = new Blob(chunks, { 'type' : 'audio/flac' });
       chunks = [];
 
-      let fileKey = "audio-" + Date.now() + ".flac";
-      
+      const fileKey = generateFileName();  // Call the generateFileName function
+
       let presignResponse = await fetch(uploadURL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           "bucket_name": "presigned-url-audio-uploads",
           "file_key": fileKey,
-          "expiry_time": 3600,        
-          "action": "upload"  
+          "expiry_time": 3600,
+          "action": "upload"
         })
       });
 
       let presignData = await presignResponse.json();
       let presignedURL = presignData.url;
 
-      await fetch(presignedURL, { 
-        method: 'PUT', 
-        body: blob, 
+      await fetch(presignedURL, {
+        method: 'PUT',
+        body: blob,
         headers: {
           'Content-Type': 'audio/flac'
         }
-      }) 
+      });
 
       if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
@@ -80,17 +95,17 @@ document.getElementById('start').onclick = () => {
     };
 
     intervalId = setInterval(() => {
-      if (mediaRecorder.state == 'recording') {
+      if (mediaRecorder.state === 'recording') {
         mediaRecorder.stop();
       }
-    }, timeInterval);  
+    }, timeInterval);
   })
   .catch(err => console.error('getUserMedia error', err));
 };
 
 document.getElementById('stop').onclick = () => {
   shouldContinueRecording = false;
-  if (mediaRecorder && mediaRecorder.state == 'recording') {
+  if (mediaRecorder && mediaRecorder.state === 'recording') {
     mediaRecorder.stop();
   }
   if (intervalId) {
