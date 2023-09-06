@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="start">Start</button>
+<button id="stop">Stop</button>
+<br>
+<br>
+<label for="timeInterval">Sound Clip Length (ms):</label>
+<input id="timeInterval" type="number" value="10000">
+<br>
+<br>
+<label for="urlInput">Upload URL:</label>
+<input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
+<br>
+<br>
+<label for="seqNumber">Starting Sequence Number:</label>
+<input id="seqNumber" type="number" value="000001">
+<br>
+<br>
+<button id="update">Update</button>
+
+<div id="downloadLinks">
+  <h3>Download Links:</h3>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  let chunks = [];
+  let mediaRecorder;
+  let intervalId;
+  let shouldContinueRecording = false;
+  let uploadURL = document.getElementById('urlInput').value;
+  let timeInterval = parseInt(document.getElementById('timeInterval').value);
+  let seqNumber = parseInt(document.getElementById('seqNumber').value);
+
+  document.getElementById('update').onclick = () => {
+    uploadURL = document.getElementById('urlInput').value;
+    timeInterval = parseInt(document.getElementById('timeInterval').value);
+    seqNumber = parseInt(document.getElementById('seqNumber').value);
+  };
+
+  document.getElementById('start').onclick = () => {
+    shouldContinueRecording = true;
+    navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+
+      mediaRecorder.ondataavailable = e => {
+        chunks.push(e.data);
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      };
+
+      mediaRecorder.onstop = async e => {
+        let blob = new Blob(chunks, { 'type' : 'audio/flac' });
+        chunks = [];
+
+        const date = new Date();
+        const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        const seqStr = String(seqNumber).padStart(6, '0');
+
+        let fileKey = `${dateStr}-${seqStr}.flac`;
+        seqNumber++;  // Increment sequence number
+
+        let presignResponse = await fetch(uploadURL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            "bucket_name": "presigned-url-audio-uploads",
+            "file_key": fileKey,
+            "expiry_time": 3600,
+            "action": "upload"
+          })
+        });
+
+        let presignData = await presignResponse.json();
+        let presignedURL = presignData.url;
+
+        // Call getDownloadLink function
+        const presignedDownloadURL = await getDownloadLink(fileKey);
+
+        // Create and append a clickable download link
+        const downloadLinksDiv = document.getElementById('downloadLinks'); // Assume you have a div with this id in your HTML
+
+        // Create an anchor tag
+        const downloadLink = document.createElement('a');
+        downloadLink.href = 'javascript:void(0);'; // Prevent default navigation
+        downloadLink.textContent = fileKey;  // Set the text
+
+        // Add click event listener to the anchor tag
+        downloadLink.addEventListener('click', function() {
+          const audioElement = new Audio(presignedDownloadURL);
+          audioElement.play();
+        });
+
+        // Append the anchor tag to the div
+        downloadLinksDiv.appendChild(downloadLink);
+        downloadLinksDiv.appendChild(document.createElement('br'));
+
+        await fetch(presignedURL, {
+          method: 'PUT',
+          body: blob,
+          headers: { 'Content-Type': 'audio/flac' }
+        });
+
+        if (stream.active && shouldContinueRecording) {
+          mediaRecorder.start();
+        }
+      };
+
+      intervalId = setInterval(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, timeInterval);
+    })
+    .catch(err => console.error('getUserMedia error', err));
+  };
+
+  document.getElementById('stop').onclick = () => {
+    shouldContinueRecording = false;
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+  };
+
+  // Existing getDownloadLink function
+  async function getDownloadLink(fileKey) {
+    const presignResponse = await fetch(uploadURL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        "bucket_name": "presigned-url-audio-uploads",
+        "file_key": fileKey,
+        "expiry_time": 3600,
+        "action": "download"
+      })
+    });
+
+    const presignData = await presignResponse.json();
+    const presignedURL = presignData.url;
+    return presignedURL;
+  }
+
+});
+</script>
+
+</body>
+</html>
+
+
