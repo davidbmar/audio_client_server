@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <br>
+  <label for="timeInterval">Sound Clip Length (ms):</label>
+  <input id="timeInterval" type="number" value="10000">
+  <br>
+  <label for="urlInput">Upload URL:</label>
+  <input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
+  <br>
+  <label for="seqNumber">Starting Sequence Number:</label>
+  <input id="seqNumber" type="number" value="000001">
+  <br>
+  <button id="update">Update</button>
+  <div id="downloadLinks">
+    <h3>Download Links:</h3>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="audioRecorder.js"></script>
+  <script src="uploadDownload.js"></script>
+</body>
+</html>
+
