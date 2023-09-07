@@ -58,4 +58,6 @@ def batch_delete_all_objects(bucket_name):
 if __name__ == "__main__":
     bucket_name = "presigned-url-audio-uploads"  # Replace with your bucket name
     batch_delete_all_objects(bucket_name)
+    bucket_name = "audioclientserver-transcribedobjects-public"  # Replace with your bucket name
+    batch_delete_all_objects(bucket_name)
 
