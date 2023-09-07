@@ -27,7 +27,6 @@ async def handler(websocket, path):
     websocket (websockets.WebSocketServerProtocol): The WebSocket server protocol.
     path (str): The path of the request URI.
     """
-
     try:
         while True:
             # Fetch messages from SQS
@@ -43,14 +42,30 @@ async def handler(websocket, path):
             if messages:
                 for message in messages:
                     message_body = message['Body']
-                    logging.info(f"Fetching content from S3 for message: {message_body}")
-                    
-                    try:
-                        s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', message_body)
-                        # ... (previous code remains the same)
-                        
-                    except Exception as e:
-                        logging.error(f"An error occurred for key '{message_body}': {str(e)}")
+
+                    # Fetch content from S3 and send it over the WebSocket
+                    logging.info(f"Fetching content from S3 for message: {message_body}")  # Log before fetching from S3
+                    s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', message_body)
+
+                    # Create response dictionary
+                    response_dict = {
+                        'new_file_content': s3_content,
+                        'file_name': message_body,
+                        'bucket': 'presigned-url-audio-uploads'
+                    }
+                    logging.info(f"Sending WebSocket Response: {response_dict}")  # Log the response dictionary
+
+                    # Log each key-value pair in the dictionary
+                    for key, value in response_dict.items():
+                        logging.info(f"{key}: {value}")
+
+                    await websocket.send(json.dumps(response_dict))
+
+                    # Delete message from SQS queue after sending
+                    sqs.delete_message(
+                        QueueUrl=queue_url,
+                        ReceiptHandle=message['ReceiptHandle']
+                    )
             else:
                 logging.info("No messages to fetch.")
 
