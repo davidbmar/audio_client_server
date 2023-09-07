@@ -22,6 +22,7 @@
             ws.onmessage = function(event) {
                 // Parse received JSON message
                 var data = JSON.parse(event.data);
+                updateTranscriptionTable(data.new_file_content, data.file_name);
                 
                 if (data.heartbeat) {
                     // This is a heartbeat message, don't do anything special
@@ -29,7 +30,7 @@
                 }
 
                 // Update UI or fetch new file from S3
-                console.log("New file to fetch from S3: " + data.new_file);
+                //console.log("New file to fetch from S3: " + data.new_file);
             };
 
             ws.onclose = function() {
@@ -39,10 +40,50 @@
                 clearInterval(heartbeatInterval);
             };
         }
+
+        function updateTranscriptionTable(transcribedText, fileName) {
+            const tableBody = document.getElementById('transcriptionBody');
+  
+            const newRow = tableBody.insertRow();
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+          
+            // Set transcribed text
+            cell1.innerHTML = transcribedText;
+          
+            // Set audio controls
+            const audioElement = document.createElement('audio');
+            const sourceElement = document.createElement('source');
+            
+            // Assuming you have a function to get the audio file URL, replace `getAudioFileURL`
+            sourceElement.src = getAudioFileURL(fileName);
+            sourceElement.type = 'audio/flac';
+          
+            audioElement.appendChild(sourceElement);
+            audioElement.controls = true;
+          
+            cell2.appendChild(audioElement);
+          }
+ 
     </script>
 </head>
+
 <body onload="connectWebSocket()">
     <h1>WebSocket S3 Client</h1>
+
+    <table id="transcriptionTable">
+      <thead>
+        <tr>
+          <th>Transcribed Text</th>
+          <th>Play Audio</th>
+        </tr>
+      </thead>
+      <tbody id="transcriptionBody">
+        <!-- Rows will be added here dynamically -->
+      </tbody>
+    </table>
+
+
 </body>
 </html>
 

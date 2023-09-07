@@ -27,6 +27,7 @@ async def handler(websocket, path):
     websocket (websockets.WebSocketServerProtocol): The WebSocket server protocol.
     path (str): The path of the request URI.
     """
+
     try:
         while True:
             # Fetch messages from SQS
@@ -37,17 +38,30 @@ async def handler(websocket, path):
             )
             logging.info(f"SQS Response: {response}")  # Log the SQS response
             messages = response.get('Messages', [])
-            
+
             # Check if there are messages to process
             if messages:
                 for message in messages:
                     message_body = message['Body']
-                    
+
                     # Fetch content from S3 and send it over the WebSocket
                     logging.info(f"Fetching content from S3 for message: {message_body}")  # Log before fetching from S3
                     s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', message_body)
-                    await websocket.send(json.dumps({'new_file_content': s3_content}))
-                    
+
+                    # Create response dictionary
+                    response_dict = {
+                        'new_file_content': s3_content,
+                        'file_name': message_body,
+                        'bucket': 'presigned-url-audio-uploads'
+                    }
+                    logging.info(f"Sending WebSocket Response: {response_dict}")  # Log the response dictionary
+
+                    # Log each key-value pair in the dictionary
+                    for key, value in response_dict.items():
+                        logging.info(f"{key}: {value}")
+
+                    await websocket.send(json.dumps(response_dict))
+
                     # Delete message from SQS queue after sending
                     sqs.delete_message(
                         QueueUrl=queue_url,
@@ -55,13 +69,14 @@ async def handler(websocket, path):
                     )
             else:
                 logging.info("No messages to fetch.")
-            
+
             await asyncio.sleep(1)  # Sleep for 1 second before fetching more messages
-            
+
     except Exception as e:
         logging.error(f"An error occurred: {str(e)}")
     except websockets.ConnectionClosed:
         logging.warning("Connection closed.")
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
