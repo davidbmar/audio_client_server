@@ -14,3 +14,5 @@ document.getElementById('update').onclick = () => {
   seqNumber = parseInt(document.getElementById('seqNumber').value);
 };
 
+
+
