@@ -5,6 +5,21 @@ import json
 import boto3
 import logging
 
+def remove_filename_extension(filename):
+    """
+    Remove the '.txt' extension from the given filename.
+
+    Parameters:
+    filename (str): The name of the file.
+
+    Returns:
+    str: The filename without the '.txt' extension.
+    """
+
+    if filename.endswith('.txt'):
+        return filename[:-4]
+    return filename
+
 def fetch_s3_object_content(bucket_name, object_key):
     """
     Fetch the content of an S3 object given a bucket name and object key.
@@ -46,12 +61,14 @@ async def handler(websocket, path):
                     # Fetch content from S3 and send it over the WebSocket
                     logging.info(f"Fetching content from S3 for message: {message_body}")  # Log before fetching from S3
                     s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', message_body)
+                    source_soundfile=remove_filename_extension(filename)
 
                     # Create response dictionary
                     response_dict = {
                         'new_file_content': s3_content,
-                        'file_name': message_body,
-                        'bucket': 'presigned-url-audio-uploads'
+                        'transcribed_filename': message_body,
+                        'source_sound_filename': source_soundfile,
+                        'source_bucket': 'presigned-url-audio-uploads'
                     }
                     logging.info(f"Sending WebSocket Response: {response_dict}")  # Log the response dictionary
 

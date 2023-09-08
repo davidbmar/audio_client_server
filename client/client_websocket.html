@@ -6,6 +6,8 @@
         var ws;
         var heartbeatInterval;
 
+	var uploadURL="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload"
+
         function connectWebSocket() {
             // Connect to WebSocket server
             ws = new WebSocket("ws://3.22.47.41:8766/");
@@ -22,7 +24,7 @@
             ws.onmessage = function(event) {
                 // Parse received JSON message
                 var data = JSON.parse(event.data);
-                updateTranscriptionTable(data.new_file_content, data.file_name);
+                updateTranscriptionTable(data.new_file_content, data.source_sound_filename, data.source_bucket);
                 
                 if (data.heartbeat) {
                     // This is a heartbeat message, don't do anything special
@@ -41,29 +43,55 @@
             };
         }
 
-        function updateTranscriptionTable(transcribedText, fileName) {
+        async function getDownloadPresignedURL(bucket, fileName) {
+            // Fetch presigned download URL
+            let presignResponse = await fetch(uploadURL, {
+               method: 'POST',
+               headers: { 'Content-Type': 'application/json' },
+               body: JSON.stringify({
+                 "bucket_name": bucket,
+                "file_key": fileName,
+                 "expiry_time": 3600,
+                 "action": "download"
+               })
+            });
+            const presignData = await presignResponse.json();
+            return presignData.url;
+        }
+
+        async function updateTranscriptionTable(transcribedText, source_audio_fileName, source_audio_bucket) {
+            // Get table body element
             const tableBody = document.getElementById('transcriptionBody');
-  
+
+            // Create a new row and cells
             const newRow = tableBody.insertRow();
             const cell1 = newRow.insertCell(0);
             const cell2 = newRow.insertCell(1);
           
-            // Set transcribed text
+            // Set the transcribed text in the first cell
+
             cell1.innerHTML = transcribedText;
           
-            // Set audio controls
+            // Create audio and source elements for the second cell
             const audioElement = document.createElement('audio');
             const sourceElement = document.createElement('source');
-            
-            // Assuming you have a function to get the audio file URL, replace `getAudioFileURL`
-            sourceElement.src = getAudioFileURL(fileName);
-            sourceElement.type = 'audio/flac';
           
+            // Get pre-signed URL for audio file stored in S3 bucket
+            const audioURL = await getDownloadPresignedURL(source_audio_bucket, source_audio_fileName);
+          
+            // Set source element attributes
+            sourceElement.src = audioURL;
+            sourceElement.type = 'audio/flac';  // Set MIME type as required
+          
+            // Append source element to audio element
             audioElement.appendChild(sourceElement);
+          
+            // Enable audio controls
             audioElement.controls = true;
           
+            // Append audio element to the second cell
             cell2.appendChild(audioElement);
-          }
+        }
  
     </script>
 </head>
