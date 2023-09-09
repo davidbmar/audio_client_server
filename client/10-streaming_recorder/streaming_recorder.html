@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Audio Stream with Buffering</title>
+</head>
+<body>
+  <!-- Buttons for controlling audio recording -->
+  <button id="startBtn">Start Recording</button>
+  <button id="stopBtn" disabled>Stop Recording</button>
+
+  <script>
+    // Initialize variables
+    let mediaRecorder;        // MediaRecorder instance
+    let audioChunks = [];     // Buffer to hold audio chunks
+    let ws = new WebSocket('ws://3.22.47.41:8765/'); // WebSocket connection for streaming to linux server.
+
+
+    // Function to handle the 'Start Recording' button
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      // Request user media access and get audio stream
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Initialize MediaRecorder with the obtained stream
+      mediaRecorder = new MediaRecorder(stream);
+
+      // Event handler for accumulating audio chunks
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+
+        // Check if buffer has enough data to send
+        if (audioChunks.length >= 10) {  // Buffer 10 chunks before sending
+          ws.send(new Blob(audioChunks)); // Send buffered audio
+          audioChunks = [];  // Clear the buffer
+        }
+      };
+
+      // Start recording
+      mediaRecorder.start();
+
+      // Toggle button states
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    });
+
+    // Function to handle the 'Stop Recording' button
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      // Stop the media recorder
+      mediaRecorder.stop();
+
+      // Toggle button states
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+
+      // Send remaining buffered data, if any
+      if (audioChunks.length > 0) {
+        ws.send(new Blob(audioChunks)); // Send remaining audio
+        audioChunks = [];  // Clear the buffer
+      }
+    });
+  </script>
+</body>
+</html>
+
+

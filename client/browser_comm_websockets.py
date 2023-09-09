@@ -60,8 +60,9 @@ async def handler(websocket, path):
 
                     # Fetch content from S3 and send it over the WebSocket
                     logging.info(f"Fetching content from S3 for message: {message_body}")  # Log before fetching from S3
-                    s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', message_body)
-                    source_soundfile=remove_filename_extension(filename)
+                    sent_filename=message_body #there's only one component in this message and it's a filename.
+                    s3_content = fetch_s3_object_content('audioclientserver-transcribedobjects-public', sent_filename)
+                    source_soundfile=remove_filename_extension(sent_filename)
 
                     # Create response dictionary
                     response_dict = {
