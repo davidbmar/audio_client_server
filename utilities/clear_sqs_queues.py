@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import boto3
 
 def clear_sqs_queue(queue_url, region_name='us-east-2'):
