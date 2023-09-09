@@ -13,8 +13,34 @@
     // Initialize variables
     let mediaRecorder;        // MediaRecorder instance
     let audioChunks = [];     // Buffer to hold audio chunks
-    let ws = new WebSocket('ws://3.22.47.41:8765/'); // WebSocket connection for streaming to linux server.
+    let ws = new WebSocket('ws://3.22.47.41:8767/'); // WebSocket connection for streaming to Linux server.
 
+    ws.onopen = () => {
+       console.log("WebSocket connection opened.");
+
+       // Sending initial configuration or handshake message
+       const initConfig = {
+         type: 'init_config',
+         sampleRate: null,  // Placeholder, will be filled once MediaStream is available
+         channels: null     // Placeholder
+       };
+
+       navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+         const audioContext = new AudioContext();
+         const source = audioContext.createMediaStreamSource(stream);
+
+         // Fill in the sampleRate and channels
+         initConfig.sampleRate = audioContext.sampleRate;
+         initConfig.channels = source.channelCount;
+
+         // Send this configuration to the server
+         ws.send(JSON.stringify(initConfig));
+       });
+    };
+
+    ws.onerror = (error) => {
+       console.log(`WebSocket error: ${error}`);
+    };
 
     // Function to handle the 'Start Recording' button
     document.getElementById('startBtn').addEventListener('click', async () => {
@@ -26,34 +52,32 @@
 
       // Event handler for accumulating audio chunks
       mediaRecorder.ondataavailable = (event) => {
+
+        console.log("Data available, adding to chunks.");
         audioChunks.push(event.data);
 
-        // Check if buffer has enough data to send
-        if (audioChunks.length >= 10) {  // Buffer 10 chunks before sending
-          ws.send(new Blob(audioChunks)); // Send buffered audio
-          audioChunks = [];  // Clear the buffer
+        if (ws.readyState === WebSocket.OPEN && audioChunks.length >= 10) {
+           console.log("Sending buffered audio chunks");
+           ws.send(new Blob(audioChunks)); // Send buffered audio
+           console.log("Buffered audio chunks sent");
+           audioChunks = [];  // Clear the buffer
         }
       };
 
-      // Start recording
-      mediaRecorder.start();
+      mediaRecorder.start(1000);  // 1-second timeslice
 
-      // Toggle button states
       document.getElementById('startBtn').disabled = true;
       document.getElementById('stopBtn').disabled = false;
     });
 
     // Function to handle the 'Stop Recording' button
     document.getElementById('stopBtn').addEventListener('click', () => {
-      // Stop the media recorder
       mediaRecorder.stop();
 
-      // Toggle button states
       document.getElementById('startBtn').disabled = false;
       document.getElementById('stopBtn').disabled = true;
 
-      // Send remaining buffered data, if any
-      if (audioChunks.length > 0) {
+      if (ws.readyState === WebSocket.OPEN && audioChunks.length > 0) {
         ws.send(new Blob(audioChunks)); // Send remaining audio
         audioChunks = [];  // Clear the buffer
       }
@@ -61,5 +85,6 @@
   </script>
 </body>
 </html>
+
 
 
