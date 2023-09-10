@@ -30,8 +30,10 @@
          const source = audioContext.createMediaStreamSource(stream);
 
          // Fill in the sampleRate and channels
-         initConfig.sampleRate = audioContext.sampleRate;
-         initConfig.channels = source.channelCount;
+         //initConfig.sampleRate = audioContext.sampleRate;
+         initConfig.sampleRate = 48000;
+         //initConfig.channels = source.channelCount;
+         initConfig.channels = 2;
 
          // Send this configuration to the server
          ws.send(JSON.stringify(initConfig));
