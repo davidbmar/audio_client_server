@@ -21,23 +21,19 @@
 <button id="update">Update</button>
 
 <script>
-// Initialize semaphore as a resolved Promise
+// Initialize semaphore and other variables
 let semaphore = Promise.resolve();
-
-// Initialize variables
 let chunks = [];
 let mediaRecorder;
 let intervalId;
 let shouldContinueRecording = false;
 let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
-let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Initialize sequence number from the input
+let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
 
-
-// Initialize buffer variables here
+// Buffer
 let buffer = [];
-let bufferLength = parseInt(document.getElementById('timeInterval').value); // Initialize buffer length
-let bufferReleaseTime = 0; 
+let bufferReleaseTime = Date.now();
 
 // Async function to generate file name using the date and sequence number
 const generateFileName = async () => {
@@ -60,9 +56,10 @@ const generateFileName = async () => {
 document.getElementById('update').onclick = () => {
   uploadURL = document.getElementById('urlInput').value;
   timeInterval = parseInt(document.getElementById('timeInterval').value);
-  sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Update the sequence number from the input
-  bufferLength = parseInt(document.getElementById('timeInterval').value); //Set buffer length to the same as clip length.
+  sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+  bufferReleaseTime = Date.now() + timeInterval;
 };
+
 
 document.getElementById('start').onclick = () => {
   shouldContinueRecording = true;
@@ -72,22 +69,21 @@ document.getElementById('start').onclick = () => {
     mediaRecorder.start();
 
     mediaRecorder.ondataavailable = e => {
-      buffer.push(e.data); // Accumulate in buffer
+      buffer.push(e.data);
       if (Date.now() >= bufferReleaseTime) {
-        chunks = buffer; // Transfer buffer to chunks
+        chunks = [...buffer]; // Copy buffer to chunks
         buffer = []; // Clear the buffer
+
         if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
       }
     };
 
-
     mediaRecorder.onstop = async e => {
-      const blob = new Blob(chunks, { 'type' : 'audio/flac' });
+      const blob = new Blob(chunks, { 'type': 'audio/flac' });
       chunks = [];
 
-      // Call the generateFileName function asynchronously
       const fileKey = await generateFileName();
 
       let presignResponse = await fetch(uploadURL, {
@@ -115,8 +111,8 @@ document.getElementById('start').onclick = () => {
 
       if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
-        bufferReleaseTime = Date.now() + bufferLength; // Set next release time
-      }		    
+        bufferReleaseTime = Date.now() + timeInterval;  // Set next release time
+      }
     };
 
     intervalId = setInterval(() => {
@@ -128,6 +124,8 @@ document.getElementById('start').onclick = () => {
   .catch(err => console.error('getUserMedia error', err));
 };
 
+
+
 document.getElementById('stop').onclick = () => {
   shouldContinueRecording = false;
   if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -137,6 +135,7 @@ document.getElementById('stop').onclick = () => {
     clearInterval(intervalId);
   }
 };
+
 </script>
 
 </body>
