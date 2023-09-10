@@ -51,7 +51,7 @@
 
       // Initialize MediaRecorder with the obtained stream
       mediaRecorder = new MediaRecorder(stream, {
-        audioBitsPerSecond: initConfig.sampleRate // Ensure this aligns with server config
+        audioBitsPerSecond: 48000 // Ensure this aligns with server config
       });
 
       // Event handler for accumulating audio chunks
