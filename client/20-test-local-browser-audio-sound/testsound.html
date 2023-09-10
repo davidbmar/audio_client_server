@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>WebSocket Audio Stream with Buffering</title>
+</head>
+<body>
+  <!-- Buttons for controlling audio recording -->
+  <button id="startBtn">Start Recording</button>
+  <button id="stopBtn" disabled>Stop Recording</button>
+
+  <!-- Audio element for playback -->
+  <audio id="audioPlayer" controls></audio>
+
+  <script>
+    // Initialize variables
+    let mediaRecorder;        // MediaRecorder instance
+    let audioChunks = [];     // Buffer to hold audio chunks
+
+    // WebSocket is removed since you don't want to send data to the server
+    // let ws = new WebSocket('ws://3.22.47.41:8767/');
+
+    // Function to handle the 'Start Recording' button
+    document.getElementById('startBtn').addEventListener('click', async () => {
+      // Request user media access and get audio stream
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // Initialize MediaRecorder with the obtained stream
+      mediaRecorder = new MediaRecorder(stream);
+
+      // Event handler for accumulating audio chunks
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.start(1000);  // 1-second timeslice
+
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled = false;
+    });
+
+    // Function to handle the 'Stop Recording' button
+    document.getElementById('stopBtn').addEventListener('click', () => {
+      mediaRecorder.stop();
+
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('stopBtn').disabled = true;
+
+      // Create a Blob from the audio chunks
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+
+      // Create an object URL for the Blob
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Set the object URL as the source of the audio element
+      document.getElementById('audioPlayer').src = audioUrl;
+
+      // Clear the buffer
+      audioChunks = [];
+    });
+  </script>
+</body>
+</html>
+
+
