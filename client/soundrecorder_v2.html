@@ -66,7 +66,7 @@ document.getElementById('start').onclick = () => {
   navigator.mediaDevices.getUserMedia({ audio: true })
   .then(stream => {
     mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.start();
+    mediaRecorder.start(1000);  // 1-second timeslice
 
     mediaRecorder.ondataavailable = e => {
       buffer.push(e.data);
