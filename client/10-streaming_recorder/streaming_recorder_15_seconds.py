@@ -2,8 +2,10 @@
 import asyncio
 import websockets
 from pydub import AudioSegment
+import os
 import io
 import json
+import boto3
 from datetime import datetime
 
 # Initial placeholder values, these will be updated by the client
@@ -11,8 +13,30 @@ SAMPLE_RATE = 48000
 CHANNEL_COUNT = 2
 
 buffer = bytearray()
-segment_duration = 5000  # Save every 5 seconds, in milliseconds
+segment_duration = 2500  # Save every 5 seconds, in milliseconds
 current_file_number = 1  # To name saved files uniquely
+
+def upload_sound_file(file_name, bucket, object_name=None):
+    """Upload a file to an S3 bucket
+
+    :param file_name: File to upload
+    :param bucket: Bucket to upload to
+    :param object_name: S3 object name. If not specified then file_name is used
+    :return: True if file was uploaded, else False
+    """
+
+    # If S3 object_name was not specified, use file_name
+    if object_name is None:
+        object_name = os.path.basename(file_name)
+
+    # Upload the file
+    s3_client = boto3.client('s3')
+    try:
+        response = s3_client.upload_file(file_name, bucket, object_name)
+    except ClientError as e:
+        logging.error(e)
+        return False
+    return True
 
 async def save_audio(websocket, path):
     global buffer
@@ -66,6 +90,7 @@ async def save_audio(websocket, path):
                     audio_segment.export(f"audio_output_{current_file_number}.flac", format="flac")
                     print(f"Saved file audio_output_{current_file_number}.mp3")
                     print(f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')} - Audio saved")
+                    upload_sound_file(f"audio_output_{current_file_number}.flac","presigned-url-audio-uploads")
                     current_file_number += 1
                     buffer = bytearray()
                     current_audio_duration = 0
