@@ -60,7 +60,7 @@
 
         if (ws.readyState === WebSocket.OPEN && audioChunks.length >= 10) {
            console.log("Sending buffered audio chunks");
-           ws.send(new Blob(audioChunks)); // Send buffered audio
+           ws.send(new Blob(audioChunks,{type: 'audio/flac'})); // Send buffered audio
            console.log("Buffered audio chunks sent");
            audioChunks = [];  // Clear the buffer
         }
@@ -80,7 +80,7 @@
       document.getElementById('stopBtn').disabled = true;
 
       if (ws.readyState === WebSocket.OPEN && audioChunks.length > 0) {
-        ws.send(new Blob(audioChunks)); // Send remaining audio
+        ws.send(new Blob(audioChunks,{ type: 'audio/flac' })); // Send remaining audio
         audioChunks = [];  // Clear the buffer
       }
     });
