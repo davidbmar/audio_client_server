@@ -33,6 +33,12 @@ let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
 let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Initialize sequence number from the input
 
+
+// Initialize buffer variables here
+let buffer = [];
+let bufferLength = parseInt(document.getElementById('timeInterval').value); // Initialize buffer length
+let bufferReleaseTime = 0; 
+
 // Async function to generate file name using the date and sequence number
 const generateFileName = async () => {
   // Semaphore logic to block subsequent calls until current one is finished
@@ -55,6 +61,7 @@ document.getElementById('update').onclick = () => {
   uploadURL = document.getElementById('urlInput').value;
   timeInterval = parseInt(document.getElementById('timeInterval').value);
   sequenceNumber = parseInt(document.getElementById('sequenceInput').value);  // Update the sequence number from the input
+  bufferLength = parseInt(document.getElementById('timeInterval').value); //Set buffer length to the same as clip length.
 };
 
 document.getElementById('start').onclick = () => {
@@ -65,12 +72,16 @@ document.getElementById('start').onclick = () => {
     mediaRecorder.start();
 
     mediaRecorder.ondataavailable = e => {
-      chunks.push(e.data);
-
-      if (mediaRecorder.state === 'recording') {
-        mediaRecorder.stop();
+      buffer.push(e.data); // Accumulate in buffer
+      if (Date.now() >= bufferReleaseTime) {
+        chunks = buffer; // Transfer buffer to chunks
+        buffer = []; // Clear the buffer
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
       }
     };
+
 
     mediaRecorder.onstop = async e => {
       const blob = new Blob(chunks, { 'type' : 'audio/flac' });
@@ -101,9 +112,11 @@ document.getElementById('start').onclick = () => {
         }
       });
 
+
       if (stream.active && shouldContinueRecording) {
         mediaRecorder.start();
-      }
+        bufferReleaseTime = Date.now() + bufferLength; // Set next release time
+      }		    
     };
 
     intervalId = setInterval(() => {
