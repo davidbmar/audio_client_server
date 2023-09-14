@@ -34,6 +34,7 @@ let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
 let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
 let chunkCount = parseInt(document.getElementById('chunkCount').value);
+let shouldRestart = false; // New variable to handle restarts
 
 
 // Function to generate file name using the date and sequence number
@@ -83,46 +84,37 @@ document.getElementById('start').onclick = () => {
 };
 
 
+
 const startRecording = () => {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-  
+      mediaRecorder.start(1000);  // Start with 1000ms timeslice
+      
       mediaRecorder.ondataavailable = e => {
-         console.log('Data available event:', e.data);
-         audioBuffer.push(e.data); // Push to buffer instead of chunks
-     
+         audioBuffer.push(e.data); // Push to buffer
+
          // Upload when buffer reaches the specified chunk count
          if (audioBuffer.length >= chunkCount) {
-  	   console.log(`Uploading audio. Buffer length: ${audioBuffer.length}`);
            const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
            uploadToS3(blob);
-           audioBuffer = [];
+           audioBuffer = [];  // Clear buffer
          }
       };
 
       mediaRecorder.onstop = e => {
-        console.log('Stop event. Should continue recording:', shouldContinueRecording);
-
         if (audioBuffer.length > 0) {
           const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
           uploadToS3(blob);
-          audioBuffer = [];
+          audioBuffer = [];  // Clear buffer
         }
+        
         // Restart mediaRecorder if shouldContinueRecording is still true
         if (shouldContinueRecording) {
-          console.log('Restarting recording...');
-
           startRecording();
         }
       };
-              
-      intervalId = setInterval(() => {
-        if (mediaRecorder.state == 'recording') {
-          mediaRecorder.stop();
-        }
-      }, timeInterval);
+
     })
     .catch(err => console.error('getUserMedia error', err));
 };
