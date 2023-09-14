@@ -83,37 +83,34 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
-
-
 const startRecording = () => {
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start(1000);  // Start with 1000ms timeslice
+      mediaRecorder.start();  // No timeslice
       
       mediaRecorder.ondataavailable = e => {
          audioBuffer.push(e.data); // Push to buffer
-
-         // Upload when buffer reaches the specified chunk count
-         if (audioBuffer.length >= chunkCount) {
-           const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-           uploadToS3(blob);
-           audioBuffer = [];  // Clear buffer
-         }
       };
 
       mediaRecorder.onstop = e => {
-        if (audioBuffer.length > 0) {
-          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-          uploadToS3(blob);
-          audioBuffer = [];  // Clear buffer
-        }
-        
+        // Create blob from buffer and upload
+        const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+        uploadToS3(blob);
+        audioBuffer = [];  // Clear buffer
+
         // Restart mediaRecorder if shouldContinueRecording is still true
         if (shouldContinueRecording) {
           startRecording();
         }
       };
+
+      // Stop the mediaRecorder every 5 seconds
+      intervalId = setInterval(() => {
+        if (mediaRecorder.state == 'recording') {
+          mediaRecorder.stop();
+        }
+      }, 5000);  // 5000 milliseconds (5 seconds)
 
     })
     .catch(err => console.error('getUserMedia error', err));
