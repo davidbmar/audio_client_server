@@ -35,6 +35,7 @@ let timeInterval = parseInt(document.getElementById('timeInterval').value);
 let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
 let chunkCount = parseInt(document.getElementById('chunkCount').value);
 let shouldRestart = false; // New variable to handle restarts
+let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
 
 
 // Function to generate file name using the date and sequence number
@@ -84,33 +85,38 @@ document.getElementById('start').onclick = () => {
 };
 
 const startRecording = () => {
+  if (isMediaRecorderInitialized) {
+    mediaRecorder.start();
+    return;
+  }
+
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();  // No timeslice
-      
+      mediaRecorder.start();
+      isMediaRecorderInitialized = true;  // Set flag to true
+
       mediaRecorder.ondataavailable = e => {
-         audioBuffer.push(e.data); // Push to buffer
+        audioBuffer.push(e.data);  // Push to buffer
       };
 
       mediaRecorder.onstop = e => {
-        // Create blob from buffer and upload
-        const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-        uploadToS3(blob);
-        audioBuffer = [];  // Clear buffer
+        if (audioBuffer.length > 0) {
+          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+          uploadToS3(blob);
+          audioBuffer = [];  // Clear buffer
+        }
 
-        // Restart mediaRecorder if shouldContinueRecording is still true
         if (shouldContinueRecording) {
-          startRecording();
+          mediaRecorder.start();
         }
       };
 
-      // Stop the mediaRecorder every 5 seconds
       intervalId = setInterval(() => {
-        if (mediaRecorder.state == 'recording') {
+        if (mediaRecorder.state === 'recording') {
           mediaRecorder.stop();
         }
-      }, 5000);  // 5000 milliseconds (5 seconds)
+      }, 5000);  // Stop recording every 5 seconds
 
     })
     .catch(err => console.error('getUserMedia error', err));
