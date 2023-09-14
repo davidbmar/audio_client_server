@@ -79,40 +79,54 @@ document.getElementById('update').onclick = () => {
 
 document.getElementById('start').onclick = () => {
   shouldContinueRecording = true;
-  navigator.mediaDevices.getUserMedia({ audio: true })
-  .then(stream => {
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.start();
-
-    mediaRecorder.ondataavailable = e => {
-       audioBuffer.push(e.data); // Push to buffer instead of chunks
-   
-       // Upload when buffer reaches the specified chunk count
-       if (audioBuffer.length >= chunkCount) {
-         const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-         uploadToS3(blob);  // Assume uploadToS3() is your S3 upload function
-         audioBuffer = [];  // Clear buffer
-       }
-    };		  
-
-    mediaRecorder.onstop = e => {
-      if (audioBuffer.length > 0) {
-        const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-        uploadToS3(blob); // Use new uploadToS3 function here
-        audioBuffer = [];
-      }
-    };
-		  
-    intervalId = setInterval(() => {
-      if (mediaRecorder.state == 'recording') {
-        mediaRecorder.stop();
-      }
-    }, timeInterval);
-  })
-  .catch(err => console.error('getUserMedia error', err));
+  startRecording();
 };
 
 
+const startRecording = () => {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+  
+      mediaRecorder.ondataavailable = e => {
+         console.log('Data available event:', e.data);
+         audioBuffer.push(e.data); // Push to buffer instead of chunks
+     
+         // Upload when buffer reaches the specified chunk count
+         if (audioBuffer.length >= chunkCount) {
+  	   console.log(`Uploading audio. Buffer length: ${audioBuffer.length}`);
+           const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+           uploadToS3(blob);
+           audioBuffer = [];
+         }
+      };
+
+      mediaRecorder.onstop = e => {
+        console.log('Stop event. Should continue recording:', shouldContinueRecording);
+
+        if (audioBuffer.length > 0) {
+          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+          uploadToS3(blob);
+          audioBuffer = [];
+        }
+        // Restart mediaRecorder if shouldContinueRecording is still true
+        if (shouldContinueRecording) {
+          console.log('Restarting recording...');
+
+          startRecording();
+        }
+      };
+              
+      intervalId = setInterval(() => {
+        if (mediaRecorder.state == 'recording') {
+          mediaRecorder.stop();
+        }
+      }, timeInterval);
+    })
+    .catch(err => console.error('getUserMedia error', err));
+};
+	
 document.getElementById('stop').onclick = () => {
   shouldContinueRecording = false;
   if (mediaRecorder && mediaRecorder.state == 'recording') {
