@@ -84,44 +84,47 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
+
 const startRecording = () => {
-  if (isMediaRecorderInitialized) {
+  if (!isMediaRecorderInitialized) {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        
+        mediaRecorder.ondataavailable = e => {
+          audioBuffer.push(e.data);  // Push to buffer
+        };
+
+        mediaRecorder.onstop = e => {
+          if (audioBuffer.length > 0) {
+            const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+            uploadToS3(blob);
+            audioBuffer = [];  // Clear buffer
+          }
+
+          // Only start again if the shouldContinueRecording flag is true
+          if (shouldContinueRecording) {
+            mediaRecorder.start();
+          }
+        };
+        
+        mediaRecorder.start();
+        isMediaRecorderInitialized = true;  // Set flag to true
+        
+        intervalId = setInterval(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, 5000);  // Stop recording every 5 seconds
+        
+      })
+      .catch(err => console.error('getUserMedia error', err));
+  } else if (mediaRecorder.state === 'inactive') {
+    // If MediaRecorder is initialized and not currently recording, start it.
     mediaRecorder.start();
-    return;
   }
+};	
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
-      isMediaRecorderInitialized = true;  // Set flag to true
-
-      mediaRecorder.ondataavailable = e => {
-        audioBuffer.push(e.data);  // Push to buffer
-      };
-
-      mediaRecorder.onstop = e => {
-        if (audioBuffer.length > 0) {
-          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-          uploadToS3(blob);
-          audioBuffer = [];  // Clear buffer
-        }
-
-        if (shouldContinueRecording) {
-          mediaRecorder.start();
-        }
-      };
-
-      intervalId = setInterval(() => {
-        if (mediaRecorder.state === 'recording') {
-          mediaRecorder.stop();
-        }
-      }, 5000);  // Stop recording every 5 seconds
-
-    })
-    .catch(err => console.error('getUserMedia error', err));
-};
-	
 document.getElementById('stop').onclick = () => {
   shouldContinueRecording = false;
   if (mediaRecorder && mediaRecorder.state == 'recording') {
