@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="start">Start</button>
+<button id="stop">Stop</button>
+<br>
+<br>
+<label for="timeInterval">Sound Clip Length (ms):</label>
+<input id="timeInterval" type="number" value="1000"> <!-- Changed to 1000ms -->
+<br>
+<br>
+<label for="chunkCount">Number of Chunks:</label>
+<input id="chunkCount" type="number" value="10"> <!-- New field -->
+<br>
+<br>
+<label for="urlInput">Upload URL:</label>
+<input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
+<br>
+<br>
+<label for="sequenceInput">Starting Sequence Number:</label>
+<input id="sequenceInput" type="number" value="1">
+<br>
+<br>
+<button id="update">Update</button>
+
+<script>
+// Initialize variables
+let audioBuffer = [];
+let mediaRecorder;
+let intervalId;
+let shouldContinueRecording = false;
+let uploadURL = document.getElementById('urlInput').value;
+let timeInterval = parseInt(document.getElementById('timeInterval').value);
+let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+let chunkCount = parseInt(document.getElementById('chunkCount').value);
+
+
+// Function to generate file name using the date and sequence number
+const generateFileName = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const sequence = String(sequenceNumber++).padStart(6, '0');  // Increment sequence number
+  return `${year}-${month}-${day}-${sequence}.flac`;
+};
+
+document.getElementById('update').onclick = () => {
+  uploadURL = document.getElementById('urlInput').value;
+  timeInterval = parseInt(document.getElementById('timeInterval').value);
+  sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+  chunkCount = parseInt(document.getElementById('chunkCount').value); // Update the chunk count from the input
+};
+
+document.getElementById('start').onclick = () => {
+  shouldContinueRecording = true;
+  navigator.mediaDevices.getUserMedia({ audio: true })
+  .then(stream => {
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.start();
+
+    mediaRecorder.ondataavailable = e => {
+       audioBuffer.push(e.data); // Push to buffer instead of chunks
+   
+       // Upload when buffer reaches the specified chunk count
+       if (audioBuffer.length >= chunkCount) {
+         const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+         uploadToS3(blob);  // Assume uploadToS3() is your S3 upload function
+         audioBuffer = [];  // Clear buffer
+       }
+    };		  
+
+    mediaRecorder.onstop = e => {
+      if (audioBuffer.length > 0) {
+        const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+        uploadToS3(blob); // Use new uploadToS3 function here
+        audioBuffer = [];
+      }
+    };
+		  
+    intervalId = setInterval(() => {
+      if (mediaRecorder.state == 'recording') {
+        mediaRecorder.stop();
+      }
+    }, timeInterval);
+  })
+  .catch(err => console.error('getUserMedia error', err));
+};
+
+
+document.getElementById('stop').onclick = () => {
+  shouldContinueRecording = false;
+  if (mediaRecorder && mediaRecorder.state == 'recording') {
+    mediaRecorder.stop();
+  }
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+};
+</script>
+
+</body>
+</html>
+
