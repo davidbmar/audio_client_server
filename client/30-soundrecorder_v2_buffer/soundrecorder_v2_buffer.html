@@ -46,6 +46,30 @@ const generateFileName = () => {
   return `${year}-${month}-${day}-${sequence}.flac`;
 };
 
+// Add the uploadToS3 function
+async function uploadToS3(blob) {
+  const fileKey = generateFileName();
+  let presignResponse = await fetch(uploadURL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      "bucket_name": "presigned-url-audio-uploads",
+      "file_key": fileKey,
+      "expiry_time": 3600,
+      "action": "upload"
+    })
+  });
+
+  let presignData = await presignResponse.json();
+  let presignedURL = presignData.url;
+
+  await fetch(presignedURL, {
+    method: 'PUT',
+    body: blob,
+    headers: { 'Content-Type': 'audio/flac' }
+  });
+}
+	
 document.getElementById('update').onclick = () => {
   uploadURL = document.getElementById('urlInput').value;
   timeInterval = parseInt(document.getElementById('timeInterval').value);
