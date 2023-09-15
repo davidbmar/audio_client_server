@@ -84,46 +84,47 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
-
 const startRecording = () => {
-  if (!isMediaRecorderInitialized) {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        mediaRecorder = new MediaRecorder(stream);
-        
-        mediaRecorder.ondataavailable = e => {
-          audioBuffer.push(e.data);  // Push to buffer
-        };
-
-        mediaRecorder.onstop = e => {
-          if (audioBuffer.length > 0) {
-            const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-            uploadToS3(blob);
-            audioBuffer = [];  // Clear buffer
-          }
-
-          // Only start again if the shouldContinueRecording flag is true
-          if (shouldContinueRecording) {
-            mediaRecorder.start();
-          }
-        };
-        
-        mediaRecorder.start();
-        isMediaRecorderInitialized = true;  // Set flag to true
-        
-        intervalId = setInterval(() => {
-          if (mediaRecorder.state === 'recording') {
-            mediaRecorder.stop();
-          }
-        }, 5000);  // Stop recording every 5 seconds
-        
-      })
-      .catch(err => console.error('getUserMedia error', err));
-  } else if (mediaRecorder.state === 'inactive') {
-    // If MediaRecorder is initialized and not currently recording, start it.
+  // Dynamically update timeInterval based on user input
+  timeInterval = parseInt(document.getElementById('timeInterval').value);
+  
+  if (isMediaRecorderInitialized) {
     mediaRecorder.start();
+    return;
   }
-};	
+  
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start();
+      isMediaRecorderInitialized = true;
+
+      mediaRecorder.ondataavailable = e => {
+        audioBuffer.push(e.data);
+      };
+      
+      mediaRecorder.onstop = e => {
+        if (audioBuffer.length > 0) {
+          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+          uploadToS3(blob);
+          audioBuffer = [];
+        }
+        
+        if (shouldContinueRecording) {
+          mediaRecorder.start();
+        }
+      };
+      
+      // Use user-defined timeInterval for the interval function
+      intervalId = setInterval(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, timeInterval); // Use user-defined time interval
+      
+    })
+    .catch(err => console.error('getUserMedia error', err));
+};
 
 document.getElementById('stop').onclick = () => {
   shouldContinueRecording = false;
