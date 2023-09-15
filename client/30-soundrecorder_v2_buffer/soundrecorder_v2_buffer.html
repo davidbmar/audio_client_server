@@ -84,19 +84,19 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
+
 const startRecording = () => {
-  // Dynamically update timeInterval based on user input
-  timeInterval = parseInt(document.getElementById('timeInterval').value);
-  
+  timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
+
   if (isMediaRecorderInitialized) {
-    mediaRecorder.start();
+    mediaRecorder.start(timeInterval);  // Add timeslice parameter here
     return;
   }
-  
+
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       mediaRecorder = new MediaRecorder(stream);
-      mediaRecorder.start();
+      mediaRecorder.start(timeInterval);  // Add timeslice parameter here
       isMediaRecorderInitialized = true;
 
       mediaRecorder.ondataavailable = e => {
