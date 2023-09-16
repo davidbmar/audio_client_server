@@ -23,7 +23,7 @@
 <br>
 <br>
 <label for="flaskUrlInput">Flask Upload URL:</label>
-<input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com/upload">
+<input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
 <br>
 <br>
 <button id="update">Update</button>
@@ -56,13 +56,16 @@ const generateFileName = () => {
 // This function uploads to the LinuxHost, in contrast, of uploading to S3.
 async function uploadToLinuxHost(blob) {
   const fileKey = generateFileName();
+  console.log("Generated fileKey:", fileKey);  // Debug log
   const formData = new FormData();
   formData.append("file", blob, fileKey);
 
   await fetch(flaskUploadURL, {
     method: 'POST',
     body: formData,
-  });
+  }).then(response => response.text())  // Added this for debug
+    .then(data => console.log("Server Response:", data))  // Debug log
+    .catch((error) => console.error("Error:", error));  // Debug log
 }
 
 	

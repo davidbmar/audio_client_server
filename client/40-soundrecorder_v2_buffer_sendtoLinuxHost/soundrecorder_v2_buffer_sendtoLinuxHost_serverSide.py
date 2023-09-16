@@ -1,29 +1,30 @@
 #!/usr/bin/python3
+
 from flask import Flask, request
+import logging
 import os
 
 app = Flask(__name__)
+logging.basicConfig(level=logging.DEBUG)
 
-UPLOAD_FOLDER = './directRecieveFromClient'
+UPLOAD_FOLDER = './uploads'
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
+    logging.debug(request.files)
     if 'file' not in request.files:
         return 'No file part', 400
-
     file = request.files['file']
-    custom_filename = file.filename  # You can directly get the filename from the client
-
-    if custom_filename == '':
+    filename = file.filename
+    if filename == '':
         return 'No selected file', 400
-
     if file:
-        filename = os.path.join(UPLOAD_FOLDER, custom_filename)
-        file.save(filename)
-        return f'File {custom_filename} uploaded successfully', 200
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+        return f'File {filename} uploaded successfully', 200
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8768)
+    app.run(debug=True, port=8768)
 
