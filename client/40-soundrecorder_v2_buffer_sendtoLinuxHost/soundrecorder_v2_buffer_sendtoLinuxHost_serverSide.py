@@ -1,8 +1,8 @@
 #!/usr/bin/python3
-
 from flask import Flask, request
 import logging
 import os
+import boto3
 
 app = Flask(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -25,9 +25,9 @@ def upload_file():
     if file:
         filepath = os.path.join(UPLOAD_FOLDER, filename)
         file.save(filepath)
-        return f'File {filename} uploaded successfully', 200
 
         file_ready(filename)
+        return f'File {filename} uploaded successfully', 200
 
 def file_ready(file_info):
     sqs = boto3.client('sqs',region_name='us-east-2')
