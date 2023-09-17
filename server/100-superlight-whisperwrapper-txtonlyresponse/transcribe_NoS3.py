@@ -4,7 +4,8 @@ import time
 import os
 import re
 import s3_operations
-import haslib
+import json
+import hashlib
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
@@ -28,14 +29,17 @@ class SpeechTranscriber:
 
         # Generate a MessageDeduplicationId, a unique identifier which if seen twice then de-dupes only one message.
         # to see how this works, review the test utility code: utility.drivemessages.clientDisplay_TxtOnly.fifo.py
-        message_deduplication_id = hashlib.sha256(json.dumps(message).encode()).hexdigest()
+        message_deduplication_id = hashlib.sha256(json.dumps(message_body).encode()).hexdigest()
 
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
-            MessageBody=str(message_body),
-            MessageDeduplicationId=message_deduplication_id,
-            MessageGroupId='MessageGroupIDUserABC'
+            MessageBody=json.dumps(message_body),
+            MessageGroupId='testGroup5',
+            MessageDeduplicationId=message_deduplication_id
         )
+        print(f"Message sent with ID: {response['MessageId']}")
+
+
 
     # Modified Code
     def transcribe(self, file):
