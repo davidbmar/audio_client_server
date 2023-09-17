@@ -4,7 +4,7 @@ import time
 import os
 import re
 import s3_operations
-import haslib
+import hashlib
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
