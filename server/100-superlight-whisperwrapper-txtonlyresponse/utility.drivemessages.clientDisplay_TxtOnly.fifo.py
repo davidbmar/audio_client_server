@@ -1,12 +1,16 @@
 #!/usr/bin/python3
 import boto3
 import json
+from datetime import datetime
+
 
 # Initialize the SQS client
 sqs = boto3.client('sqs')
 
 # Define the SQS URL
 sqs_url = "https://sqs.us-east-2.amazonaws.com/635071011057/clientDisplay_TxtOnly.fifo"
+
+current_time = datetime.now().strftime("%H%M%S")
 
 # Messages to be sent to SQS
 messages = [
@@ -52,12 +56,18 @@ def send_message_to_sqs(message):
     response = sqs.send_message(
         QueueUrl=sqs_url,
         MessageBody=json.dumps(message),
-        MessageGroupId='testGroup',  # Required for FIFO queues
+        MessageGroupId='testGroup2',  # Required for FIFO queues
         MessageDeduplicationId=message_deduplication_id  # Add this line
     )
     print(f"Message sent with ID: {response['MessageId']}")
 
 # Send each message to the SQS queue
 for message in messages:
+
+    # update the message to have the timestamp generated in the beginning just for uniqueness.  
+    # ie, if you run this script twice, the second time it will not do anything due to the medssage_deduplicate_id without this timestamp of 
+    # when this program was run.
+    message['transcribed_message'] = f"{current_time} {message['transcribed_message']}"
+
     send_message_to_sqs(message)
 
