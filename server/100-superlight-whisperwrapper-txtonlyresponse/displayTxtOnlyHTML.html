@@ -15,23 +15,43 @@
                 
                 // Start the heartbeat interval when the connection opens
                 heartbeatInterval = setInterval(function() {
+                    console.log("Sending heartbeat");  // Debugging statement
+		    
                     ws.send(JSON.stringify({'heartbeat': 'ping'}));
                 }, 5000); // 5 seconds
             };
 
             ws.onmessage = function(event) {
+                console.log("Received a message from the server.");  // Debugging statement
+            
                 // Parse received JSON message
                 var data = JSON.parse(event.data);
-
+                console.log("Parsed data:", data);  // Debugging statement
+            
                 // Check if this is a heartbeat message
                 if (data.heartbeat) {
-                    // This is a heartbeat message, don't do anything special
+                    console.log("Received a heartbeat message.");  // Debugging statement
                     return;
                 }
             
-                // Update the transcription table
-                if (data.file_info && data.transcribed_message) {
-                    updateTranscriptionTable(data.transcribed_message, data.file_info, "your_S3_bucket_name");
+                // Extract and parse the 'file_info' content
+                if (data.file_info) {
+                    console.log("Received 'file_info' key.");  // Debugging statement
+            
+                    var fileInfo = JSON.parse(data.file_info);
+                    console.log("Parsed 'file_info':", fileInfo);  // Debugging statement
+            
+                    var filename = fileInfo.filename;
+                    var transcribedMessage = fileInfo.transcribed_message;
+            
+                    console.log("Filename:", filename);  // Debugging statement
+                    console.log("Transcribed Message:", transcribedMessage);  // Debugging statement
+            
+                    // Update the transcription table
+                    updateTranscriptionTable(transcribedMessage, filename, "your_S3_bucket_name");
+                    console.log("Updated the transcription table.");  // Debugging statement
+                } else {
+                    console.log("Did not receive 'file_info' key.");  // Debugging statement
                 }
             };
 

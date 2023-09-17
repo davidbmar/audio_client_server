@@ -12,6 +12,15 @@ class WebSocketSQSServer:
         self.sqs_queue_url = sqs_queue_url
         self.ws_port = ws_port
 
+    # Add this new method to WebSocketSQSServer class
+    async def consumer_handler(self, websocket, path):
+        async for message in websocket:
+            data = json.loads(message)
+            if 'heartbeat' in data:
+                print("Received heartbeat")  # Debugging statement
+
+
+
     async def producer_handler(self, websocket, path):
         try:
             print("Entered producer_handler...")  # Debugging statement
@@ -33,7 +42,7 @@ class WebSocketSQSServer:
                     print(f"Received messages: {messages}")  # Debugging statement
                     for message in messages['Messages']:
                         message_content = message['Body']
-                        print(f"Sending message: {message_content}")  # Debugging statement
+                        print(f"message_content: {message_content}")  # Debugging statement
                         json_payload = json.dumps({'file_info': message_content})
                         print(f"JSON payload: {json_payload}")  # <-- Add this line
 
