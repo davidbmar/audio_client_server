@@ -3,6 +3,9 @@ import boto3
 import json
 from datetime import datetime
 
+#This is a utility function, which tests and drives messages to the clientDisplay_TxtOnly.fifo.  
+#This funciton is for testing the html display, and the SQS queue and the service side application 
+#(clientDisplay_TxtOnly.py.
 
 # Initialize the SQS client
 sqs = boto3.client('sqs')
