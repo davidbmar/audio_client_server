@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<button id="start">Start</button>
+<button id="stop">Stop</button>
+<br>
+<br>
+<label for="timeInterval">Sound Clip Length (ms):</label>
+<input id="timeInterval" type="number" value="3000"> <!-- Changed to 1000ms -->
+<br>
+<br>
+<label for="chunkCount">Number of Chunks:</label>
+<input id="chunkCount" type="number" value="50"> <!-- New field -->
+<br>
+<br>
+<label for="sequenceInput">Starting Sequence Number:</label>
+<input id="sequenceInput" type="number" value="100">
+<br>
+<br>
+<label for="flaskUrlInput">Flask Upload URL:</label>
+<input id="flaskUrlInput" type="text" value="https://t3kgtlbatra1sb-8768.proxy.runpod.net/upload">
+<br>
+<br>
+<button id="update">Update</button>
+
+<script>
+
+// Initialize config object
+const config = {
+  audioBuffer: [],
+  mediaRecorder: null,
+  intervalId: null,
+  shouldContinueRecording: false,
+  timeInterval: 3000,
+  sequenceNumber: 100,
+  chunkCount: 50,
+  flaskUploadURL: "https://t3kgtlbatra1sb-8768.proxy.runpod.net/upload",
+  shouldRestart: false,
+  isMediaRecorderInitialized: false,
+};
+
+// Function to initialize MediaRecorder
+const initializeMediaRecorder = () => {
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      config.mediaRecorder = new MediaRecorder(stream);
+      config.isMediaRecorderInitialized = true;
+
+      config.mediaRecorder.ondataavailable = e => {
+        config.audioBuffer.push(e.data);
+      };
+      
+      config.mediaRecorder.onstop = e => {
+        if (config.audioBuffer.length > 0) {
+          const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
+          uploadToLinuxHost(blob);
+          config.audioBuffer = [];
+        }
+        
+        if (config.shouldContinueRecording) {
+          config.mediaRecorder.start();
+        }
+      };
+    })
+    .catch(err => console.error('getUserMedia error', err));
+};
+
+
+// Function to generate file name using the date and sequence number
+const generateFileName = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const sequence = String(config.sequenceNumber++).padStart(6, '0');  // Increment sequence number
+  return `${year}-${month}-${day}-${sequence}.flac`;
+};
+
+// This function uploads to the LinuxHost, in contrast, of uploading to S3.
+async function uploadToLinuxHost(blob) {
+  const fileKey = generateFileName();
+  console.log("Generated fileKey:", fileKey);  // Debug log
+  const formData = new FormData();
+  formData.append("file", blob, fileKey);
+
+  await fetch(config.flaskUploadURL, {
+    method: 'POST',
+    body: formData,
+  }).then(response => response.text())  // Added this for debug
+    .then(data => console.log("Server Response:", data))  // Debug log
+    .catch((error) => console.error("Error:", error));  // Debug log
+}
+
+document.getElementById('update').onclick = () => {
+  updateConfig();
+};
+
+// Function to update config
+const updateConfig = () => {
+  config.timeInterval = parseInt(document.getElementById('timeInterval').value);
+  config.sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+  config.chunkCount = parseInt(document.getElementById('chunkCount').value);
+  config.flaskUploadURL = document.getElementById('flaskUrlInput').value;
+};
+
+document.getElementById('start').onclick = () => {
+  config.shouldContinueRecording = true;
+  startRecording();
+};
+
+const startRecording = () => {
+  config.timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
+
+  if (config.isMediaRecorderInitialized) {
+    config.mediaRecorder.start(config.timeInterval);  // Add timeslice parameter here
+    return;
+  }
+
+  // Initialize MediaRecorder if not already initialized
+  if (!config.isMediaRecorderInitialized) {
+    initializeMediaRecorder();
+  }
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      config.mediaRecorder = new MediaRecorder(stream);
+      config.mediaRecorder.start(config.timeInterval);  // Add timeslice parameter here
+      config.isMediaRecorderInitialized = true;
+
+      config.mediaRecorder.ondataavailable = e => {
+        config.audioBuffer.push(e.data);
+      };
+      
+      config.mediaRecorder.onstop = e => {
+        if (config.audioBuffer.length > 0) {
+          const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
+          uploadToLinuxHost(blob);
+          config.audioBuffer = [];
+        }
+        
+        if (config.shouldContinueRecording) {
+          config.mediaRecorder.start();
+        }
+      };
+      
+      // Use user-defined timeInterval for the interval function
+      config.intervalId = setInterval(() => {
+        if (config.mediaRecorder.state === 'recording') {
+          config.mediaRecorder.stop();
+        }
+      }, config.timeInterval); // Use user-defined time interval
+      
+    })
+    .catch(err => console.error('getUserMedia error', err));
+};	
+
+
+document.getElementById('stop').onclick = () => {
+  config.shouldContinueRecording = false;
+  if (config.mediaRecorder && config.mediaRecorder.state == 'recording') {
+    config.mediaRecorder.stop();
+  }
+  if (config.intervalId) {
+    clearInterval(config.intervalId);
+  }
+};	
+</script>
+
+</body>
+</html>
+
