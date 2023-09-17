@@ -131,7 +131,6 @@ const startRecording = () => {
   }
 };
 
-
 document.getElementById('stop').onclick = () => {
   config.shouldContinueRecording = false;
   if (config.mediaRecorder && config.mediaRecorder.state == 'recording') {
@@ -140,7 +139,8 @@ document.getElementById('stop').onclick = () => {
   if (config.intervalId) {
     clearInterval(config.intervalId);
   }
-};	
+};
+
 </script>
 
 </body>
