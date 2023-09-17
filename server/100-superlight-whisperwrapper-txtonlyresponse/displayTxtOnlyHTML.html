@@ -6,6 +6,10 @@
         var ws;
         var heartbeatInterval;
 
+        function scrollToBottom() {
+            window.scrollTo(0, document.body.scrollHeight);
+        }
+
         function connectWebSocket() {
             // Connect to WebSocket server
             ws = new WebSocket("ws://3.22.47.41:8766/");
@@ -96,9 +100,8 @@
             // Append audio element to the second cell
             cell2.appendChild(audioElement);
 
-            // scroll to the bottom
-            window.scrollTo(0, document.body.scrollHeight);
-
+            // Scroll to the bottom
+            scrollToBottom();
         }
  
     </script>
