@@ -29,7 +29,7 @@ class SpeechTranscriber:
 
         # Generate a MessageDeduplicationId, a unique identifier which if seen twice then de-dupes only one message.
         # to see how this works, review the test utility code: utility.drivemessages.clientDisplay_TxtOnly.fifo.py
-        message_deduplication_id = hashlib.sha256(json.dumps(message).encode()).hexdigest()
+        message_deduplication_id = hashlib.sha256(json.dumps(message_body).encode()).hexdigest()
 
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
