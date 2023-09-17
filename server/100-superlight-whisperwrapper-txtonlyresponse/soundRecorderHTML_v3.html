@@ -7,11 +7,11 @@
 <br>
 <br>
 <label for="timeInterval">Sound Clip Length (ms):</label>
-<input id="timeInterval" type="number" value="3000"> <!-- Changed to 1000ms -->
+<input id="timeInterval" type="number" value="3000">
 <br>
 <br>
 <label for="chunkCount">Number of Chunks:</label>
-<input id="chunkCount" type="number" value="50"> <!-- New field -->
+<input id="chunkCount" type="number" value="50">
 <br>
 <br>
 <label for="sequenceInput">Starting Sequence Number:</label>
@@ -19,7 +19,7 @@
 <br>
 <br>
 <label for="flaskUrlInput">Flask Upload URL:</label>
-<input id="flaskUrlInput" type="text" value="https://t3kgtlbatra1sb-8768.proxy.runpod.net/upload">
+<input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
 <br>
 <br>
 <button id="update">Update</button>
@@ -42,6 +42,7 @@ const config = {
 
 // Function to initialize MediaRecorder
 const initializeMediaRecorder = () => {
+  console.log("Initializing MediaRecorder");  // Debug log
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
       config.mediaRecorder = new MediaRecorder(stream);
@@ -52,6 +53,7 @@ const initializeMediaRecorder = () => {
       };
       
       config.mediaRecorder.onstop = e => {
+        console.log("MediaRecorder stopped");  // Debug log
         if (config.audioBuffer.length > 0) {
           const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
           uploadToLinuxHost(blob);
@@ -59,42 +61,37 @@ const initializeMediaRecorder = () => {
         }
         
         if (config.shouldContinueRecording) {
-	  config.mediaRecorder.start(config.timeInterval);
+          config.mediaRecorder.start(config.timeInterval);
         }
       };
     })
     .catch(err => console.error('getUserMedia error', err));
 };
 
-
-// Function to generate file name using the date and sequence number
+// Function to generate file name
 const generateFileName = () => {
   const date = new Date();
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  const sequence = String(config.sequenceNumber++).padStart(6, '0');  // Increment sequence number
+  const sequence = String(config.sequenceNumber++).padStart(6, '0');
   return `${year}-${month}-${day}-${sequence}.flac`;
 };
 
-// This function uploads to the LinuxHost, in contrast, of uploading to S3.
+// Function to upload to LinuxHost
 async function uploadToLinuxHost(blob) {
   const fileKey = generateFileName();
-  console.log("Generated fileKey:", fileKey);  // Debug log
+  console.log("Generated fileKey:", fileKey);
   const formData = new FormData();
   formData.append("file", blob, fileKey);
 
   await fetch(config.flaskUploadURL, {
     method: 'POST',
     body: formData,
-  }).then(response => response.text())  // Added this for debug
-    .then(data => console.log("Server Response:", data))  // Debug log
-    .catch((error) => console.error("Error:", error));  // Debug log
+  }).then(response => response.text())
+    .then(data => console.log("Server Response:", data))
+    .catch((error) => console.error("Error:", error));
 }
-
-document.getElementById('update').onclick = () => {
-  updateConfig();
-};
 
 // Function to update config
 const updateConfig = () => {
@@ -104,30 +101,23 @@ const updateConfig = () => {
   config.flaskUploadURL = document.getElementById('flaskUrlInput').value;
 };
 
+document.getElementById('update').onclick = () => {
+  updateConfig();
+};
+
 document.getElementById('start').onclick = () => {
   config.shouldContinueRecording = true;
   startRecording();
 };
 
 const startRecording = () => {
-  // Stop existing recording if any
-  if (config.mediaRecorder && config.mediaRecorder.state === 'recording') {
-    config.shouldContinueRecording = true; // Ensure recording continues
-    config.mediaRecorder.stop();
-  }
+  console.log("Entering startRecording");  // Debug log
+  console.log("MediaRecorder state:", config.mediaRecorder ? config.mediaRecorder.state : 'Not Initialized');  // Debug log
+  console.log("shouldContinueRecording:", config.shouldContinueRecording);  // Debug log
 
-  // Update timeInterval from the UI
-  config.timeInterval = parseInt(document.getElementById('timeInterval').value);
-
-  // Start new recording with updated timeInterval
-  if (config.isMediaRecorderInitialized) {
+  if (config.mediaRecorder && config.mediaRecorder.state !== 'recording') {
+    console.log("Explicitly starting MediaRecorder");  // Debug log
     config.mediaRecorder.start(config.timeInterval);
-    return;
-  }
-
-  // Initialize MediaRecorder if not already initialized
-  if (!config.isMediaRecorderInitialized) {
-    initializeMediaRecorder();
   }
 };
 
