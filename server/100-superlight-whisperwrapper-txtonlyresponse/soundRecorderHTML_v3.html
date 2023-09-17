@@ -54,6 +54,8 @@ const initializeMediaRecorder = () => {
         };
         
         config.mediaRecorder.onstop = e => {
+          console.log("MediaRecorder stopped");  // Debug statement
+
           if (config.audioBuffer.length > 0) {
             const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
             uploadToLinuxHost(blob);
@@ -66,6 +68,8 @@ const initializeMediaRecorder = () => {
         };
 
         resolve();
+        console.log("MediaRecorder initialized");  // Debug statement
+
       })
       .catch(err => {
         console.error('getUserMedia error', err);
