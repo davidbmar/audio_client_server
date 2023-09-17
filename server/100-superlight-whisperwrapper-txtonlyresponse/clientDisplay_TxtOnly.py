@@ -11,16 +11,30 @@ class WebSocketSQSServer:
         self.ws_port = ws_port
 
     async def producer_handler(self, websocket, path):
-        while True:
-            messages = self.sqs.receive_message(QueueUrl=self.sqs_queue_url, MaxNumberOfMessages=1)
-            if 'Messages' in messages:
-                for message in messages['Messages']:
-                    message_content = message['Body']
-                    await websocket.send(json.dumps({'file_info': message_content}))
-
-                    self.sqs.delete_message(QueueUrl=self.sqs_queue_url, ReceiptHandle=message['ReceiptHandle'])
-            await asyncio.sleep(1)
-
+        try:
+            ping_interval = 10  # Ping every 10 seconds
+            last_ping_time = time.time()
+            
+            while True:
+                current_time = time.time()
+                
+                if current_time - last_ping_time >= ping_interval:
+                    await websocket.ping("keepalive")
+                    last_ping_time = current_time
+                
+                messages = self.sqs.receive_message(QueueUrl=self.sqs_queue_url, MaxNumberOfMessages=1)
+                if 'Messages' in messages:
+                    for message in messages['Messages']:
+                        message_content = message['Body']
+                        await websocket.send(json.dumps({'file_info': message_content}))
+                        self.sqs.delete_message(QueueUrl=self.sqs_queue_url, ReceiptHandle=message['ReceiptHandle'])
+                
+                await asyncio.sleep(1)
+                
+        except websockets.exceptions.ConnectionClosedOK:
+            print("Connection closed, exiting.")
+        except Exception as e:
+            print(f"An error occurred: {e}")
 
     def start_server(self):
         loop = asyncio.new_event_loop()
