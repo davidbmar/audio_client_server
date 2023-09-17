@@ -119,14 +119,16 @@ const startRecording = () => {
 };
 
 document.getElementById('stop').onclick = () => {
-  shouldContinueRecording = false;
-  if (mediaRecorder && mediaRecorder.state == 'recording') {
-    mediaRecorder.stop();
+  config.shouldContinueRecording = false;
+  if (config.mediaRecorder && config.mediaRecorder.state == 'recording') {
+    config.mediaRecorder.stop();
   }
-  if (intervalId) {
-    clearInterval(intervalId);
+  if (config.intervalId) {
+    clearInterval(config.intervalId);
   }
+  config.isMediaRecorderInitialized = false;  
 };
+
 </script>
 
 </body>
