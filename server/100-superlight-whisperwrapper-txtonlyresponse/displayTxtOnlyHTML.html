@@ -8,13 +8,13 @@
 
         function scrollToBottom() {
             console.log("Attempting to scroll to the bottom.");  // Debugging statement
-            window.scrollTo(0, document.body.scrollHeight);
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.scrollTop = tableContainer.scrollHeight;
         }
-
+	    
         function connectWebSocket() {
             // Connect to WebSocket server
             ws = new WebSocket("ws://3.22.47.41:8766/");
-            
             ws.onopen = function() {
                 console.log("Connected to the server");
                 
@@ -113,17 +113,19 @@
 <body onload="connectWebSocket()">
     <h1>WebSocket S3 Client</h1>
 
-    <table id="transcriptionTable">
-      <thead>
-        <tr>
-          <th>Transcribed Text</th>
-          <th>Play Audio</th>
-        </tr>
-      </thead>
-      <tbody id="transcriptionBody">
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
+    <div id="tableContainer" style="height: 400px; overflow-y: auto;">
+      <table id="transcriptionTable">
+        <thead>
+          <tr>
+            <th>Transcribed Text</th>
+            <th>Play Audio</th>
+          </tr>
+        </thead>
+        <tbody id="transcriptionBody">
+          <!-- Rows will be added here dynamically -->
+        </tbody>
+      </table>
+    </div>
 
     <script>
        <!-- Scroll to the bottom -->
