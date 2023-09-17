@@ -33,10 +33,13 @@ class SpeechTranscriber:
 
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
-            MessageBody=str(message_body),
-            MessageDeduplicationId=message_deduplication_id,
-            MessageGroupId='MessageGroupIDUserABC'
+            MessageBody=json.dumps(message_body),
+            MessageGroupId='testGroup5',
+            MessageDeduplicationId=message_deduplication_id
         )
+        print(f"Message sent with ID: {response['MessageId']}")
+
+
 
     # Modified Code
     def transcribe(self, file):
