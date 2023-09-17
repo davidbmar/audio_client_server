@@ -110,10 +110,17 @@ document.getElementById('start').onclick = () => {
 };
 
 const startRecording = () => {
-  config.timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
+  // Stop existing recording if any
+  if (config.mediaRecorder && config.mediaRecorder.state === 'recording') {
+    config.mediaRecorder.stop();
+  }
 
+  // Update timeInterval from the UI
+  config.timeInterval = parseInt(document.getElementById('timeInterval').value);
+
+  // Start new recording with updated timeInterval
   if (config.isMediaRecorderInitialized) {
-    config.mediaRecorder.start(config.timeInterval);  // Add timeslice parameter here
+    config.mediaRecorder.start(config.timeInterval);
     return;
   }
 
@@ -121,39 +128,8 @@ const startRecording = () => {
   if (!config.isMediaRecorderInitialized) {
     initializeMediaRecorder();
   }
+};
 
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      config.mediaRecorder = new MediaRecorder(stream);
-      config.mediaRecorder.start(config.timeInterval);  // Add timeslice parameter here
-      config.isMediaRecorderInitialized = true;
-
-      config.mediaRecorder.ondataavailable = e => {
-        config.audioBuffer.push(e.data);
-      };
-      
-      config.mediaRecorder.onstop = e => {
-        if (config.audioBuffer.length > 0) {
-          const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
-          uploadToLinuxHost(blob);
-          config.audioBuffer = [];
-        }
-        
-        if (config.shouldContinueRecording) {
-          config.mediaRecorder.start();
-        }
-      };
-      
-      // Use user-defined timeInterval for the interval function
-      config.intervalId = setInterval(() => {
-        if (config.mediaRecorder.state === 'recording') {
-          config.mediaRecorder.stop();
-        }
-      }, config.timeInterval); // Use user-defined time interval
-      
-    })
-    .catch(err => console.error('getUserMedia error', err));
-};	
 
 
 document.getElementById('stop').onclick = () => {
