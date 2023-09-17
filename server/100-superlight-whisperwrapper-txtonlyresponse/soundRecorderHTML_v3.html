@@ -40,32 +40,38 @@ const config = {
   isMediaRecorderInitialized: false,
 };
 
+
 // Function to initialize MediaRecorder
 const initializeMediaRecorder = () => {
-  console.log("Initializing MediaRecorder");  // Debug log
-  navigator.mediaDevices.getUserMedia({ audio: true })
-    .then(stream => {
-      config.mediaRecorder = new MediaRecorder(stream);
-      config.isMediaRecorderInitialized = true;
+  return new Promise((resolve, reject) => {
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        config.mediaRecorder = new MediaRecorder(stream);
+        config.isMediaRecorderInitialized = true;
 
-      config.mediaRecorder.ondataavailable = e => {
-        config.audioBuffer.push(e.data);
-      };
-      
-      config.mediaRecorder.onstop = e => {
-        console.log("MediaRecorder stopped");  // Debug log
-        if (config.audioBuffer.length > 0) {
-          const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
-          uploadToLinuxHost(blob);
-          config.audioBuffer = [];
-        }
+        config.mediaRecorder.ondataavailable = e => {
+          config.audioBuffer.push(e.data);
+        };
         
-        if (config.shouldContinueRecording) {
-          config.mediaRecorder.start(config.timeInterval);
-        }
-      };
-    })
-    .catch(err => console.error('getUserMedia error', err));
+        config.mediaRecorder.onstop = e => {
+          if (config.audioBuffer.length > 0) {
+            const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
+            uploadToLinuxHost(blob);
+            config.audioBuffer = [];
+          }
+          
+          if (config.shouldContinueRecording) {
+            config.mediaRecorder.start(config.timeInterval);
+          }
+        };
+
+        resolve();
+      })
+      .catch(err => {
+        console.error('getUserMedia error', err);
+        reject(err);
+      });
+  });
 };
 
 // Function to generate file name
@@ -110,16 +116,17 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
-const startRecording = () => {
-  console.log("Entering startRecording");  // Debug log
-  console.log("MediaRecorder state:", config.mediaRecorder ? config.mediaRecorder.state : 'Not Initialized');  // Debug log
-  console.log("shouldContinueRecording:", config.shouldContinueRecording);  // Debug log
 
-  // Initialize MediaRecorder if not already initialized
+const startRecording = async () => {
+  console.log("Entering startRecording");  // Debug log
+
   if (!config.isMediaRecorderInitialized) {
     console.log("Initializing MediaRecorder because it's not initialized");  // Debug log
-    initializeMediaRecorder();
+    await initializeMediaRecorder();
   }
+
+  console.log("MediaRecorder state:", config.mediaRecorder.state);  // Debug log
+  console.log("shouldContinueRecording:", config.shouldContinueRecording);  // Debug log
 
   if (config.mediaRecorder && config.mediaRecorder.state !== 'recording') {
     console.log("Explicitly starting MediaRecorder");  // Debug log
