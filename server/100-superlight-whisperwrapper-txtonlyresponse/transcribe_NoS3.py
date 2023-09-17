@@ -4,6 +4,7 @@ import time
 import os
 import re
 import s3_operations
+import json
 import hashlib
 from faster_whisper import WhisperModel
 
