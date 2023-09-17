@@ -16,7 +16,8 @@ class WebSocketSQSServer:
             if 'Messages' in messages:
                 for message in messages['Messages']:
                     message_content = message['Body']
-                    await websocket.send(json.dumps({'file_info': file_info}))
+                    await websocket.send(json.dumps({'file_info': message_content}))
+
                     self.sqs.delete_message(QueueUrl=self.sqs_queue_url, ReceiptHandle=message['ReceiptHandle'])
             await asyncio.sleep(1)
 
