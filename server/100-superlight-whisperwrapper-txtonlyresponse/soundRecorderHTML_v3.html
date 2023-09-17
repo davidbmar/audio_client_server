@@ -59,7 +59,7 @@ const initializeMediaRecorder = () => {
         }
         
         if (config.shouldContinueRecording) {
-          config.mediaRecorder.start();
+	  config.mediaRecorder.start(config.timeInterval);
         }
       };
     })
@@ -112,6 +112,7 @@ document.getElementById('start').onclick = () => {
 const startRecording = () => {
   // Stop existing recording if any
   if (config.mediaRecorder && config.mediaRecorder.state === 'recording') {
+    config.shouldContinueRecording = true; // Ensure recording continues
     config.mediaRecorder.stop();
   }
 
@@ -129,7 +130,6 @@ const startRecording = () => {
     initializeMediaRecorder();
   }
 };
-
 
 
 document.getElementById('stop').onclick = () => {
