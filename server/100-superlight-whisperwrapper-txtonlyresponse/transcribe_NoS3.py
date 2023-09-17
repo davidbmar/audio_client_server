@@ -23,13 +23,14 @@ class SpeechTranscriber:
             'filename': filename,
             'transcribed_message': transcribed_message
         }
+        print(f"Sending the following message to SQS {self.final_file_txt_file_queue_url}: {message_body}")  # Added line for validation
+
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
             MessageBody=str(message_body),
-            MessageDeduplicationId='MessageGroupIDUserA',
-            MessageGroupId='MessageGroupIDUserA'
+            MessageDeduplicationId='MessageGroupIDUserA123',
+            MessageGroupId='MessageGroupIDUserABC'
         )
-        print(f"Sent {filename} and its transcription to new SQS queue for final files")
 
     # Modified Code
     def transcribe(self, file):
