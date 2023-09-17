@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket SuperFast Light Transcription Client</title>
+    <script type="text/javascript">
+        var ws;
+        var heartbeatInterval;
+
+        function connectWebSocket() {
+            // Connect to WebSocket server
+            ws = new WebSocket("ws://3.22.47.41:8766/");
+            
+            ws.onopen = function() {
+                console.log("Connected to the server");
+                
+                // Start the heartbeat interval when the connection opens
+                heartbeatInterval = setInterval(function() {
+                    ws.send(JSON.stringify({'heartbeat': 'ping'}));
+                }, 5000); // 5 seconds
+            };
+
+            ws.onmessage = function(event) {
+                // Parse received JSON message
+                var data = JSON.parse(event.data);
+
+                // Check if this is a heartbeat message
+                if (data.heartbeat) {
+                    // This is a heartbeat message, don't do anything special
+                    return;
+                }
+            
+                // Update the transcription table
+                if (data.file_info && data.transcribed_message) {
+                    updateTranscriptionTable(data.transcribed_message, data.file_info, "your_S3_bucket_name");
+                }
+            };
+
+            ws.onclose = function() {
+                console.log("Connection is closed");
+
+                // Clear the heartbeat interval when the connection closes
+                clearInterval(heartbeatInterval);
+            };
+        }
+
+        async function updateTranscriptionTable(transcribedText, source_audio_fileName, source_audio_bucket) {
+            // Get table body element
+            const tableBody = document.getElementById('transcriptionBody');
+
+            // Create a new row and cells
+            const newRow = tableBody.insertRow();
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+          
+            // Set the transcribed text in the first cell
+
+            cell1.innerHTML = transcribedText;
+          
+            // Create audio and source elements for the second cell
+            const audioElement = document.createElement('audio');
+            const sourceElement = document.createElement('source');
+          
+            // Get pre-signed URL for audio file stored in S3 bucket
+            const audioURL = await getDownloadPresignedURL(source_audio_bucket, source_audio_fileName);
+          
+            // Set source element attributes
+            sourceElement.src = audioURL;
+            sourceElement.type = 'audio/flac';  // Set MIME type as required
+          
+            // Append source element to audio element
+            audioElement.appendChild(sourceElement);
+          
+            // Enable audio controls
+            audioElement.controls = true;
+          
+            // Append audio element to the second cell
+            cell2.appendChild(audioElement);
+        }
+ 
+    </script>
+</head>
+
+<body onload="connectWebSocket()">
+    <h1>WebSocket S3 Client</h1>
+
+    <table id="transcriptionTable">
+      <thead>
+        <tr>
+          <th>Transcribed Text</th>
+          <th>Play Audio</th>
+        </tr>
+      </thead>
+      <tbody id="transcriptionBody">
+        <!-- Rows will be added here dynamically -->
+      </tbody>
+    </table>
+
+
+</body>
+</html>
+
