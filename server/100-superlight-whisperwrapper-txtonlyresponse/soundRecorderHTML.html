@@ -18,8 +18,8 @@
 <input id="sequenceInput" type="number" value="100">
 <br>
 <br>
-<label for="UrlInput">Flask Upload URL:</label>
-<input id="UrlInput" type="text" value="https://t3kgtlbatra1sb-8768.proxy.runpod.net/upload">
+<label for="flaskUrlInput">Flask Upload URL:</label>
+<input id="flaskUrlInput" type="text" value="https://t3kgtlbatra1sb-8768.proxy.runpod.net/upload">
 <br>
 <br>
 <button id="update">Update</button>
@@ -34,7 +34,7 @@ let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
 let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
 let chunkCount = parseInt(document.getElementById('chunkCount').value);
-let flaskUploadURL = document.getElementById('UrlInput').value;
+let flaskUploadURL = document.getElementById('flaskUrlInput').value;
 let shouldRestart = false; // New variable to handle restarts
 let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
 
