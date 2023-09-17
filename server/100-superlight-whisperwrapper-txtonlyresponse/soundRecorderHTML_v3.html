@@ -55,6 +55,7 @@ const initializeMediaRecorder = () => {
         
         config.mediaRecorder.onstop = e => {
           console.log("MediaRecorder stopped");  // Debug statement
+          console.log("shouldContinueRecording inside onstop:", config.shouldContinueRecording);  // Debug statement
 
           if (config.audioBuffer.length > 0) {
             const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
