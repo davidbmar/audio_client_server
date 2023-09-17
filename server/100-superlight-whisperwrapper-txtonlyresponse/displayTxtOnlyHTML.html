@@ -69,42 +69,38 @@
         }
 
         async function updateTranscriptionTable(transcribedText, source_audio_fileName, source_audio_bucket) {
+            console.log("in UpdateTranscription Table"); 
+
             // Get table body element
             const tableBody = document.getElementById('transcriptionBody');
 
             // Create a new row and cells
             const newRow = tableBody.insertRow();
             const cell1 = newRow.insertCell(0);
-            const cell2 = newRow.insertCell(1);
           
             // Set the transcribed text in the first cell
 
             cell1.innerHTML = transcribedText;
+
+            console.log("in UpdateTranscription Table 1"); 
           
             // Create audio and source elements for the second cell
             const audioElement = document.createElement('audio');
             const sourceElement = document.createElement('source');
-          
-            // Get pre-signed URL for audio file stored in S3 bucket
-            const audioURL = await getDownloadPresignedURL(source_audio_bucket, source_audio_fileName);
-          
-            // Set source element attributes
-            sourceElement.src = audioURL;
-            sourceElement.type = 'audio/flac';  // Set MIME type as required
-          
-            // Append source element to audio element
-            audioElement.appendChild(sourceElement);
+
+            console.log("in UpdateTranscription Table 2"); 
           
             // Enable audio controls
             audioElement.controls = true;
           
-            // Append audio element to the second cell
-            cell2.appendChild(audioElement);
-
+            console.log("in UpdateTranscription Table 3"); 
             // Scroll to the bottom
             scrollToBottom();
+            console.log("in UpdateTranscription Table 4"); 
             // Scroll to the newly added row
+
             newRow.scrollIntoView({behavior: "smooth"});
+            console.log("in UpdateTranscription Table 5"); 
         }
  
     </script>
