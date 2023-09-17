@@ -30,7 +30,6 @@ let audioBuffer = [];
 let mediaRecorder;
 let intervalId;
 let shouldContinueRecording = false;
-let uploadURL = document.getElementById('urlInput').value;
 let timeInterval = parseInt(document.getElementById('timeInterval').value);
 let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
 let chunkCount = parseInt(document.getElementById('chunkCount').value);
@@ -66,7 +65,6 @@ async function uploadToLinuxHost(blob) {
 
 	
 document.getElementById('update').onclick = () => {
-  uploadURL = document.getElementById('urlInput').value;
   timeInterval = parseInt(document.getElementById('timeInterval').value);
   sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
   chunkCount = parseInt(document.getElementById('chunkCount').value); // Update the chunk count from the input
