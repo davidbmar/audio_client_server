@@ -113,23 +113,26 @@ document.getElementById('start').onclick = () => {
   startRecording();
 };
 
+const startRecording = () => {
+  console.log("Entering startRecording");  // Debug statement
 
-const startRecording = async () => {
-  console.log("Entering startRecording");  // Debug log
-
+  // Initialize MediaRecorder if not already initialized
   if (!config.isMediaRecorderInitialized) {
-    console.log("Initializing MediaRecorder because it's not initialized");  // Debug log
-    await initializeMediaRecorder();
+    console.log("Initializing MediaRecorder because it's not initialized");  // Debug statement
+    initializeMediaRecorder();
   }
 
-  console.log("MediaRecorder state:", config.mediaRecorder.state);  // Debug log
-  console.log("shouldContinueRecording:", config.shouldContinueRecording);  // Debug log
+  // Update timeInterval from the UI
+  config.timeInterval = parseInt(document.getElementById('timeInterval').value);
 
-  if (config.mediaRecorder && config.mediaRecorder.state !== 'recording') {
-    console.log("Explicitly starting MediaRecorder");  // Debug log
+  // Start new recording with updated timeInterval
+  if (config.isMediaRecorderInitialized) {
+    console.log("Explicitly starting MediaRecorder");  // Debug statement
     config.mediaRecorder.start(config.timeInterval);
+    console.log("MediaRecorder started with timeInterval:", config.timeInterval);  // Debug statement
   }
 };
+
 
 document.getElementById('stop').onclick = () => {
   config.shouldContinueRecording = false;
