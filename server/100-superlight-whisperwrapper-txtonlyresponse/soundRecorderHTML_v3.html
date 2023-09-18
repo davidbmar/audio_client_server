@@ -40,43 +40,35 @@ const config = {
   isMediaRecorderInitialized: false,
 };
 
-
-// Function to initialize MediaRecorder
 const initializeMediaRecorder = () => {
-  return new Promise((resolve, reject) => {
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
-        config.mediaRecorder = new MediaRecorder(stream);
-        config.isMediaRecorderInitialized = true;
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      config.mediaRecorder = new MediaRecorder(stream);
+      config.isMediaRecorderInitialized = true;
+      console.log("MediaRecorder initialized");  // Debug statement
 
-        config.mediaRecorder.ondataavailable = e => {
-          config.audioBuffer.push(e.data);
-        };
+      config.mediaRecorder.ondataavailable = e => {
+        console.log("Data available");  // Debug statement
+        config.audioBuffer.push(e.data);
         
-        config.mediaRecorder.onstop = e => {
-          console.log("MediaRecorder stopped");  // Debug statement
-          console.log("shouldContinueRecording inside onstop:", config.shouldContinueRecording);  // Debug statement
-
-          if (config.audioBuffer.length > 0) {
-            const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
-            uploadToLinuxHost(blob);
-            config.audioBuffer = [];
-          }
-          
-          if (config.shouldContinueRecording) {
-            config.mediaRecorder.start(config.timeInterval);
-          }
-        };
-
-        resolve();
-        console.log("MediaRecorder initialized");  // Debug statement
-
-      })
-      .catch(err => {
-        console.error('getUserMedia error', err);
-        reject(err);
-      });
-  });
+        if (config.shouldContinueRecording) {
+          console.log("Explicitly stopping and starting MediaRecorder");  // Debug statement
+          config.mediaRecorder.stop();
+          config.mediaRecorder.start(config.timeInterval);
+        }
+      };
+      
+      config.mediaRecorder.onstop = e => {
+        console.log("MediaRecorder stopped");  // Debug statement
+        console.log("shouldContinueRecording inside onstop:", config.shouldContinueRecording);  // Debug statement
+        if (config.audioBuffer.length > 0) {
+          const blob = new Blob(config.audioBuffer, { 'type' : 'audio/flac' });
+          uploadToLinuxHost(blob);
+          config.audioBuffer = [];
+        }
+      };
+    })
+    .catch(err => console.error('getUserMedia error', err));
 };
 
 // Function to generate file name
