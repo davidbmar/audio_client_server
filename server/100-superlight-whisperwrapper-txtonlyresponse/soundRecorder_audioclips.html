@@ -58,7 +58,27 @@ let chunkCount = parseInt(document.getElementById('chunkCount').value);
 let flaskUploadURL = document.getElementById('flaskUrlInput').value;
 let shouldRestart = false; // New variable to handle restarts
 let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
+let db;
 
+function initializeIndexedDB() {
+  const request = indexedDB.open("audioDB", 1);
+
+  request.onupgradeneeded = function(event) {
+    db = event.target.result;
+    const objectStore = db.createObjectStore("audioChunks", { autoIncrement: true });
+  };
+
+  request.onsuccess = function(event) {
+    db = event.target.result;
+  };
+
+  request.onerror = function(event) {
+    console.error("IndexedDB error:", event.target.errorCode);
+  };
+}
+
+// Call the function to initialize IndexedDB
+initializeIndexedDB();
 
 // Function to generate file name using the date and sequence number
 const generateFileName = () => {
@@ -117,19 +137,30 @@ const startRecording = () => {
       mediaRecorder.ondataavailable = e => {
         audioBuffer.push(e.data);
       };
-      
+     
       mediaRecorder.onstop = e => {
         if (audioBuffer.length > 0) {
           const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
           uploadToLinuxHost(blob);
           audioBuffer = [];
+      
+          // Save to IndexedDB
+          const transaction = db.transaction(["audioChunks"], "readwrite");
+          const objectStore = transaction.objectStore("audioChunks");
+          const addRequest = objectStore.add(blob);
+      
+          addRequest.onsuccess = function(event) {
+            const id = event.target.result;
+            const fileName = generateFileName();
+            // We'll add a function to update the table here in the next step
+          };
         }
         
         if (shouldContinueRecording) {
           mediaRecorder.start();
         }
       };
-      
+
       // Use user-defined timeInterval for the interval function
       intervalId = setInterval(() => {
         if (mediaRecorder.state === 'recording') {
