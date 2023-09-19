@@ -61,6 +61,17 @@
     var ws;
     var heartbeatInterval;
     var db;
+    var shouldContinueRecording = false;
+    var audioBuffer = [];
+    var mediaRecorder;
+    var intervalId;
+    var uploadURL;
+    var timeInterval;
+    var sequenceNumber;
+    var chunkCount;
+    var flaskUploadURL;
+    var isMediaRecorderInitialized = false;
+
 
     function scrollToBottom() {
         console.log("Attempting to scroll to the bottom.");  // Debugging statement
@@ -72,7 +83,7 @@
         console.log("in UpdateTranscription Table"); 
 
         // Get table body element
-        const tableBody = document.getElementById('transcriptionBody');
+        const tableBody = document.getElementById('commonTableBody');
 
         // Create a new row and cells
         const newRow = tableBody.insertRow();
