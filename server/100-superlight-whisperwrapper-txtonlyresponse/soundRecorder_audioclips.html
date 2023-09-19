@@ -114,7 +114,7 @@ const generateFileName = () => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  const sequence = String(sequenceNumber++).padStart(6, '0');  // Increment sequence number
+  const sequence = String(sequenceNumber).padStart(6, '0');
   return `${year}-${month}-${day}-${sequence}.flac`;
 };
 
@@ -176,12 +176,14 @@ const startRecording = () => {
           const transaction = db.transaction(["audioChunks"], "readwrite");
           const objectStore = transaction.objectStore("audioChunks");
           const addRequest = objectStore.add(blob);
-      
+     
           addRequest.onsuccess = function(event) {
             const id = event.target.result;
             const fileName = generateFileName();
-            updateAudioTable(fileName, id);  // Add this line
+            updateAudioTable(fileName, id);
+            sequenceNumber++;  // Increment sequence number here
           };
+
         }
         
         if (shouldContinueRecording) {
