@@ -2,7 +2,6 @@
 <html>
 <body>
 
-<body>
 <button id="start">Start</button>
 <button id="stop">Stop</button>
 <br>
@@ -17,7 +16,6 @@
 <br>
 <label for="urlInput">Upload URL:</label>
 <input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
-
 <br>
 <br>
 <label for="sequenceInput">Starting Sequence Number:</label>
@@ -26,12 +24,11 @@
 <br>
 <label for="flaskUrlInput">Flask Upload URL:</label>
 <input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
-
 <br>
 <br>
 <button id="update">Update</button>
 
-<!-- This is the audio files that have been recorded.  -->
+<!-- Add this to your HTML -->
 <div id="audioList">
   <table id="audioTable">
     <thead>
@@ -46,7 +43,9 @@
   </table>
 </div>
 
-<script type="text/javasript">
+
+
+<script>
 // Initialize variables
 let audioBuffer = [];
 let mediaRecorder;
@@ -59,55 +58,7 @@ let chunkCount = parseInt(document.getElementById('chunkCount').value);
 let flaskUploadURL = document.getElementById('flaskUrlInput').value;
 let shouldRestart = false; // New variable to handle restarts
 let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
-let db;
 
-function updateAudioTable(fileName, id) {
-  const table = document.getElementById("audioTable").getElementsByTagName('tbody')[0];
-  const newRow = table.insertRow();
-  const cell1 = newRow.insertCell(0);
-  const cell2 = newRow.insertCell(1);
-
-  cell1.innerHTML = fileName;
-
-  const playButton = document.createElement("button");
-  playButton.innerHTML = "Play";
-  playButton.addEventListener("click", () => {
-    // Fetch blob from IndexedDB and play
-    const transaction = db.transaction(["audioChunks"]);
-    const objectStore = transaction.objectStore("audioChunks");
-    const getRequest = objectStore.get(id);
-
-    getRequest.onsuccess = function(event) {
-      const audioBlob = event.target.result;
-      const audioUrl = URL.createObjectURL(audioBlob);
-      const audio = new Audio(audioUrl);
-      audio.play();
-    };
-  });
-
-  cell2.appendChild(playButton);
-}
-
-
-function initializeIndexedDB() {
-  const request = indexedDB.open("audioDB", 1);
-
-  request.onupgradeneeded = function(event) {
-    db = event.target.result;
-    const objectStore = db.createObjectStore("audioChunks", { autoIncrement: true });
-  };
-
-  request.onsuccess = function(event) {
-    db = event.target.result;
-  };
-
-  request.onerror = function(event) {
-    console.error("IndexedDB error:", event.target.errorCode);
-  };
-}
-
-// Call the function to initialize IndexedDB
-initializeIndexedDB();
 
 // Function to generate file name using the date and sequence number
 const generateFileName = () => {
@@ -115,7 +66,7 @@ const generateFileName = () => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  const sequence = String(sequenceNumber).padStart(6, '0');
+  const sequence = String(sequenceNumber++).padStart(6, '0');  // Increment sequence number
   return `${year}-${month}-${day}-${sequence}.flac`;
 };
 
@@ -166,32 +117,19 @@ const startRecording = () => {
       mediaRecorder.ondataavailable = e => {
         audioBuffer.push(e.data);
       };
-     
+      
       mediaRecorder.onstop = e => {
         if (audioBuffer.length > 0) {
           const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
           uploadToLinuxHost(blob);
           audioBuffer = [];
-      
-          // Save to IndexedDB
-          const transaction = db.transaction(["audioChunks"], "readwrite");
-          const objectStore = transaction.objectStore("audioChunks");
-          const addRequest = objectStore.add(blob);
-     
-          addRequest.onsuccess = function(event) {
-            const id = event.target.result;
-            const fileName = generateFileName();
-            updateAudioTable(fileName, id);
-            sequenceNumber++;  // Increment sequence number here
-          };
-
         }
         
         if (shouldContinueRecording) {
           mediaRecorder.start();
         }
       };
-
+      
       // Use user-defined timeInterval for the interval function
       intervalId = setInterval(() => {
         if (mediaRecorder.state === 'recording') {
