@@ -1,356 +1,222 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Unified Transcription and Sound Recording</title>
-</head>
-<body onload="connectWebSocket(); initializeIndexedDB();">
-  <h1>Unified Transcription and Sound Recording</h1>
+<script type="text/javasript">
+// Initialize variables
+let audioBuffer = [];
+let mediaRecorder;
+let intervalId;
+let shouldContinueRecording = false;
+let uploadURL = document.getElementById('urlInput').value;
+let timeInterval = parseInt(document.getElementById('timeInterval').value);
+let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+let chunkCount = parseInt(document.getElementById('chunkCount').value);
+let flaskUploadURL = document.getElementById('flaskUrlInput').value;
+let shouldRestart = false; // New variable to handle restarts
+let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
+let db;
 
-  <!-- Sound Recording Section -->
-  <div id="soundRecordingSection">
-    <button id="start">Start</button>
-    <button id="stop">Stop</button>
-    <br>
-    <br>
-    <label for="timeInterval">Sound Clip Length (ms):</label>
-    <input id="timeInterval" type="number" value="1000"> <!-- Changed to 1000ms -->
-    <br>
-    <br>
-    <label for="chunkCount">Number of Chunks:</label>
-    <input id="chunkCount" type="number" value="10"> <!-- New field -->
-    <br>
-    <br>
-    <label for="urlInput">Upload URL:</label>
-    <input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
-    <br>
-    <br>
-    <label for="sequenceInput">Starting Sequence Number:</label>
-    <input id="sequenceInput" type="number" value="1">
-    <br>
-    <br>
-    <label for="flaskUrlInput">Flask Upload URL:</label>
-    <input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
-    <br>
-    <br>
-    <button id="update">Update</button>
-  </div>
+function updateAudioTable(fileName, id) {
+  const table = document.getElementById("audioTable").getElementsByTagName('tbody')[0];
+  const newRow = table.insertRow();
+  const cell1 = newRow.insertCell(0);
+  const cell2 = newRow.insertCell(1);
 
-  <!-- Common Table -->
-  <div id="tableContainer" style="height: 400px; overflow-y: auto;">
-    <table id="commonTable">
-      <thead>
-        <tr>
-          <th>File Name</th>
-          <th>Play</th>
-          <th>Transcribed Text</th>
-        </tr>
-      </thead>
-      <tbody id="commonTableBody">
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-  </div>
+  cell1.innerHTML = fileName;
 
-  <!-- Transcription Section -->
-  <div id="transcriptionSection">
-    <!-- You can add any additional controls specific to transcription here -->
-  </div>
+  const playButton = document.createElement("button");
+  playButton.innerHTML = "Play";
+  playButton.addEventListener("click", () => {
+    // Fetch blob from IndexedDB and play
+    const transaction = db.transaction(["audioChunks"]);
+    const objectStore = transaction.objectStore("audioChunks");
+    const getRequest = objectStore.get(id);
 
-  <script>
-    // Initialize variables common to both functionalities
-    var ws;
-    var heartbeatInterval;
-    var db;
-    var shouldContinueRecording = false;
-    var audioBuffer = [];
-    var mediaRecorder;
-    var intervalId;
-    var uploadURL;
-    var timeInterval;
-    var sequenceNumber;
-    var chunkCount;
-    var flaskUploadURL;
-    var isMediaRecorderInitialized = false;
-
-
-    function scrollToBottom() {
-        console.log("Attempting to scroll to the bottom.");  // Debugging statement
-        const tableContainer = document.getElementById('tableContainer');
-        tableContainer.scrollTop = tableContainer.scrollHeight;
-    }
-
-    async function updateTranscriptionTable(transcribedText, source_audio_fileName, source_audio_bucket) {
-        console.log("in UpdateTranscription Table"); 
-
-        // Get table body element
-        const tableBody = document.getElementById('commonTableBody');
-
-        // Create a new row and cells
-        const newRow = tableBody.insertRow();
-        const cell1 = newRow.insertCell(0);
-  
-        // Set the transcribed text in the first cell
-
-        cell1.innerHTML = transcribedText;
-
-        console.log("in UpdateTranscription Table 1"); 
-      
-        // Create audio and source elements for the second cell
-        const audioElement = document.createElement('audio');
-        const sourceElement = document.createElement('source');
-
-        console.log("in UpdateTranscription Table 2"); 
-  
-        // Enable audio controls
-        audioElement.controls = true;
-      
-        console.log("in UpdateTranscription Table 3"); 
-        // Scroll to the bottom
-        scrollToBottom();
-        console.log("in UpdateTranscription Table 4"); 
-        // Scroll to the newly added row
-
-        newRow.scrollIntoView({behavior: "smooth"});
-        console.log("in UpdateTranscription Table 5"); 
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    function connectWebSocket() {
-        // Connect to WebSocket server
-        ws = new WebSocket("ws://3.22.47.41:8766/");
-        ws.onopen = function() {
-            console.log("Connected to the server");
-            
-            // Start the heartbeat interval when the connection opens
-            heartbeatInterval = setInterval(function() {
-                console.log("Sending heartbeat");  // Debugging statement
-                
-                ws.send(JSON.stringify({'heartbeat': 'ping'}));
-            }, 5000); // 5 seconds
-        };
-
-        ws.onmessage = function(event) {
-            //console.log("Received a message from the server.");  // Debugging statement
-        
-            // Parse received JSON message
-            var data = JSON.parse(event.data);
-            //console.log("Parsed data:", data);  // Debugging statement
-        
-            // Check if this is a heartbeat message
-            if (data.heartbeat) {
-                console.log("Received a heartbeat message.");  // Debugging statement
-                return;
-            }
-        
-            // Extract and parse the 'file_info' content
-            if (data.file_info) {
-                //console.log("Received 'file_info' key.");  // Debugging statement
-        
-                var fileInfo = JSON.parse(data.file_info);
-                //console.log("Parsed 'file_info':", fileInfo);  // Debugging statement
-        
-                var filename = fileInfo.filename;
-                var transcribedMessage = fileInfo.transcribed_message;
-        
-                //console.log("Filename:", filename);  // Debugging statement
-                //console.log("Transcribed Message:", transcribedMessage);  // Debugging statement
-        
-                // Update the transcription table
-                updateTranscriptionTable(transcribedMessage, filename, "your_S3_bucket_name");
-                //console.log("Updated the transcription table.");  // Debugging statement
-            } else {
-                console.log("Did not receive 'file_info' key.");  // Debugging statement
-            }
-        };
-
-        ws.onclose = function() {
-            console.log("Connection is closed");
-
-        // Clear the heartbeat interval when the connection closes
-            clearInterval(heartbeatInterval);
-        };
-    } // END function connectWebSocket() 
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    function initializeIndexedDB() {
-      const request = indexedDB.open("audioDB", 1);
-    
-      request.onupgradeneeded = function(event) {
-        db = event.target.result;
-        const objectStore = db.createObjectStore("audioChunks", { autoIncrement: true });
-      };
-    
-      request.onsuccess = function(event) {
-        db = event.target.result;
-      };
-    
-      request.onerror = function(event) {
-        console.error("IndexedDB error:", event.target.errorCode);
-      };
-    } // END function initializeIndexedDB() 
-    //////////////////////////////////////////////////////////////////////////////////////////////
-
-    // Common function to update the table
-    function updateCommonTable(fileName, audioBlob, transcribedText) {
-      const tableBody = document.getElementById('commonTableBody');
-      const newRow = tableBody.insertRow();
-      const cell1 = newRow.insertCell(0);
-      const cell2 = newRow.insertCell(1);
-      const cell3 = newRow.insertCell(2);
-
-      // Set the filename
-      cell1.innerHTML = fileName;
-
-      // Create play button
-      const playButton = document.createElement("button");
-      playButton.innerHTML = "Play";
-      playButton.addEventListener("click", () => {
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.play();
-      });
-      cell2.appendChild(playButton);
-
-      // Set the transcribed text
-      cell3.innerHTML = transcribedText;
-    }
-
-    //////////////////////////////////////////////////////////////////////////////////////////////
-    function updateAudioTable(fileName, id) {
-      const table = document.getElementById("audioTable").getElementsByTagName('tbody')[0];
-      const newRow = table.insertRow();
-      const cell1 = newRow.insertCell(0);
-      const cell2 = newRow.insertCell(1);
-    
-      cell1.innerHTML = fileName;
-    
-      const playButton = document.createElement("button");
-      playButton.innerHTML = "Play";
-      playButton.addEventListener("click", () => {
-        // Fetch blob from IndexedDB and play
-        const transaction = db.transaction(["audioChunks"]);
-        const objectStore = transaction.objectStore("audioChunks");
-        const getRequest = objectStore.get(id);
-    
-        getRequest.onsuccess = function(event) {
-          const audioBlob = event.target.result;
-          const audioUrl = URL.createObjectURL(audioBlob);
-          const audio = new Audio(audioUrl);
-          audio.play();
-        };
-      });
-    
-      cell2.appendChild(playButton);
-    }
-
-    // Function to generate file name using the date and sequence number
-    const generateFileName = () => {
-      const date = new Date();
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const sequence = String(sequenceNumber).padStart(6, '0');
-      return `${year}-${month}-${day}-${sequence}.flac`;
+    getRequest.onsuccess = function(event) {
+      const audioBlob = event.target.result;
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.play();
     };
-	  
-    // This function uploads to the LinuxHost, in contrast, of uploading to S3.
-    async function uploadToLinuxHost(blob) {
-      const fileKey = generateFileName();
-      console.log("Generated fileKey:", fileKey);  // Debug log
-      const formData = new FormData();
-      formData.append("file", blob, fileKey);
-    
-      await fetch(flaskUploadURL, {
-        method: 'POST',
-        body: formData,
-      }).then(response => response.text())  // Added this for debug
-        .then(data => console.log("Server Response:", data))  // Debug log
-        .catch((error) => console.error("Error:", error));  // Debug log
-    }
+  });
 
-    const startRecording = () => {
-      timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
-    
-      if (isMediaRecorderInitialized) {
-        mediaRecorder.start(timeInterval);  // Add timeslice parameter here
-        return;
-      }
-    
-      navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          mediaRecorder = new MediaRecorder(stream);
-          mediaRecorder.start(timeInterval);  // Add timeslice parameter here
-          isMediaRecorderInitialized = true;
-    
-          mediaRecorder.ondataavailable = e => {
-            audioBuffer.push(e.data);
-          };
+  cell2.appendChild(playButton);
+}
+
+
+function initializeIndexedDB() {
+  const request = indexedDB.open("audioDB", 1);
+
+  request.onupgradeneeded = function(event) {
+    db = event.target.result;
+    const objectStore = db.createObjectStore("audioChunks", { autoIncrement: true });
+  };
+
+  request.onsuccess = function(event) {
+    db = event.target.result;
+  };
+
+  request.onerror = function(event) {
+    console.error("IndexedDB error:", event.target.errorCode);
+  };
+}
+
+// Call the function to initialize IndexedDB
+initializeIndexedDB();
+
+// Function to generate file name using the date and sequence number
+const generateFileName = () => {
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const sequence = String(sequenceNumber).padStart(6, '0');
+  return `${year}-${month}-${day}-${sequence}.flac`;
+};
+
+// This function uploads to the LinuxHost, in contrast, of uploading to S3.
+async function uploadToLinuxHost(blob) {
+  const fileKey = generateFileName();
+  console.log("Generated fileKey:", fileKey);  // Debug log
+  const formData = new FormData();
+  formData.append("file", blob, fileKey);
+
+  await fetch(flaskUploadURL, {
+    method: 'POST',
+    body: formData,
+  }).then(response => response.text())  // Added this for debug
+    .then(data => console.log("Server Response:", data))  // Debug log
+    .catch((error) => console.error("Error:", error));  // Debug log
+}
+
+	
+document.getElementById('update').onclick = () => {
+  uploadURL = document.getElementById('urlInput').value;
+  timeInterval = parseInt(document.getElementById('timeInterval').value);
+  sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+  chunkCount = parseInt(document.getElementById('chunkCount').value); // Update the chunk count from the input
+  flaskUploadURL = document.getElementById('flaskUrlInput').value;    // this is the url for the EC2 host / RunPod.io host.
+};
+
+document.getElementById('start').onclick = () => {
+  shouldContinueRecording = true;
+  startRecording();
+};
+
+
+const startRecording = () => {
+  timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
+
+  if (isMediaRecorderInitialized) {
+    mediaRecorder.start(timeInterval);  // Add timeslice parameter here
+    return;
+  }
+
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      mediaRecorder = new MediaRecorder(stream);
+      mediaRecorder.start(timeInterval);  // Add timeslice parameter here
+      isMediaRecorderInitialized = true;
+
+      mediaRecorder.ondataavailable = e => {
+        audioBuffer.push(e.data);
+      };
      
-          mediaRecorder.onstop = e => {
-            if (audioBuffer.length > 0) {
-              const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-              uploadToLinuxHost(blob);
-              audioBuffer = [];
-          
-              // Save to IndexedDB
-              const transaction = db.transaction(["audioChunks"], "readwrite");
-              const objectStore = transaction.objectStore("audioChunks");
-              const addRequest = objectStore.add(blob);
-         
-              addRequest.onsuccess = function(event) {
-                const id = event.target.result;
-                const fileName = generateFileName();
-                updateAudioTable(fileName, id);
-                sequenceNumber++;  // Increment sequence number here
-              };
-    
-            }
-            
-            if (shouldContinueRecording) {
-              mediaRecorder.start();
-            }
+      mediaRecorder.onstop = e => {
+        if (audioBuffer.length > 0) {
+          const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+          uploadToLinuxHost(blob);
+          audioBuffer = [];
+      
+          // Save to IndexedDB
+          const transaction = db.transaction(["audioChunks"], "readwrite");
+          const objectStore = transaction.objectStore("audioChunks");
+          const addRequest = objectStore.add(blob);
+     
+          addRequest.onsuccess = function(event) {
+            const id = event.target.result;
+            const fileName = generateFileName();
+            updateAudioTable(fileName, id);
+            sequenceNumber++;  // Increment sequence number here
           };
-    
-          // Use user-defined timeInterval for the interval function
-          intervalId = setInterval(() => {
-            if (mediaRecorder.state === 'recording') {
-              mediaRecorder.stop();
-            }
-          }, timeInterval); // Use user-defined time interval
-        })
-        .catch(err => console.error('getUserMedia error', err));
-    };
 
-    // Event listeners for sound recording
-    document.getElementById('start').onclick = () => {
-      // ... (Your existing start recording code here)
-      shouldContinueRecording = true;
-      startRecording();
-    };
+        }
+        
+        if (shouldContinueRecording) {
+          mediaRecorder.start();
+        }
+      };
 
-    document.getElementById('stop').onclick = () => {
-      // ... (Your existing stop recording code here)
-      shouldContinueRecording = false;
-      if (mediaRecorder && mediaRecorder.state == 'recording') {
-        mediaRecorder.stop();
-      }
-          if (intervalId) {
-        clearInterval(intervalId);
-      }
-        isMediaRecorderInitialized = false;  
-    };
+      // Use user-defined timeInterval for the interval function
+      intervalId = setInterval(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+        }
+      }, timeInterval); // Use user-defined time interval
+      
+    })
+    .catch(err => console.error('getUserMedia error', err));
+};
 
-    document.getElementById('update').onclick = () => {
-      // ... (Your existing update settings code here)
-      uploadURL = document.getElementById('urlInput').value;
-      timeInterval = parseInt(document.getElementById('timeInterval').value);
-      sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
-      chunkCount = parseInt(document.getElementById('chunkCount').value); // Update the chunk count from the input
-      flaskUploadURL = document.getElementById('flaskUrlInput').value;    // this is the url for the EC2 host / RunPod.io host.
-    };
-  </script>
+document.getElementById('stop').onclick = () => {
+  shouldContinueRecording = false;
+  if (mediaRecorder && mediaRecorder.state == 'recording') {
+    mediaRecorder.stop();
+  }
+  if (intervalId) {
+    clearInterval(intervalId);
+  }
+  isMediaRecorderInitialized = false;  
+
+
+};
+</script>
+</head>
+
+
+
+<body>
+<button id="start">Start</button>
+<button id="stop">Stop</button>
+<br>
+<br>
+<label for="timeInterval">Sound Clip Length (ms):</label>
+<input id="timeInterval" type="number" value="1000"> <!-- Changed to 1000ms -->
+<br>
+<br>
+<label for="chunkCount">Number of Chunks:</label>
+<input id="chunkCount" type="number" value="10"> <!-- New field -->
+<br>
+<br>
+<label for="urlInput">Upload URL:</label>
+<input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test
+<br>
+<br>
+<label for="sequenceInput">Starting Sequence Number:</label>
+<input id="sequenceInput" type="number" value="1">
+<br>
+<br>
+<label for="flaskUrlInput">Flask Upload URL:</label>
+<input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:
+<br>
+<br>
+<button id="update">Update</button>
+
+<!-- This is the audio files that have been recorded.  -->
+<div id="audioList">
+  <table id="audioTable">
+    <thead>
+      <tr>
+        <th>File Name</th>
+        <th>Play</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows will be added here dynamically -->
+    </tbody>
+  </table>
+</div>
+
 </body>
 </html>
 
