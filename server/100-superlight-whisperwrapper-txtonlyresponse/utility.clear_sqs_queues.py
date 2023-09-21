@@ -21,7 +21,9 @@ def clear_sqs_queue(queue_url, region_name='us-east-2'):
         response = sqs.receive_message(
             QueueUrl=queue_url,
             AttributeNames=['All'],
-            MaxNumberOfMessages=10  # Max number of messages to receive in one go
+            MaxNumberOfMessages=10,  # Max number of messages to receive in one go
+            VisibilityTimeout=5  # Visibility timeout in seconds
+
         )
 
         # Check if the 'Messages' key exists in the response
