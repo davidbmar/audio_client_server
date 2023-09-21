@@ -1,10 +1,12 @@
 #!/usr/bin/python3
 from flask import Flask, request
+from flask_cors import CORS
 import logging
 import os
 import boto3
 
 app = Flask(__name__)
+CORS(app)
 logging.basicConfig(level=logging.DEBUG)
 
 
