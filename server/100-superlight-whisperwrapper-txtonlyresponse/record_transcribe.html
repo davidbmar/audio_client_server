@@ -28,35 +28,6 @@
   <br>
   <button id="update">Update</button>
   
-  <!-- This is the audio files that have been recorded.  -->
-  <div id="audioList">
-    <table id="audioTable">
-      <thead>
-        <tr>
-          <th>File Name</th>
-          <th>Play</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-  </div>
-
-  <div id="tableContainer" style="height: 400px; overflow-y: auto;">
-    <table id="transcriptionTable">
-      <thead>
-        <tr>
-          <th>Transcribed Text</th>
-          <th>Play Audio</th>
-        </tr>
-      </thead>
-      <tbody id="transcriptionBody">
-        <!-- Rows will be added here dynamically -->
-      </tbody>
-    </table>
-  </div>
-
   <div id="unifiedTableContainer" style="height: 400px; overflow-y: auto;">
     <table id="unifiedTable">
       <thead>
@@ -124,8 +95,6 @@
                 //console.log("Filename:", filename);  // Debugging statement
                 //console.log("Transcribed Message:", transcribedMessage);  // Debugging statement
         
-                // Update the transcription table
-                //updateTranscriptionTable(transcribedMessage, filename, "your_S3_bucket_name");
                 updateUnifiedTable(filename, transcribedMessage, null);
                 //console.log("Updated the transcription table.");  // Debugging statement
             } else {
@@ -139,41 +108,6 @@
             // Clear the heartbeat interval when the connection closes
             clearInterval(heartbeatInterval);
         };
-    }
-
-    async function updateTranscriptionTable(transcribedText, source_audio_fileName, source_audio_bucket) {
-        console.log("in UpdateTranscription Table"); 
-
-        // Get table body element
-        const tableBody = document.getElementById('transcriptionBody');
-
-        // Create a new row and cells
-        const newRow = tableBody.insertRow();
-        const cell1 = newRow.insertCell(0);
-      
-        // Set the transcribed text in the first cell
-
-        cell1.innerHTML = transcribedText;
-
-        console.log("in UpdateTranscription Table 1"); 
-      
-        // Create audio and source elements for the second cell
-        const audioElement = document.createElement('audio');
-        const sourceElement = document.createElement('source');
-
-        console.log("in UpdateTranscription Table 2"); 
-      
-        // Enable audio controls
-        audioElement.controls = true;
-      
-        console.log("in UpdateTranscription Table 3"); 
-        // Scroll to the bottom
-        scrollToBottom();
-        console.log("in UpdateTranscription Table 4"); 
-        // Scroll to the newly added row
-
-        newRow.scrollIntoView({behavior: "smooth"});
-        console.log("in UpdateTranscription Table 5"); 
     }
 
   </script>
@@ -193,37 +127,6 @@
   let shouldRestart = false; // New variable to handle restarts
   let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
   let db;
-  
-  function updateAudioTable(fileName, id) {
-    console.log("updateAudioTable called with fileName:", fileName, "and id:", id);  // Debugging statement
-
-    const table = document.getElementById("audioTable").getElementsByTagName('tbody')[0];
-    const newRow = table.insertRow();
-    const cell1 = newRow.insertCell(0);
-    const cell2 = newRow.insertCell(1);
-  
-      cell1.innerHTML = fileName;
-  
-    const playButton = document.createElement("button");
-    playButton.innerHTML = "Play";
-    playButton.addEventListener("click", () => {
-      // Fetch blob from IndexedDB and play
-      const transaction = db.transaction(["audioChunks"]);
-      const objectStore = transaction.objectStore("audioChunks");
-      const getRequest = objectStore.get(id);
-  
-      getRequest.onsuccess = function(event) {
-        const audioBlob = event.target.result;
-        console.log("Retrieved audioBlob:", audioBlob);  // Debugging statement
-        const audioUrl = URL.createObjectURL(audioBlob);
-        const audio = new Audio(audioUrl);
-        audio.play();
-      };
-    });
-  
-    cell2.appendChild(playButton);
-  }
-  
   
   function initializeIndexedDB() {
     const request = indexedDB.open("audioDB", 1);
@@ -316,7 +219,6 @@
             addRequest.onsuccess = function(event) {
               const id = event.target.result;
               const fileName = generateFileName();
-              //updateAudioTable(fileName, id);
               updateUnifiedTable(fileName,null,id)
               sequenceNumber++;  // Increment sequence number here
             };
@@ -399,6 +301,11 @@
   
       cell2.appendChild(playButton);
       cell3.innerHTML = transcribedText || "Transcribing...";  // If transcription is not yet available
+
+      // Scroll to the bottom
+      const unifiedTableContainer = document.getElementById('unifiedTableContainer');
+      unifiedTableContainer.scrollTop = unifiedTableContainer.scrollHeight;
+
     }
   }
 
@@ -432,6 +339,8 @@
  </script> 
 </body>
 </html>
+
+
 
 
 
