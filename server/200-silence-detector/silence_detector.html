@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-time Sound and Silence Detection</title>
+</head>
+<body>
+
+  <h1>Real-time Sound and Silence Detection</h1>
+  <button id="start">Start Recording</button>
+  <button id="stop">Stop Recording</button>
+  <p id="status">Status: Not Recording</p>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let soundDetected = false;
+    let checkInterval;
+    const MIN_DECIBELS = -45;
+
+    document.getElementById('start').addEventListener('click', () => {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+          mediaRecorder = new MediaRecorder(stream);
+          mediaRecorder.start();
+          document.getElementById('status').innerText = "Status: Recording";
+
+          mediaRecorder.addEventListener("dataavailable", event => {
+            audioChunks.push(event.data);
+          });
+
+          const audioContext = new AudioContext();
+          const audioStreamSource = audioContext.createMediaStreamSource(stream);
+          const analyser = audioContext.createAnalyser();
+          analyser.minDecibels = MIN_DECIBELS;
+          audioStreamSource.connect(analyser);
+
+          const bufferLength = analyser.frequencyBinCount;
+          const domainData = new Uint8Array(bufferLength);
+
+          const detectSound = () => {
+            analyser.getByteFrequencyData(domainData);
+
+            for (let i = 0; i < bufferLength; i++) {
+              if (domainData[i] > 0) {
+                soundDetected = true;
+                break;
+              }
+            }
+
+            window.requestAnimationFrame(detectSound);
+          };
+
+          window.requestAnimationFrame(detectSound);
+
+          // Check sound detection every second
+          checkInterval = setInterval(() => {
+            document.getElementById('status').innerText = soundDetected ? "Status: Sound Detected" : "Status: Silence Detected";
+            soundDetected = false;  // Reset for the next second
+          }, 200);
+        })
+        .catch(err => {
+          console.error('Error accessing the microphone:', err);
+        });
+    });
+
+    document.getElementById('stop').addEventListener('click', () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        clearInterval(checkInterval);  // Stop checking
+        document.getElementById('status').innerText = "Status: Not Recording";
+      }
+    });
+  </script>
+
+</body>
+</html>
+
