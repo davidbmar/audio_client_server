@@ -26,6 +26,11 @@
   <input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
   <br>
   <br>
+  <label for="MIN_DECIBELS">MIN_DECIBELS:</label>
+  <input id="MIN_DECIBELS" type="text" value="-60"><br>
+  <label for="MIN_DECIBELS">Minimum amount of Decibels for silence detection. -100db more Senstive, -10dB less sensitive.</label>
+  <br>
+  <br>
   <button id="toggle">Toggle Append Mode</button>
   <p id="appendMode">appendMode: Not Toggled</p>
   <p id="soundDetected">soundDetected: not started</p>
@@ -136,7 +141,8 @@
   // New JavaScript code for sound detection
   let soundDetected = false;
   let checkInterval;
-  const MIN_DECIBELS = -45;
+  let MIN_DECIBELS = document.getElementById('MIN_DECIBELS').value;
+  //const MIN_DECIBELS = -60;  //-100dB makes the setting more senstive so it will consider more sound as noise, vs -10dB you need a louder sound to prevent the silence detected status from being triggered.
 
 
   
@@ -245,7 +251,7 @@
         checkInterval = setInterval(() => {
           document.getElementById('soundDetected').innerText = soundDetected ? "Status: Sound Detected" : "Status: Silence Detected";
           soundDetected = false;  // Reset for the next second
-        }, 200);
+        }, 50);
        
         mediaRecorder.onstop = e => {
           if (audioBuffer.length > 0) {
