@@ -26,6 +26,10 @@
   <input id="flaskUrlInput" type="text" value="http://ec2-3-22-47-41.us-east-2.compute.amazonaws.com:8768/upload">
   <br>
   <br>
+  <button id="toggle">Toggle Append Mode</button>
+  <p id="status">Status: Not Toggled</p>
+  <br>
+  <br>
   <button id="update">Update</button>
   
   <div id="unifiedTableContainer" style="height: 400px; overflow-y: auto;">
@@ -127,6 +131,8 @@
   let shouldRestart = false; // New variable to handle restarts
   let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
   let db;
+  let appendMode = false;
+
   
   function initializeIndexedDB() {
     const request = indexedDB.open("audioDB", 1);
@@ -207,24 +213,33 @@
        
         mediaRecorder.onstop = e => {
           if (audioBuffer.length > 0) {
-            const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
-            uploadToLinuxHost(blob);
-            audioBuffer = [];
-        
-            // Save to IndexedDB
-            const transaction = db.transaction(["audioChunks"], "readwrite");
-            const objectStore = transaction.objectStore("audioChunks");
-            const addRequest = objectStore.add(blob);
-       
-            addRequest.onsuccess = function(event) {
-              const id = event.target.result;
-              const fileName = generateFileName();
-              updateUnifiedTable(fileName,null,id)
-              sequenceNumber++;  // Increment sequence number here
-            };
+            if (appendMode){ 
+              // if in append mode, keep adding to the audioBufffer and do not upload yet.
+              if (audioBuffer.length >= chunkCount) {
+                const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+                uploadToLinuxHost(blob);
+                audioBuffer = [];
+              }
+            } else {
+              // else upload the code, we are not in the special case of continue don't upload.
+              const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+              uploadToLinuxHost(blob);
+              audioBuffer = [];
+          
+              // Save to IndexedDB
+              const transaction = db.transaction(["audioChunks"], "readwrite");
+              const objectStore = transaction.objectStore("audioChunks");
+              const addRequest = objectStore.add(blob);
+         
+              addRequest.onsuccess = function(event) {
+                const id = event.target.result;
+                const fileName = generateFileName();
+                updateUnifiedTable(fileName,null,id)
+                sequenceNumber++;  // Increment sequence number here
+              };
+            }
   
           }
-          
           if (shouldContinueRecording) {
             mediaRecorder.start();
           }
@@ -250,9 +265,14 @@
       clearInterval(intervalId);
     }
     isMediaRecorderInitialized = false;  
-  
-  
   };
+  // Add this code to your script
+  document.getElementById('toggle').onclick = () => {
+    appendMode = !appendMode; // Toggle the appendMode
+    console.log("Append Mode:", appendMode); // Debugging statement
+    document.getElementById('status').innerText = `AppendMode:${appendMode}`;
+  };
+
   </script>
 
 
@@ -339,6 +359,7 @@
  </script> 
 </body>
 </html>
+
 
 
 
