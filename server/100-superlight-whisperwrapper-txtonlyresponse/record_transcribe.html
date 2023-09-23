@@ -27,7 +27,8 @@
   <br>
   <br>
   <button id="toggle">Toggle Append Mode</button>
-  <p id="status">Status: Not Toggled</p>
+  <p id="appendMode">appendMode: Not Toggled</p>
+  <p id="soundDetected">soundDetected: not started</p>
   <br>
   <br>
   <button id="update">Update</button>
@@ -132,6 +133,11 @@
   let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
   let db;
   let appendMode = false;
+  // New JavaScript code for sound detection
+  let soundDetected = false;
+  let checkInterval;
+  const MIN_DECIBELS = -45;
+
 
   
   function initializeIndexedDB() {
@@ -210,6 +216,36 @@
         mediaRecorder.ondataavailable = e => {
           audioBuffer.push(e.data);
         };
+
+        // added code for silence detection
+        const audioContext = new AudioContext();
+        const audioStreamSource = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.minDecibels = MIN_DECIBELS;
+        audioStreamSource.connect(analyser);
+        const bufferLength = analyser.frequencyBinCount;
+        const domainData = new Uint8Array(bufferLength);
+        const detectSound = () => {
+          analyser.getByteFrequencyData(domainData);
+          for (let i = 0; i < bufferLength; i++) {
+            if (domainData[i] > 0) {
+              soundDetected = true;              // Sound Detected, set the flag to true.
+              appendMode=true;                   // When there is sound flip to continue appending to the soundfile as opposed to breaking in the middle.
+              document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+              break;
+            }else{
+              soundDetected = false;             // When no sound is detected.
+              appendMode=false;                  // You can break the file as set by the interval.
+              document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+            }
+          }
+          window.requestAnimationFrame(detectSound);
+        };
+        window.requestAnimationFrame(detectSound);
+        checkInterval = setInterval(() => {
+          document.getElementById('soundDetected').innerText = soundDetected ? "Status: Sound Detected" : "Status: Silence Detected";
+          soundDetected = false;  // Reset for the next second
+        }, 200);
        
         mediaRecorder.onstop = e => {
           if (audioBuffer.length > 0) {
@@ -219,6 +255,11 @@
                 const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
                 uploadToLinuxHost(blob);
                 audioBuffer = [];
+
+                appendMode=false;
+                console.log("append Mode:", appendMode); // Debugging statement
+                document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+
               }
             } else {
               // else upload the code, we are not in the special case of continue don't upload.
@@ -269,8 +310,8 @@
   // Add this code to your script
   document.getElementById('toggle').onclick = () => {
     appendMode = !appendMode; // Toggle the appendMode
-    console.log("Append Mode:", appendMode); // Debugging statement
-    document.getElementById('status').innerText = `AppendMode:${appendMode}`;
+    console.log("append Mode:", appendMode); // Debugging statement
+    document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
   };
 
   </script>
@@ -359,6 +400,7 @@
  </script> 
 </body>
 </html>
+
 
 
 
