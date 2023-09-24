@@ -11,6 +11,11 @@ class WebSocketSQSServer:
         self.sqs = boto3.client('sqs', region_name='us-east-2')
         self.sqs_queue_url = sqs_queue_url
         self.ws_port = ws_port
+        self.awaiting_pong = False  
+
+    async def pong_received(self, pong_data):
+        if pong_data == b'keepalive':
+            self.awaiting_pong = False  # Reset the flag
 
     # hearbeat keep alive 
     async def consumer_handler(self, websocket, path):
@@ -24,14 +29,21 @@ class WebSocketSQSServer:
             print("Entered producer_handler...")  # Debugging statement
             ping_interval = 10  # Ping every 10 seconds
             last_ping_time = time.time()
+            websocket.pong_received = self.pong_received  # set the pong handler
+
 
             while True:
                 current_time = time.time()
 
                 if current_time - last_ping_time >= ping_interval:
-                    print("Sending ping...")  # Debugging statement
-                    await websocket.ping("keepalive")
-                    last_ping_time = current_time
+                    if not self.awaiting_pong:  # <-- New Line: check if a pong is pending
+                        print("Sending ping...")  # Debugging statement
+                        await websocket.ping("keepalive")
+                        self.awaiting_pong = True  # <-- New Line: set the flag
+                        last_ping_time = current_time
+                    else:
+                        print("Skipped sending ping because waiting for pong.")
+
 
                 print("Fetching messages from SQS...")  # Debugging statement
                 messages = self.sqs.receive_message(QueueUrl=self.sqs_queue_url, MaxNumberOfMessages=10)
