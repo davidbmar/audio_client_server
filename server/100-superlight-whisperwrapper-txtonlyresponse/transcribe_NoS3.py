@@ -39,14 +39,11 @@ class SpeechTranscriber:
         )
         print(f"Message sent with ID: {response['MessageId']}")
 
-
-
     # Modified Code
     def transcribe(self, file):
-        # Determine the file format from the filename
-        file_format = re.search(r'\.(flac|ogg)$', filename).group(1)
-
-        segments, info = self.model.transcribe(file, language="en", beam_size=5)  # Added 'file_format'
+        filename = os.path.basename(file)  # Get the base name of the file from its full path
+        file_format = re.search(r'\.(flac|ogg)$', filename).group(1)  # Extract file extension
+        segments, info = self.model.transcribe(file, language="en", beam_size=5)  
         transcribed_message = ""
     
         for segment in segments:
@@ -64,7 +61,7 @@ class SpeechTranscriber:
 
         # Modified line below: Check for either .flac or .ogg extension
         if re.search(r'\.(flac|ogg)$', filename):
-            self.transcribe(full_path, filename)
+            self.transcribe(full_path)
 
     def start(self):
         try:
