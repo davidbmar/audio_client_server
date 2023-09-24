@@ -1,6 +1,82 @@
 <!DOCTYPE html>
 <html>
-<body onload="connectWebSocket()" >
+<head>
+
+<script type="text/javascript">
+  var ws;
+
+  function scrollToBottom() {
+      console.log("Attempting to scroll to the bottom.");  // Debugging statement
+      const tableContainer = document.getElementById('tableContainer');
+      tableContainer.scrollTop = tableContainer.scrollHeight;
+  }
+
+  // Function to send heartbeat
+  const sendHeartbeat = () => {
+    console.log("Sending Heartbeat.");  // Debugging statement
+    // Create a JSON object for the heartbeat message
+    const heartbeatMessage = JSON.stringify({ "heartbeat": "ping", });
+    // Send the heartbeat message to the server.
+    ws.send(heartbeatMessage);
+  };
+
+  function connectWebSocket() {
+    // Connect to WebSocket server
+    let ws;
+    try { 
+      ws = new WebSocket("ws://3.22.47.41:8766/");
+
+      console.log("Opened websocket..");  // Debugging statement
+
+      // Event listener for when the WebSocket connection is established
+      ws.addEventListener('open', function(event) {
+        console.log("Connected to the server");
+        setInterval(sendHeartbeat, 5000);
+      });    
+  
+      ws.addEventListener('message', function(event) {
+          // Parse received JSON message
+          var data = JSON.parse(event.data);
+          //console.log("Parsed data:", data);  // Debugging statement
+      
+          // Check if this is a heartbeat message
+          if (data.heartbeat) {
+              console.log("Received a heartbeat message.");  // Debugging statement
+              return;
+          }
+      
+            // Extract and parse the 'file_info' content
+          if (data.file_info) {
+              var fileInfo = JSON.parse(data.file_info);
+              var filename = fileInfo.filename;
+              var transcribedMessage = fileInfo.transcribed_message;
+              updateUnifiedTable(filename, transcribedMessage, null);
+          } else {
+              console.log("Did not receive 'file_info' key.");  // Debugging statement
+          }
+      });
+  
+      ws.onopen = function() {
+        console.log("Connection opened!"); 
+        ws.send("test"); // Send test message
+      }
+  
+      ws.onclose = function() {
+          console.log("Connection is closed");
+      };
+  
+      ws.onerror = function(error) {
+        console.log("Server : clientDisplay_TxtOnly maybe down!", error);
+      };
+    } catch (e) {
+      console.log("Could not open WebSocket to clientDisplay_TxtOnly");
+    }
+  }
+</script>
+</head>  
+
+<html>
+<body onload="connectWebSocket();">
 
   <button id="start">Start</button>
   <button id="stop">Stop</button>
@@ -63,89 +139,6 @@
 
  
   
-  <script type="text/javascript">
-    var ws;
-
-    function scrollToBottom() {
-        console.log("Attempting to scroll to the bottom.");  // Debugging statement
-        const tableContainer = document.getElementById('tableContainer');
-        tableContainer.scrollTop = tableContainer.scrollHeight;
-    }
-
-    // Function to send heartbeat
-    const sendHeartbeat = () => {
-      // Create a JSON object for the heartbeat message
-      const heartbeatMessage = JSON.stringify({ "heartbeat": "ping", });
-      // Send the heartbeat message to the server.
-      ws.send(heartbeatMessage);
-    };
-
-    // Event listener for when the WebSocket connection is established
-    ws.addEventListener('open', function(event) {
-      setInterval(sendHeartbeat, 5000);
-    });    
-
-    function connectWebSocket() {
-        // Connect to WebSocket server
-        ws = new WebSocket("ws://3.22.47.41:8766/");
-        ws.onopen = function() {
-        console.log("Connected to the server");
-
-        // Function to send heartbeat
-        const sendHeartbeat = () => {
-          // Create a JSON object for the heartbeat message
-          const heartbeatMessage = JSON.stringify({ "heartbeat": "ping", });
-          // Send the heartbeat message to the server.
-          ws.send(heartbeatMessage);
-        };
-    
-        // Event listener for when the WebSocket connection is established
-        ws.addEventListener('open', function(event) {
-          setInterval(sendHeartbeat, 5000);
-        });    
-
-        ws.addEventListener('message', function(event) {
-            //console.log("Received a message from the server.");  // Debugging statement
-        
-            // Parse received JSON message
-            var data = JSON.parse(event.data);
-            //console.log("Parsed data:", data);  // Debugging statement
-        
-            // Check if this is a heartbeat message
-            if (data.heartbeat) {
-                console.log("Received a heartbeat message.");  // Debugging statement
-                return;
-            }
-        
-            // Extract and parse the 'file_info' content
-            if (data.file_info) {
-                //console.log("Received 'file_info' key.");  // Debugging statement
-        
-                var fileInfo = JSON.parse(data.file_info);
-                //console.log("Parsed 'file_info':", fileInfo);  // Debugging statement
-        
-                var filename = fileInfo.filename;
-                var transcribedMessage = fileInfo.transcribed_message;
-        
-                //console.log("Filename:", filename);  // Debugging statement
-                //console.log("Transcribed Message:", transcribedMessage);  // Debugging statement
-        
-                updateUnifiedTable(filename, transcribedMessage, null);
-                //console.log("Updated the transcription table.");  // Debugging statement
-            } else {
-                console.log("Did not receive 'file_info' key.");  // Debugging statement
-            }
-        };
-
-        ws.onclose = function() {
-            console.log("Connection is closed");
-
-            // Clear the heartbeat interval when the connection closes
-            clearInterval(heartbeatInterval);
-        };
-    }
-
-  </script>
 
 
   <script>
@@ -436,6 +429,7 @@
  </script> 
 </body>
 </html>
+
 
 
 
