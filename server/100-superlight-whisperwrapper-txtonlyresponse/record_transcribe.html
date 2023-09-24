@@ -31,6 +31,14 @@
   <label for="MIN_DECIBELS">Minimum amount of Decibels for silence detection. -100db more Senstive, -10dB less sensitive.</label>
   <br>
   <br>
+  <label for="fileFormat">File Format:</label>
+  <input type="radio" id="flacFormat" name="fileFormat" value="flac" checked>
+  <label for="flacFormat">FLAC</label>
+  <input type="radio" id="oggFormat" name="fileFormat" value="ogg">
+  <label for="oggFormat">OGG</label>
+  <br>
+  <br>
+
   <button id="toggle">Toggle Append Mode</button>
   <p id="appendMode">appendMode: Not Toggled</p>
   <p id="soundDetected">soundDetected: not started</p>
@@ -165,21 +173,24 @@
   
   // Call the function to initialize IndexedDB
   initializeIndexedDB();
-  
-  // Function to generate file name using the date and sequence number
+ 
   const generateFileName = () => {
     const date = new Date();
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
     const sequence = String(sequenceNumber).padStart(6, '0');
-    return `${year}-${month}-${day}-${sequence}.flac`;
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value;
+    return `${year}-${month}-${day}-${hour}${minute}-${sequence}.${selectedFormat}`;
   };
-  
+
+
   // This function uploads to the LinuxHost, in contrast, of uploading to S3.
   async function uploadToLinuxHost(blob) {
     const fileKey = generateFileName();
-    console.log("Generated fileKey:", fileKey);  // Debug log
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
     const formData = new FormData();
     formData.append("file", blob, fileKey);
   
@@ -258,7 +269,8 @@
             if (appendMode){ 
               // if in append mode, keep adding to the audioBufffer and do not upload yet.
               if (audioBuffer.length >= chunkCount) {
-                const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+                const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
+                const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
                 uploadToLinuxHost(blob);
                 audioBuffer = [];
 
@@ -269,7 +281,8 @@
               }
             } else {
               // else upload the code, we are not in the special case of continue don't upload.
-              const blob = new Blob(audioBuffer, { 'type' : 'audio/flac' });
+              const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
+              const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
               uploadToLinuxHost(blob);
               audioBuffer = [];
           
