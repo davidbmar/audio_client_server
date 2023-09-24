@@ -65,29 +65,46 @@
   
   <script type="text/javascript">
     var ws;
-    var heartbeatInterval;
 
     function scrollToBottom() {
         console.log("Attempting to scroll to the bottom.");  // Debugging statement
         const tableContainer = document.getElementById('tableContainer');
         tableContainer.scrollTop = tableContainer.scrollHeight;
     }
-  
+
+    // Function to send heartbeat
+    const sendHeartbeat = () => {
+      // Create a JSON object for the heartbeat message
+      const heartbeatMessage = JSON.stringify({ "heartbeat": "ping", });
+      // Send the heartbeat message to the server.
+      ws.send(heartbeatMessage);
+    };
+
+    // Event listener for when the WebSocket connection is established
+    ws.addEventListener('open', function(event) {
+      setInterval(sendHeartbeat, 5000);
+    });    
+
     function connectWebSocket() {
         // Connect to WebSocket server
         ws = new WebSocket("ws://3.22.47.41:8766/");
         ws.onopen = function() {
-            console.log("Connected to the server");
-            
-            // Start the heartbeat interval when the connection opens
-            heartbeatInterval = setInterval(function() {
-                console.log("Sending heartbeat");  // Debugging statement
-    
-                ws.send(JSON.stringify({'heartbeat': 'ping'}));
-            }, 5000); // 5 seconds
-        };
+        console.log("Connected to the server");
 
-        ws.onmessage = function(event) {
+        // Function to send heartbeat
+        const sendHeartbeat = () => {
+          // Create a JSON object for the heartbeat message
+          const heartbeatMessage = JSON.stringify({ "heartbeat": "ping", });
+          // Send the heartbeat message to the server.
+          ws.send(heartbeatMessage);
+        };
+    
+        // Event listener for when the WebSocket connection is established
+        ws.addEventListener('open', function(event) {
+          setInterval(sendHeartbeat, 5000);
+        });    
+
+        ws.addEventListener('message', function(event) {
             //console.log("Received a message from the server.");  // Debugging statement
         
             // Parse received JSON message
