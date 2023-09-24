@@ -3,7 +3,7 @@
 <head>
 
 <script type="text/javascript">
-  var ws;
+  let ws;
 
   function scrollToBottom() {
       console.log("Attempting to scroll to the bottom.");  // Debugging statement
@@ -22,7 +22,6 @@
 
   function connectWebSocket() {
     // Connect to WebSocket server
-    let ws;
     try { 
       ws = new WebSocket("ws://3.22.47.41:8766/");
 
