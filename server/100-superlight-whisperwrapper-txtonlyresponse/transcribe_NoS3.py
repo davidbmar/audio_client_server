@@ -43,7 +43,10 @@ class SpeechTranscriber:
 
     # Modified Code
     def transcribe(self, file):
-        segments, info = self.model.transcribe(file, language="en", beam_size=5)
+        # Determine the file format from the filename
+        file_format = re.search(r'\.(flac|ogg)$', filename).group(1)
+
+        segments, info = self.model.transcribe(file, language="en", beam_size=5)  # Added 'file_format'
         transcribed_message = ""
     
         for segment in segments:
@@ -59,8 +62,9 @@ class SpeechTranscriber:
     def process_file(self, filename):
         full_path = os.path.join(self.download_dir, filename)
 
-        if re.search(r'\.flac$', filename):
-            self.transcribe(full_path)
+        # Modified line below: Check for either .flac or .ogg extension
+        if re.search(r'\.(flac|ogg)$', filename):
+            self.transcribe(full_path, filename)
 
     def start(self):
         try:
