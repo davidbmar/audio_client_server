@@ -20,6 +20,29 @@
     ws.send(heartbeatMessage);
   };
 
+  function handleJSON(jsonString) {
+    var data = JSON.parse(jsonString);
+    if (data.heartbeat === 'pong') {
+        console.log("Received a heartbeat pong message.");
+        return;
+    } else if (data.heartbeat === 'ping') {
+        console.log("Received a heartbeat ping message.");
+        return;
+    }
+
+    if (data.file_info) {
+        var fileInfo = JSON.parse(data.file_info);
+        var filename = fileInfo.filename;
+        var transcribedMessage = fileInfo.transcribed_message;
+        updateUnifiedTable(filename, transcribedMessage, null);
+    } else {
+        console.log("Did not receive 'file_info' key.");
+    }
+  }  
+
+
+
+
   function connectWebSocket() {
     // Connect to WebSocket server
     try { 
@@ -32,32 +55,23 @@
         console.log("Connected to the server");
         setInterval(sendHeartbeat, 5000);
       });    
-  
+ 
+      
       ws.addEventListener('message', function(event) {
-          // Parse received JSON message
-          var data = JSON.parse(event.data);
-          //console.log("Parsed data:", data);  // Debugging statement
-      
-          // Check if this is a heartbeat message
-          if (data.heartbeat) {
-              console.log("Received a heartbeat message.");  // Debugging statement
-              return;
-          }
-      
-            // Extract and parse the 'file_info' content
-          if (data.file_info) {
-              var fileInfo = JSON.parse(data.file_info);
-              var filename = fileInfo.filename;
-              var transcribedMessage = fileInfo.transcribed_message;
-              updateUnifiedTable(filename, transcribedMessage, null);
-          } else {
-              console.log("Did not receive 'file_info' key.");  // Debugging statement
-          }
+        if (event.data instanceof Blob) {
+          var reader = new FileReader();
+          reader.onload = function() {
+            var text = reader.result;
+            handleJSON(text);
+          };
+          reader.readAsText(event.data);
+        } else {
+          handleJSON(event.data);
+        }
       });
-  
+
       ws.onopen = function() {
         console.log("Connection opened!"); 
-        ws.send("test"); // Send test message
       }
   
       ws.onclose = function() {
@@ -375,16 +389,23 @@
       const playButton = document.createElement("button");
       playButton.innerHTML = "Play";
       playButton.addEventListener("click", () => {
+        console.log("Play button clicked");  // Debugging statement
         // Fetch blob from IndexedDB and play
         const transaction = db.transaction(["audioChunks"]);
         const objectStore = transaction.objectStore("audioChunks");
         const getRequest = objectStore.get(audioBlobId);
   
         getRequest.onsuccess = function(event) {
+          console.log("Blob fetched from IndexedDB");  // Debugging statement
           const audioBlob = event.target.result;
           const audioUrl = URL.createObjectURL(audioBlob);
           const audio = new Audio(audioUrl);
           audio.play();
+          console.log("Audio should be playing now");  // Debugging statement
+        };
+
+        getRequest.onerror = function(event) {
+          console.error("Error fetching blob from IndexedDB:", event.target.errorCode);
         };
       });
   
