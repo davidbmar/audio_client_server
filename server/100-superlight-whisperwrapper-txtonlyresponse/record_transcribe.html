@@ -150,10 +150,6 @@
     </table>
   </div>
 
- 
-  
-
-
   <script>
   // Initialize variables
   let audioBuffer = [];
@@ -174,8 +170,6 @@
   let checkInterval;
   let MIN_DECIBELS = document.getElementById('MIN_DECIBELS').value;
   //const MIN_DECIBELS = -60;  //-100dB makes the setting more senstive so it will consider more sound as noise, vs -10dB you need a louder sound to prevent the silence detected status from being triggered.
-
-
   
   function initializeIndexedDB() {
     const request = indexedDB.open("audioDB", 1);
@@ -204,18 +198,19 @@
     const day = String(date.getDate()).padStart(2, '0');
     const hour = String(date.getHours()).padStart(2, '0');
     const minute = String(date.getMinutes()).padStart(2, '0');
+    const second = String(date.getSeconds()).padStart(2, '0');
+    const msecond = String(date.getMilliseconds()).padStart(2, '0');
     const sequence = String(sequenceNumber).padStart(6, '0');
     const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value;
-    return `${year}-${month}-${day}-${hour}${minute}-${sequence}.${selectedFormat}`;
+    return `${year}-${month}-${day}-${hour}-${minute}-${second}${msecond}-${sequence}.${selectedFormat}`;
   };
 
 
   // This function uploads to the LinuxHost, in contrast, of uploading to S3.
-  async function uploadToLinuxHost(blob) {
-    const fileKey = generateFileName();
+  async function uploadToLinuxHost(blob,filenameToUploadToHost) {
     const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
     const formData = new FormData();
-    formData.append("file", blob, fileKey);
+    formData.append("file", blob, filenameToUploadToHost);
   
     await fetch(flaskUploadURL, {
       method: 'POST',
@@ -288,13 +283,19 @@
         }, 50);
        
         mediaRecorder.onstop = e => {
+          currentFilename = generateFileName();
+          console.log("currentFilename:", currentFilename); // Debugging statement
+
           if (audioBuffer.length > 0) {
             if (appendMode){ 
               // if in append mode, keep adding to the audioBufffer and do not upload yet.
-              if (audioBuffer.length >= chunkCount) {
+              // you would be in this section of code if you need to do nothing an keep appending in the code. The exception is that if your over the chunkcount.
+              console.log("in appendMode, currentFilename:", currentFilename); // Debugging statement
+              if (audioBuffer.length >= chunkCount) {  // if over the chunkcount then you have to flush no matter what.
+                console.log("audioBuffer.length>=chunkCount, currentFilename:", currentFilename); // Debugging statement
                 const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
                 const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
-                uploadToLinuxHost(blob);
+                uploadToLinuxHost(blob,currentFilename);
                 audioBuffer = [];
 
                 appendMode=false;
@@ -303,10 +304,11 @@
 
               }
             } else {
-              // else upload the code, we are not in the special case of continue don't upload.
+              console.log("upload the file, we are not in the special case, currentFilename:", currentFilename); // Debugging statement
+              // else upload the file, we are not in the special case of continue don't upload.
               const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
               const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
-              uploadToLinuxHost(blob);
+              uploadToLinuxHost(blob,currentFilename);
               audioBuffer = [];
           
               // Save to IndexedDB
@@ -316,9 +318,9 @@
          
               addRequest.onsuccess = function(event) {
                 const id = event.target.result;
-                const fileName = generateFileName();
-                updateUnifiedTable(fileName,null,id)
-                sequenceNumber++;  // Increment sequence number here
+                //const fileName = generateFileName();
+                updateUnifiedTable(currentFilename,null,id)
+                sequenceNumber++;  // Originally, i had increment the sequence number at the end, but the compute might be taking too long causing some timing issues.
               };
             }
   
