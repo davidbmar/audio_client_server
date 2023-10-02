@@ -187,6 +187,26 @@
       console.error("IndexedDB error:", event.target.errorCode);
     };
   }
+
+  function uploadAndLocallySaveAudio(audioFilename) {
+    console.log("In function uploadAndLocallySave Audio() for currentFilename:", audioFilename); // Debugging statement
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
+    const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
+    uploadToLinuxHost(blob,audioFilename);
+    audioBuffer = [];
+   
+    // Save to IndexedDB
+    const transaction = db.transaction(["audioChunks"], "readwrite");
+    const objectStore = transaction.objectStore("audioChunks");
+    const addRequest = objectStore.add(blob);
+  
+    addRequest.onsuccess = function(event) {
+      const id = event.target.result;
+      //const fileName = generateFileName();
+      updateUnifiedTable(audioFilename,null,id)
+      sequenceNumber++;  // Originally, i had increment the sequence number at the end, but the compute might be taking too long causing some timing issues.
+    };
+  } 
   
   // Call the function to initialize IndexedDB
   initializeIndexedDB();
@@ -292,36 +312,12 @@
               // you would be in this section of code if you need to do nothing an keep appending in the code. The exception is that if your over the chunkcount.
               console.log("in appendMode, currentFilename:", currentFilename); // Debugging statement
               if (audioBuffer.length >= chunkCount) {  // if over the chunkcount then you have to flush no matter what.
-                console.log("audioBuffer.length>=chunkCount, currentFilename:", currentFilename); // Debugging statement
-                const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
-                const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
-                uploadToLinuxHost(blob,currentFilename);
-                audioBuffer = [];
-
-                appendMode=false;
-                console.log("append Mode:", appendMode); // Debugging statement
-                document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
-
+                console.log("AudioBuffer.length :" + audioBuffer.length + "chunkCount:"+ chunkCount); // Debugging statement
+                uploadAndLocallySaveAudio(currentFilename) 
               }
             } else {
               console.log("upload the file, we are not in the special case, currentFilename:", currentFilename); // Debugging statement
-              // else upload the file, we are not in the special case of continue don't upload.
-              const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
-              const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
-              uploadToLinuxHost(blob,currentFilename);
-              audioBuffer = [];
-          
-              // Save to IndexedDB
-              const transaction = db.transaction(["audioChunks"], "readwrite");
-              const objectStore = transaction.objectStore("audioChunks");
-              const addRequest = objectStore.add(blob);
-         
-              addRequest.onsuccess = function(event) {
-                const id = event.target.result;
-                //const fileName = generateFileName();
-                updateUnifiedTable(currentFilename,null,id)
-                sequenceNumber++;  // Originally, i had increment the sequence number at the end, but the compute might be taking too long causing some timing issues.
-              };
+              uploadAndLocallySaveAudio(currentFilename) 
             }
   
           }
