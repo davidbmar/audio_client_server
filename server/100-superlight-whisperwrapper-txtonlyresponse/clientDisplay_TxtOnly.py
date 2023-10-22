@@ -63,7 +63,7 @@ class WebSocketSQSServer:
     def start_server(self):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        server = websockets.serve(self.handler, "0.0.0.0", self.ws_port)
+        server = websockets.serve(self.handler, "0.0.0.0", self.ws_port,ping_timeout=300, ping_interval=10)
         loop.run_until_complete(server)
         print(f"WebSocket server started on ws://0.0.0.0:{self.ws_port}")  # Debugging statement
         loop.run_forever()
