@@ -32,11 +32,11 @@ if __name__ == "__main__":
    print("Created a pod")
    pprint.pprint(pod)
 
-   # Pause while the pod is being created
-   print("Waiting...")
-   time.sleep(100)
-
-   # Stop a pod
-   print("\n\n\n-=-=-=-=-=-=-=Stopping POD=-=-=-=-=-=-=-=\n")
-   pod = runpod.stop_pod(pod["id"])
-   pprint.pprint(pod)
+#   # Pause while the pod is being created
+#   print("Waiting...")
+#   time.sleep(100)
+#
+#   # Stop a pod
+#   print("\n\n\n-=-=-=-=-=-=-=Stopping POD=-=-=-=-=-=-=-=\n")
+#   pod = runpod.stop_pod(pod["id"])
+#   pprint.pprint(pod)
