@@ -45,7 +45,7 @@ def download_from_bucket():
 
             # TODO: a better way of implementing this is to use SQS Lambda Triggers.  This would mean when
             # a message is on the queue instead of polling trigger an event.
-            time.sleep(30)
+            time.sleep(2)
             continue
 
 
