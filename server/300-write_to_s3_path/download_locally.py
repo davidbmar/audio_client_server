@@ -53,7 +53,7 @@ def download_from_bucket():
             body = message['Body']
             body_json = json.loads(body)  # Parse the body as JSON
             file_to_download = body_json['Records'][0]['s3']['object']['key']
-
+            filename_only = os.path.basename(file_to_download)
             print(f"Trying to download: {file_to_download}")
 
             # Step 2.3: Download the file from S3 bucket to the DOWNLOAD_FOLDER
@@ -85,7 +85,8 @@ def download_from_bucket():
                 # Step 2.4: Delete the message from the SQS queue after successful download
                 sqs.delete_message(QueueUrl=QUEUE_URL_FOR_DOWNLOAD, ReceiptHandle=message['ReceiptHandle'])
                 # Push to transcription queue
-                push_to_transcription_queue(local_file_path)
+
+                push_to_transcription_queue(filename_only)
 
                 
             except Exception as e:

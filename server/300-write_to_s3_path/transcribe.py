@@ -16,7 +16,7 @@ class SpeechTranscriber:
         self.log_file = log_file
         self.sqs = boto3.client('sqs',region_name='us-east-2')  # Initialize SQS client
         self.queue_url_for_transcription = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
-        self.final_file_txt_file_queue_url = 'https://sqs.us-east-1.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+        self.final_file_txt_file_queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
 
     # Modified Code
     def send_to_final_file_queue(self, filename, transcribed_message):
@@ -34,15 +34,16 @@ class SpeechTranscriber:
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
             MessageBody=json.dumps(message_body),
-            MessageGroupId='testGroup5',
-            MessageDeduplicationId=message_deduplication_id
         )
         print(f"Message sent with ID: {response['MessageId']}")
 
     # Modified Code
     def transcribe(self, file):
+        print(f"In Transcribe function. file: {file}")
+
         filename = os.path.basename(file)  # Get the base name of the file from its full path
-        file_format = re.search(r'\.(flac|ogg)$', filename).group(1)  # Extract file extension
+        print (f"filename:{filename},file:{file}")
+
         segments, info = self.model.transcribe(file, language="en", beam_size=5)  
         transcribed_message = ""
     
@@ -57,11 +58,9 @@ class SpeechTranscriber:
         self.send_to_final_file_queue(final_file_base_name, transcribed_message)  # Modified line
     
     def process_file(self, filename):
+        print(f"in process file. filename :{filename}")
         full_path = os.path.join(self.download_dir, filename)
-
-        # Modified line below: Check for either .flac or .ogg extension
-        if re.search(r'\.(flac|ogg)$', filename):
-            self.transcribe(full_path)
+        self.transcribe(full_path)
 
     def start(self):
         try:
@@ -70,9 +69,10 @@ class SpeechTranscriber:
 
                 if 'Messages' in messages:
                     for message in messages['Messages']:
-                        file_info = message['Body']
-                        print(f"file_info:{file_info}")
-                        self.process_file(file_info)
+                        # Within the SQS queue, its json.  So get the sqs info, and find the filename.
+                        sqs_info = json.loads(message['Body'])
+                        filename = sqs_info["file_path"]
+                        self.process_file(filename)
                         self.sqs.delete_message(QueueUrl=self.queue_url_for_transcription, ReceiptHandle=message['ReceiptHandle'])
 
                 # TODO: a better way of implementing this is to use SQS Lambda Triggers.  This would mean when
