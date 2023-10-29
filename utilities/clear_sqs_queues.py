@@ -58,3 +58,12 @@ if __name__ == "__main__":
     print(f"queue_url:{queue_url}")
     clear_sqs_queue(queue_url)
 
+    queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
+    print(f"queue_url:{queue_url}")
+    clear_sqs_queue(queue_url)
+
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+    print(f"queue_url:{queue_url}")
+    clear_sqs_queue(queue_url)
+
+
