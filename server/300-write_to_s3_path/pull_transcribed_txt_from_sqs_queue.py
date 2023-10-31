@@ -45,7 +45,7 @@ def retrieve_messages_from_sqs(queue_url, num_messages=10):
     return messages
 
 # Continuously poll SQS queue and update CSV
-queue_url = 'https://sqs.us-east-1.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
 while True:
     retrieve_messages_from_sqs(queue_url)
     time.sleep(2)
