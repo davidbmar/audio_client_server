@@ -44,7 +44,7 @@ def send_to_final_file_queue(filename, transcribed_message):
 
 if __name__ == "__main__":
     # Read the CSV file
-    filename_transcribed_message_pairs = read_csv_file("output.sorted.csv")
+    filename_transcribed_message_pairs = read_csv_file("utility.mock.input.csv")
 
     # Send each message to the SQS queue
     for filename, transcribed_message in filename_transcribed_message_pairs:
