@@ -19,7 +19,13 @@ from langchain.chat_models import ChatOpenAI  # new way of import.
 import json
 import re
 
-os.environ["OPENAI_API_KEY"] = 'XXXXXXXXXXXXXXXXXXXX'
+# Load the API key from an environment variable
+api_key = os.environ.get("OPENAI_API_KEY")
+
+# Check if the API key is available
+if api_key is None:
+    raise ValueError("OPENAI_API_KEY environment variable not set.")
+
 pp=pprint.PrettyPrinter(indent=3,width=120)
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")

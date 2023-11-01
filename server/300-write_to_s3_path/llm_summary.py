@@ -17,7 +17,13 @@ from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI  # new way of import.
 
-os.environ["OPENAI_API_KEY"] = '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'
+# Load the API key from an environment variable
+api_key = os.environ.get("OPENAI_API_KEY")
+
+# Check if the API key is available
+if api_key is None:
+    raise ValueError("OPENAI_API_KEY environment variable not set.")
+
 pp=pprint.PrettyPrinter(indent=3,width=120)
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
