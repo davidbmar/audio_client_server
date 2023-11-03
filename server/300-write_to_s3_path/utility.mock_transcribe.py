@@ -6,6 +6,8 @@ import re
 import json
 import hashlib
 import csv
+import argparse
+import random
 
 def read_csv_file(filename):
     """Reads a CSV file and returns a list of filename, transcribed message pairs."""
@@ -19,9 +21,6 @@ def read_csv_file(filename):
                 print(f"Warning: Skipping row '{row}' due to insufficient columns.")
         return pairs
 
-
-
-# Modified Code
 def send_to_final_file_queue(filename, transcribed_message):
     """Send filename and transcribed_message to the new SQS queue."""
     sqs = boto3.client('sqs', region_name='us-east-2')  # Initialize SQS client
@@ -42,13 +41,32 @@ def send_to_final_file_queue(filename, transcribed_message):
     )
     print(f"Message sent with ID: {response['MessageId']}")
 
+# Function to trickle data into the output file.   This helps simulate data slowly comming in.  
+def trickle_data(pairs, max_wait_seconds):
+    for filename, transcribed_message in pairs:
+        send_to_final_file_queue(filename, transcribed_message)
+        wait_time = random.randint(1, max_wait_seconds)
+        print(f"Waiting for {wait_time} seconds...")
+        time.sleep(wait_time)
+
+# Main execution
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Process some integers.')
+    parser.add_argument('-slowly-trickle-data', type=int, nargs='?', const=5, help='Trickle data into the output file slowly.')
+    args = parser.parse_args()
+
     # Read the CSV file
     filename_transcribed_message_pairs = read_csv_file("utility.mock.input.csv")
 
-    # Send each message to the SQS queue
-    for filename, transcribed_message in filename_transcribed_message_pairs:
-        send_to_final_file_queue(filename, transcribed_message)
+    # Check if the -slowly-trickle-data flag is used
+    if args.slowly_trickle_data:
+        trickle_data(filename_transcribed_message_pairs, args.slowly_trickle_data)
+    else:
+        # Send each message to the SQS queue without delay
+        for filename, transcribed_message in filename_transcribed_message_pairs:
+            send_to_final_file_queue(filename, transcribed_message)
+
+
 
 
 

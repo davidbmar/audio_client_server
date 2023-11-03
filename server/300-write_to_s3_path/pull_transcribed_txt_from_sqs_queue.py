@@ -5,9 +5,12 @@ import re
 import time
 import argparse
 
+# Set up argument parser
 parser = argparse.ArgumentParser(description="Run the script with a flag.")
 parser.add_argument("--run-once", action="store_true", help="If set, run the script once and exit.")
+parser.add_argument("-loop-every-x-seconds", type=int, default=5, help="Loop every X seconds and re-sort the CSV file.")
 args = parser.parse_args()
+
 
 def extract_key(filename):
     match = re.search(r'(\d{6})\.\w+$', filename)
@@ -51,20 +54,18 @@ def retrieve_messages_from_sqs(queue_url, num_messages=10):
 
     return messages
 
-
 def main():
-   # Continuously poll SQS queue and update CSV
-   queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+    # Continuously poll SQS queue and update CSV
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
 
-   if args.run_once:
-      print("Retrieveing while messages exist then exiting as opposed to forever polling..")
-      while retrieve_messages_from_sqs(queue_url):  # Continue until no messages are returned
-        pass
-   else:
-      while True:
-         retrieve_messages_from_sqs(queue_url)
-         time.sleep(2)
+    if args.run_once:
+        print("Retrieving messages once then exiting.")
+        retrieve_messages_from_sqs(queue_url)
+    else:
+        print(f"Looping every {args.loop_every_x_seconds} seconds.")
+        while True:
+            retrieve_messages_from_sqs(queue_url)
+            time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":
     main()
-

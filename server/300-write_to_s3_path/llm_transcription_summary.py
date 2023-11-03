@@ -528,12 +528,11 @@ def summarize_stage_2(stage_1_outputs, topics, summary_num_words = 250):
   titles = [t.strip() for t in titles]
 
   map_llm = ChatOpenAI(temperature=0, model_name = 'gpt-3.5-turbo')
-  reduce_llm = ChatOpenAI(temperature=0, model_name = 'gpt-3.5-turbo', max_tokens = 4000)
+  reduce_llm = ChatOpenAI(temperature=0, model_name = 'gpt-3.5-turbo-16k', max_tokens = 10000)
 
   # Run the map-reduce chain
   docs = [Document(page_content=t) for t in topics_summary_concat]
-  chain = load_summarize_chain(chain_type="map_reduce", map_prompt = map_prompt, combine_prompt = combine_prompt, return_intermediate_steps = True,
-                              llm = map_llm, reduce_llm = reduce_llm)
+  chain = load_summarize_chain(chain_type="map_reduce", map_prompt = map_prompt, combine_prompt = combine_prompt, return_intermediate_steps = True, llm = map_llm, reduce_llm = reduce_llm)
 
   output = chain({"input_documents": docs}, return_only_outputs = True)
   summaries = output['intermediate_steps']
