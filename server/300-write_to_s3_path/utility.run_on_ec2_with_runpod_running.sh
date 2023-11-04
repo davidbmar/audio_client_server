@@ -1,5 +1,11 @@
 #!/usr/bin/bash
 echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n\n"
+echo "removing output.csv"
+rm output.csv
+touch output.csv
+sleep 5
+
+echo "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-\n\n"
 #echo "./pull_transcribed_txt_from_sqs_queue.py --run-once"
 echo "./pull_transcribed_txt_from_sqs_queue.py --loop-every-x-seconds 2"
 #./pull_transcribed_txt_from_sqs_queue.py --run-once
