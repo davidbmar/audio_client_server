@@ -11,6 +11,21 @@ parser.add_argument("--run-once", action="store_true", help="If set, run the scr
 parser.add_argument("-loop-every-x-seconds", type=int, default=5, help="Loop every X seconds and re-sort the CSV file.")
 args = parser.parse_args()
 
+def clean_message(message):
+    """
+    Clean a single message by replacing carriage returns with a placeholder, 
+    removing standalone newlines, and then replacing the placeholder with newline.
+
+    Parameters:
+    - message (str): The message string to be cleaned.
+
+    Returns:
+    - str: The cleaned message string.
+    """
+    placeholder = '<END>'
+    message = message.replace('\r', placeholder)
+    message = message.replace('\n', '')
+    return message.replace(placeholder, '\n')
 
 def extract_key(filename):
     match = re.search(r'(\d{6})\.\w+$', filename)
@@ -31,6 +46,7 @@ def update_csv_with_messages(messages, csv_filename="output.csv"):
     with open(csv_filename, 'a', newline='') as csvfile:
         writer = csv.writer(csvfile)
         for message in messages:
+            cleaned_message = clean_message(message['transcribed_message'])
             writer.writerow([message['filename'], message['transcribed_message']])
 
 def retrieve_messages_from_sqs(queue_url, num_messages=10):

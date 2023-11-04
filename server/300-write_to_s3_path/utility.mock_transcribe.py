@@ -9,17 +9,21 @@ import csv
 import argparse
 import random
 
+
 def read_csv_file(filename):
-    """Reads a CSV file and returns a list of filename, transcribed message pairs."""
+    """
+    Reads a CSV file correctly handling newlines within quoted fields.
+    Returns a list of filename, transcribed message pairs.
+    """
+    pairs = []
     with open(filename, mode='r', newline='', encoding='utf-8') as file:
-        csvreader = csv.reader(file)
-        pairs = []
-        for row in csvreader:
+        reader = csv.reader(file, delimiter=',', quotechar='"')
+        for row in reader:
             if len(row) >= 2:
-                pairs.append((row[0], row[1]))
+                pairs.append((row[0], row[1].replace('\r', ' ')))
             else:
                 print(f"Warning: Skipping row '{row}' due to insufficient columns.")
-        return pairs
+    return pairs
 
 def send_to_final_file_queue(filename, transcribed_message):
     """Send filename and transcribed_message to the new SQS queue."""
