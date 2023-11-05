@@ -47,7 +47,7 @@ def update_csv_with_messages(messages, csv_filename="output.csv"):
         writer = csv.writer(csvfile)
         for message in messages:
             cleaned_message = clean_message(message['transcribed_message'])
-            writer.writerow([message['filename'], message['transcribed_message']])
+            writer.writerow([message['filename'], cleaned_message])
 
 def retrieve_messages_from_sqs(queue_url, num_messages=10):
     sqs_client = boto3.client('sqs')
@@ -59,6 +59,7 @@ def retrieve_messages_from_sqs(queue_url, num_messages=10):
     messages = response.get('Messages', [])
     receipt_handles = []  # List to store receipt handles for batch delete
     for message in messages:
+        print (message)
         message_content = eval(message['Body'])
         update_csv_with_messages([message_content])
         receipt_handles.append(message['ReceiptHandle'])

@@ -66,4 +66,7 @@ if __name__ == "__main__":
     print(f"queue_url:{queue_url}")
     clear_sqs_queue(queue_url)
 
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_summarize_chunk.fifo'
+    print(f"queue_url:{queue_url}")
+    clear_sqs_queue(queue_url)
 
