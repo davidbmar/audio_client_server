@@ -230,7 +230,7 @@ all_data_chunks = [
               "this tacky  taboo thing. Everybody has to pretend they don't care about money  but we all do  which is "
               'weird. But you just have to treat it like this silent fart in the room.'}]
 
-data_chunks = all_data_chunks[5:6]
+data_chunks = all_data_chunks[0:15]
 message_group_id = str(int(time.time()))
 
 

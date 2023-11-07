@@ -5,6 +5,7 @@ import logging
 import json
 import os
 import pprint
+import shutil
 from datetime import datetime
 from langchain.prompts import PromptTemplate
 from langchain.chains.llm import LLMChain
@@ -12,6 +13,15 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.docstore.document import Document
 from langchain.chains.summarize import load_summarize_chain
 from langchain.chat_models import ChatOpenAI  # new way of import.
+
+# Function to copy the file to the web directory
+# you could put this into the class, or later import this.
+def copy_to_web_directory(source_file, destination_dir='/var/www/html'):
+    if not destination_dir.endswith('/'):
+        destination_dir += '/'
+    destination_file = destination_dir + source_file.split('/')[-1]
+    shutil.copy(source_file, destination_file)
+    print(f'File copied to {destination_file}')
 
 class SummarizeChunkService:
     def __init__(self, mydir="./SummarizeChunkDir", log_file="SummarizeChunk.log"):
@@ -24,14 +34,50 @@ class SummarizeChunkService:
         # Initialize logging
         logging.basicConfig(filename=self.log_file, level=logging.ERROR)
 
+    def generate_html(self):
+        summaries=self.stage_1_outputs
+        html_content = """
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="refresh" content="10">
+        <title>Summary Output</title>
+        <script>
+        function toggleSummary(id) {
+            var summary = document.getElementById(id);
+            if (summary.style.display === 'none') {
+                summary.style.display = 'block';
+            } else {
+                summary.style.display = 'none';
+            }
+        }
+        </script>
+        </head>
+        <body>
+        <h1>Live Summary</h1>
+        """
+
+        for index, summary in enumerate(summaries):
+            title = summary['title']
+            text = summary['text']
+            html_content += f"""
+            <p><b onclick="toggleSummary('summary{index}')"
+            style="cursor:pointer;">{title}</b></p>
+            <p id="summary{index}" style="display:none;">{text}</p>
+            """
+    
+        html_content += """
+        </body>
+        </html>
+        """
+        return html_content
+
     def summarize_text(self, text_chunk):
         # This function is now designed to process a single text chunk
         # Call the summarize_stage_1 function here with a single chunk
         # Assume that the function is already refactored to handle single chunks
         summary = self.summarize_stage_1(text_chunk)['stage_1_outputs']
-
-        # Store the summary in the database
-        self.output_storage[text_chunk] = summary
 
     def process(self, text_chunk):
         try:
@@ -76,15 +122,16 @@ class SummarizeChunkService:
                'text': split_string[1].strip()
            }
            print(f"\n\nFINAL single_prompt_result:{output_dict}\n\n")
-
            self.stage_1_outputs.append(output_dict)
+
         except Exception as e:
-           single_prompt_result="None"
-           print(f'Error processing chunk: {text_chunk}', flush=True)  # Step 1: Enhanced exception print
+           single_prompt_result = None
+           print(f'Error processing chunk: {chunks_text}', flush=True)  # Corrected variable name
            print(e, flush=True)
 
+        # At the end of summarize_stage_1 method
         return {
-          single_prompt_result 
+           'stage_1_outputs': output_dict  # Returning the expected key with the result
         }
 
     def start(self):
@@ -110,10 +157,16 @@ class SummarizeChunkService:
                             self.process(chunk_text)
                         else:
                             print(f"Message does not contain 'text' key: {message}")
-                        
                         self.sqs.delete_message(QueueUrl=self.input_queue_url, ReceiptHandle=message['ReceiptHandle'])
-                        print ("DATADATADATADTDAA")
+
                         pp.pprint(self.stage_1_outputs)
+                        html_output = self.generate_html()
+                        output_file="summary_output.html"
+                        with open(output_file, "w") as file:
+                            file.write(html_output)
+                            copy_to_web_directory(output_file)
+
+      
 
                 else:
                     print("No messages received.")
