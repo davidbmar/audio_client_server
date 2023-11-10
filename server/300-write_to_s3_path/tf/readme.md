@@ -12,18 +12,26 @@ terraform apply
 Post TF apply, after running "terraform apply" there should be the following outputs:
 Outputs:
 
+```console
 staging_audio2scriptviewer_input_fifo_queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2scriptviewer_input_.fifo"
 staging_audio2scriptviewer_output_fifo_queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2scriptviewer_output_.fifo"
+```
 
 # Build scripts or CI pipelines
 Before running the scripts which require these SQS queues you need to export and get these env variables like this:
+
+```console
 export STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_input_fifo_queue_url)
 export STAGING_AUDIO2SCRIPTVIEWER_OUTPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_output_fifo_queue_url)
+```
 
 So to get these env variables into your shell run:
+```console
 'source setup_env_vars.sh'
+```
 
 #So in the python scripts, to drive off of this infrastucture you should use something like this:
+```console
 ORDER_PROCESSING_QUEUE_URL = os.getenv('ORDER_PROCESSING_QUEUE_URL')
 staging_audio2scriptviewer_input_fifo_queue_url 
 staging_audio2scriptviewer_output_fifo_queue_url 
@@ -37,6 +45,7 @@ def send_message_to_queue(message_body):
         MessageBody=message_body
     )
     return response
+```
 
 ---
 ## Terraform Resource Naming Conventions
