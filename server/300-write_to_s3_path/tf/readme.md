@@ -1,9 +1,12 @@
 # Terraform and Python Integration Documentation 
 
 ## Terraform infrastucture setup.
+
+```console
 terraform init
 terraform plan
 terraform apply
+```
 
 # Outputs from TF
 Post TF apply, after running "terraform apply" there should be the following outputs:
