@@ -1,20 +1,41 @@
-# Terraform and Python Integration Documentation
+# Terraform and Python Integration Documentation 
 
-This document is a compilation of a conversation regarding best practices for naming conventions and documentation for Terraform resources and their integration with Python code, along with guidelines for Git documentation.
+## Terraform infrastucture setup.
+terraform init
+terraform plan
+terraform apply
 
-## Table of Contents
-- [Terraform Resource Naming Conventions](#terraform-resource-naming-conventions)
-- [Python Integration](#python-integration)
-- [Terraform Outputs](#terraform-outputs)
-- [Example Terraform Configuration](#example-terraform-configuration)
-- [Git Documentation Best Practices](#git-documentation-best-practices)
-- [Directory-specific READMEs](#directory-specific-readmes)
-- [Code Comments](#code-comments)
-- [External Documentation Tools](#external-documentation-tools)
-- [Best Practice](#best-practice)
+# Outputs from TF
+Post TF apply, after running "terraform apply" there should be the following outputs:
+Outputs:
+
+staging_audio2scriptviewer_input_fifo_queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2scriptviewer_input_.fifo"
+staging_audio2scriptviewer_output_fifo_queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2scriptviewer_output_.fifo"
+
+# Build scripts or CI pipelines
+Before running the scripts which require these SQS queues you need to export and get these env variables like this:
+export STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_input_fifo_queue_url)
+export STAGING_AUDIO2SCRIPTVIEWER_OUTPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_output_fifo_queue_url)
+
+So to get these env variables into your shell run:
+'source setup_env_vars.sh'
+
+#So in the python scripts, to drive off of this infrastucture you should use something like this:
+ORDER_PROCESSING_QUEUE_URL = os.getenv('ORDER_PROCESSING_QUEUE_URL')
+staging_audio2scriptviewer_input_fifo_queue_url 
+staging_audio2scriptviewer_output_fifo_queue_url 
+
+ORDER_PROCESSING_QUEUE_URL = os.getenv('ORDER_PROCESSING_QUEUE_URL')
+
+def send_message_to_queue(message_body):
+    # Use the `ORDER_PROCESSING_QUEUE_URL` from the config file
+    response = sqs_client.send_message(
+        QueueUrl=ORDER_PROCESSING_QUEUE_URL,
+        MessageBody=message_body
+    )
+    return response
 
 ---
-
 ## Terraform Resource Naming Conventions
 Terraform resources should be named following a clear, consistent pattern that reflects the environment, purpose, and type of resource. 
 

@@ -1,0 +1,4 @@
+#!/bin/bash
+export STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_input_fifo_queue_url)
+export STAGING_AUDIO2SCRIPTVIEWER_OUTPUT_FIFO_QUEUE_URL=$(terraform output -raw staging_audio2scriptviewer_output_fifo_queue_url)
+ 
