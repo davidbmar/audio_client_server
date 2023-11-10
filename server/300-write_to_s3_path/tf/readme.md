@@ -1,4 +1,4 @@
-# Terraform and Python Integration Documentation 
+STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL# Terraform and Python Integration Documentation 
 
 ## Terraform infrastucture setup.
 
@@ -32,16 +32,12 @@ So to get these env variables into your shell run:
 
 #So in the python scripts, to drive off of this infrastucture you should use something like this:
 ```console
-ORDER_PROCESSING_QUEUE_URL = os.getenv('ORDER_PROCESSING_QUEUE_URL')
-staging_audio2scriptviewer_input_fifo_queue_url 
-staging_audio2scriptviewer_output_fifo_queue_url 
-
-ORDER_PROCESSING_QUEUE_URL = os.getenv('ORDER_PROCESSING_QUEUE_URL')
+STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL = os.getenv('STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL')
+STAGING_AUDIO2SCRIPTVIEWER_OUTPUT_FIFO_QUEUE_URL = os.getenv('STAGING_AUDIO2SCRIPTVIEWER_OUTPUT_FIFO_QUEUE_URL')
 
 def send_message_to_queue(message_body):
-    # Use the `ORDER_PROCESSING_QUEUE_URL` from the config file
     response = sqs_client.send_message(
-        QueueUrl=ORDER_PROCESSING_QUEUE_URL,
+        QueueUrl=STAGING_AUDIO2SCRIPTVIEWER_INPUT_FIFO_QUEUE_URL,
         MessageBody=message_body
     )
     return response
