@@ -9,10 +9,16 @@ variable "app_name" {
   type       = string
   default     = "audio2scriptviewer"
 }
+
+# The variable is declared below, but note it's value is set in "dev.tfvars", "staging.tfvars" or "prod.tfvars"
+# When running terraform apply you would use something such as:
+# terraform apply -var-file=dev.tfvars    # For development environment
+# terraform apply -var-file=staging.tfvars  # For staging environment
+# terraform apply -var-file=prod.tfvars    # For production environment
+# 
 variable "env" {
-  description = "Deployment environment (e.g., dev, staging, prod)."
-  type       = string
-  default     = "staging"
+  description = "Deployment environment (e.g., dev, staging, prod)"
+  type        = string
 }
 
 # Infrastucture Setup 
@@ -46,6 +52,9 @@ output "output_queue_url" {
   value       = aws_sqs_queue.output_fifo_queue.url
 }
 
+# CONFIGURATION FILE OUTPUT FOR USE WITH THE PYTHON SCRIPTS
+# -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
 # This seciton To write a configuration file using the outputs from the Terraform configuration, 
 # The objective is that you would run the TF scripts and the outputs from this would create a config
 # file.  
@@ -60,6 +69,7 @@ resource "local_file" "config_file" {
         # Post these steps Terraform will create the SQS queues and generate the my_app.conf file with the queue URLs. 
         #
         # Application Configuration File
+        [DEFAULT] 
         INPUT_FIFO_QUEUE_URL = "${aws_sqs_queue.input_fifo_queue.url}"
         OUTPUT_FIFO_QUEUE_URL = "${aws_sqs_queue.output_fifo_queue.url}"
     EOT

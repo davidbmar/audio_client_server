@@ -1,24 +1,20 @@
 #!/usr/bin/python3
-#
-# DEPRECATED: This file is DEPRECATED, the new version is audio2Script.py 
-#   That makes better use of Terraform, and pulls from the config file.
-#
-#
-#
-
-
 import boto3
 import csv
 import re
 import time
 import argparse
+import configparser
+import os
 
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description="Run the script with a flag.")
 parser.add_argument("--run-once", action="store_true", help="If set, run the script once and exit.")
-parser.add_argument("-loop-every-x-seconds", type=int, default=5, help="Loop every X seconds and re-sort the CSV file.")
+parser.add_argument("--loop-every-x-seconds", type=int, default=5, help="Loop every X seconds and re-sort the CSV file.")
+parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
 args = parser.parse_args()
+env=args.env
 
 def clean_message(message):
     """
@@ -58,10 +54,10 @@ def update_csv_with_messages(messages, csv_filename="output.csv"):
             cleaned_message = clean_message(message['transcribed_message'])
             writer.writerow([message['filename'], cleaned_message])
 
-def retrieve_messages_from_sqs(queue_url, num_messages=10):
-    sqs_client = boto3.client('sqs')
+def retrieve_messages_from_sqs(input_queue_url, num_messages=10):
+    sqs_client = boto3.client('sqs', region_name='us-east-2')
     response = sqs_client.receive_message(
-        QueueUrl=queue_url,
+        QueueUrl=input_queue_url,
         MaxNumberOfMessages=num_messages
     )
 
@@ -76,21 +72,53 @@ def retrieve_messages_from_sqs(queue_url, num_messages=10):
     # Batch delete processed messages
     if receipt_handles:
         entries = [{'Id': str(i), 'ReceiptHandle': rh} for i, rh in enumerate(receipt_handles)]
-        sqs_client.delete_message_batch(QueueUrl=queue_url, Entries=entries)
+        sqs_client.delete_message_batch(QueueUrl=input_queue_url, Entries=entries)
 
     return messages
 
+def read_config(config_file):
+    """Read and parse the configuration file, which is created by Terraform."""
+    config = configparser.ConfigParser()
+    config.read(config_file)
+
+    return {
+        'input_queue_url': config.get('DEFAULT', 'INPUT_FIFO_QUEUE_URL'),
+        'output_queue_url': config.get('DEFAULT', 'OUTPUT_FIFO_QUEUE_URL')
+    }
+
+def load_configuration(config_file_path):
+    """Load and return configuration from the file."""
+    if not os.path.exists(config_file_path):
+        print(f"Configuration file not found at {config_file_path}. Please run 'terraform apply' before running this script.")
+        exit(1)
+
+    try:
+        return read_config(config_file_path)
+    except KeyError as e:
+        print(f"Key error in configuration file: {e}")
+        exit(1)
+    except configparser.Error as e:
+        print(f"Error parsing configuration file: {e}")
+        exit(1)
+
+
+
 def main():
-    # Continuously poll SQS queue and update CSV
-    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+
+    # So before running this script the AWS infrastucture should be built which is the SQS queue.  main.tf handles this.
+    # And the file ./tf/main.tf also builds the config file. Check "terraform plan"; "terraform apply" to create this config file.
+    config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
+    config = load_configuration(config_file_path)
+    input_queue_url = config['input_queue_url']
+    output_queue_url = config['output_queue_url']  # If you need to use it later
 
     if args.run_once:
         print("Retrieving messages once then exiting.")
-        retrieve_messages_from_sqs(queue_url)
+        retrieve_messages_from_sqs(input_queue_url)
     else:
         print(f"Looping every {args.loop_every_x_seconds} seconds.")
         while True:
-            retrieve_messages_from_sqs(queue_url)
+            retrieve_messages_from_sqs(input_queue_url)
             time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":
