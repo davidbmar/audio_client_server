@@ -70,8 +70,8 @@ resource "local_file" "config_file" {
         #
         # Application Configuration File
         [DEFAULT] 
-        INPUT_FIFO_QUEUE_URL = "${aws_sqs_queue.input_fifo_queue.url}"
-        OUTPUT_FIFO_QUEUE_URL = "${aws_sqs_queue.output_fifo_queue.url}"
+        INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.input_fifo_queue.url}
+        OUTPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.output_fifo_queue.url}
     EOT
 }
 
