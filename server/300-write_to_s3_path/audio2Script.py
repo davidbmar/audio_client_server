@@ -114,10 +114,12 @@ def main():
 
     if args.run_once:
         print("Retrieving messages once then exiting.")
+        print(f"!!!!!!!!Input Queue URL: {input_queue_url}")
         retrieve_messages_from_sqs(input_queue_url)
     else:
         print(f"Looping every {args.loop_every_x_seconds} seconds.")
         while True:
+            print(f"2!!!!!!!!Input Queue URL: {input_queue_url}")
             retrieve_messages_from_sqs(input_queue_url)
             time.sleep(args.loop_every_x_seconds)
 
