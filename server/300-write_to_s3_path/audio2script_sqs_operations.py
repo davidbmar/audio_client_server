@@ -1,5 +1,4 @@
 import boto3
-from utilities import clean_message
 
 def retrieve_messages_from_sqs(input_queue_url, num_messages=10):
     sqs_client = boto3.client('sqs', region_name='us-east-2')
