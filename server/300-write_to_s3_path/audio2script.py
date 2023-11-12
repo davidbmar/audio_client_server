@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 import boto3
 import csv
-import re
 import time
 import argparse
 import configparser

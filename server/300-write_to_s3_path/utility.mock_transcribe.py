@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import boto3
 import time
+from datetime import datetime
 import os
 import re
 import json
@@ -40,10 +41,14 @@ def send_queue(sqs_queue, filename, transcribed_message):
     # Generate a MessageDeduplicationId
     message_deduplication_id = hashlib.sha256(json.dumps(message_body).encode()).hexdigest()
 
+    # Generate the MessageGroupId
+    current_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    message_group_id_string = f"group-id-{current_time}"
+
     response = sqs.send_message(
         QueueUrl=sqs_queue,
         MessageBody=json.dumps(message_body),
-        MessageGroupId='your-message-group-id'  # Replace with an appropriate group ID for your use case.
+        MessageGroupId=message_group_id_string  # Replace with an appropriate group ID for your use case.
     )
     print(f"Message sent with ID: {response['MessageId']}")
 
