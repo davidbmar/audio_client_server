@@ -15,8 +15,10 @@ class SpeechTranscriber:
         self.download_dir = download_dir
         self.log_file = log_file
         self.sqs = boto3.client('sqs',region_name='us-east-2')  # Initialize SQS client
-        self.queue_url_for_transcription = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
-        self.final_file_txt_file_queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+        #self.queue_url_for_transcription = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
+        #self.final_file_txt_file_queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_completed_transcription_nonfifo'
+        self.final_file_txt_file_queue_url=input_queue_url_for_audio2script 
+        self.queue_url_for_transcription=input_queue_url_for_transcribe 
 
     # Modified Code
     def send_to_final_file_queue(self, filename, transcribed_message):
@@ -80,6 +82,17 @@ class SpeechTranscriber:
                 time.sleep(1)
         except KeyboardInterrupt:
             print("Transcriber stopped.")
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
+args = parser.parse_args()
+env=args.env
+
+# Get the info on which AWS infrastucture we are using from the TF file.
+config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
+config = load_configuration(config_file_path)
+input_queue_url_for_audio2script = config['audio2script_input_queue_url']
+input_queue_url_for_transcribe = config['transcribe_input_queue_url']
 
 if __name__ == "__main__":
     transcriber = SpeechTranscriber()

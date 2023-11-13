@@ -68,7 +68,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
     env=args.env
 
-
     # Get the info on which AWS infrastucture we are using from the TF file.
     config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
     config = load_configuration(config_file_path)

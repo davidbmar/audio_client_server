@@ -6,8 +6,8 @@ import time
 
 # Set up argument parser
 parser = argparse.ArgumentParser(description="Update HTML file and copy to web directory.")
-parser.add_argument("-last-line-processed", type=int, default=None, help="Start building the html from the .dat file at item X to build HTML.")
-parser.add_argument("-loop-every-x-seconds", type=int, default=None, help="Loop every X seconds and update the HTML file.")
+parser.add_argument("--last-line-processed", type=int, default=0, help="Start building the html from the .dat file at item X to build HTML.")
+parser.add_argument("--loop-every-x-seconds", type=int, default=None, help="Loop every X seconds and update the HTML file.")
 args = parser.parse_args()
 
 # Function to read the last processed line number from a file
@@ -144,7 +144,7 @@ def main_loop(csv_file_path, html_file_name, last_line_file, loop_interval):
         time.sleep(loop_interval)
 
 if __name__ == "__main__":
-    csv_file_path = 'output.csv.sorted'
+    csv_file_path = 'output.csv'
     html_file_name = 'transcribed_lines.html'
     last_line_file = 'csv_to_html_last_line.dat'
 

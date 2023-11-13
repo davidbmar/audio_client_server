@@ -1,4 +1,9 @@
 #!/usr/bin/python3
+#
+# DEPRECATED: this should not be used because now we are using a FIFO, so this should be processed in order.
+# But before deleting we should check.
+#
+#
 import csv
 import re
 import time
