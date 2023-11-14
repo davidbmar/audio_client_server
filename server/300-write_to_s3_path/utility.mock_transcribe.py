@@ -69,20 +69,20 @@ if __name__ == "__main__":
     env=args.env
 
     # Get the info on which AWS infrastucture we are using from the TF file.
-    config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
+    config_file_path = f'./tf/{env}_audio_client_server.conf'
     config = load_configuration(config_file_path)
-    input_queue_url_for_audio2script = config['input_queue_url']
+    audio2script_input_queue_url_for_audio2script = config['audio2script_input_queue_url']
 
     # Read the INPUT CSV file
     filename_transcribed_message_pairs = read_csv_file("utility.mock.input.csv")
 
     # Check if the --trickle flag is used
     if args.trickle:
-        trickle_data(input_queue_url_for_audio2script, filename_transcribed_message_pairs, args.trickle)
+        trickle_data(audio2script_input_queue_url_for_audio2script, filename_transcribed_message_pairs, args.trickle)
     else:
         # Send each message to the SQS queue without delay
         for filename, transcribed_message in filename_transcribed_message_pairs:
-            send_queue(input_queue_url_for_audio2script, filename, transcribed_message)
+            send_queue(audio2script_input_queue_url_for_audio2script, filename, transcribed_message)
 
 
 

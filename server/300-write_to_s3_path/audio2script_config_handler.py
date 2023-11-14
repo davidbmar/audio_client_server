@@ -11,8 +11,8 @@ def load_configuration(config_file_path):
         config = configparser.ConfigParser()
         config.read(config_file_path)
         return {
-            'input_queue_url': config.get('DEFAULT', 'INPUT_FIFO_QUEUE_URL'),
-            'output_queue_url': config.get('DEFAULT', 'OUTPUT_FIFO_QUEUE_URL')
+            'audio2script_input_queue_url': config.get('DEFAULT', 'AUDIO2SCRIPT_INPUT_FIFO_QUEUE_URL'),
+            'audio2script_output_queue_url': config.get('DEFAULT', 'AUDIO2SCRIPT_OUTPUT_FIFO_QUEUE_URL')
         }
     except Exception as e:
         print(f"Error in loading configuration: {e}")
