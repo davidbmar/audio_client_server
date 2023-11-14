@@ -22,10 +22,10 @@ def main():
 
     # So before running this script the AWS infrastucture should be built which is the SQS queue.  main.tf handles this.
     # And the file ./tf/main.tf also builds the config file. Check "terraform plan"; "terraform apply" to create this config file.
-    config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
+    config_file_path = f'./tf/{env}_audio_client_server.conf'
     config = load_configuration(config_file_path)
-    input_queue_url = config['input_queue_url']
-    output_queue_url = config['output_queue_url']  # If you need to use it later
+    input_queue_url = config['audio2script_input_queue_url']
+    output_queue_url = config['audio2script_output_queue_url']  # If you need to use it later
 
     if args.run_once:
         print("Retrieving messages once then exiting.")

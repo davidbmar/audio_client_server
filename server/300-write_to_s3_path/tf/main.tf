@@ -75,9 +75,9 @@ resource "local_file" "config_file" {
         #
         # Application Configuration File
         [DEFAULT] 
-        TRANSCRIBE_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.input_fifo_queue.url}
-        AUDIO2SCRIPT_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.input_fifo_queue.url}
-        AUDIO2SCRIPT_OUTPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.output_fifo_queue.url}
+        TRANSCRIBE_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.transcribe_input_fifo_queue.url}
+        AUDIO2SCRIPT_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.audio2script_input_fifo_queue.url}
+        AUDIO2SCRIPT_OUTPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.audio2script_output_fifo_queue.url}
     EOT
 }
 
