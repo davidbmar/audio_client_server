@@ -7,14 +7,20 @@ import os
 import time
 import json
 import hashlib
+# TODO: NOTE WE SHOULD CHANGE THIS TO BE A GENERIC CONFIG_HANDLER INSTEAD OF JUST SAYING AUDIO2SCRIPT.
+from audio2script_config_handler import load_configuration
+
 
 # Step 2.1: Initialize boto3 for SQS and S3
 sqs = boto3.client('sqs', region_name='us-east-2')
 s3 = boto3.client('s3')
 
 # Variables
+#QUEUE_URL_FOR_DOWNLOAD = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_nonfifo"
 QUEUE_URL_FOR_DOWNLOAD = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpodio_whisperprocessor_us_east_2_nonfifo"
+#QUEUE_URL_FOR_TRANSCRIPTION = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
 QUEUE_URL_FOR_TRANSCRIPTION = "https://sqs.us-east-2.amazonaws.com/635071011057/sqs_queue_runpoidio_whisperprocessor_us_east_2_transcribe_step_nonfifo"
+
 DOWNLOAD_FOLDER = "./recievedSoundFiles"  # Replace with your path
 if not os.path.exists(DOWNLOAD_FOLDER):
     os.makedirs(DOWNLOAD_FOLDER)
@@ -91,6 +97,17 @@ def download_from_bucket():
                 
             except Exception as e:
                 print(f"Error downloading {file_to_download}: {e}")
+
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
+args = parser.parse_args()
+env=args.env
+
+# Get the info on which AWS infrastucture we are using from the TF file.
+config_file_path = f'./tf/{env}_audio2scriptviewer.conf'
+config = load_configuration(config_file_path)
+INPUT_QUEUE_URL_FOR_DOWNLOAD = config['download_input_fifo_queue_url']
+INPUT_QUEUE_URL_FOR_TRANSCRIPTION = config['transcribe_input_fifo_queue_url']
 
 if __name__ == "__main__":
     download_from_bucket()
