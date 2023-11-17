@@ -16,11 +16,11 @@ variable "env" {
 
 # Infrastucture Setup 
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-# Create an input FIFO SQS queue
-resource "aws_sqs_queue" "download_input_fifo_queue" {
-  name                      = "${var.env}_download_input.fifo"
-  fifo_queue                = true
-  content_based_deduplication = true
+# Create an input SQS queue
+# NOTE:Because this is an S3 event notification the download can not be a FIFO
+resource "aws_sqs_queue" "download_input_queue" {
+  name                      = "${var.env}_download_input"
+  fifo_queue                = false
   # You can add additional configuration parameters here
 }
 
@@ -49,9 +49,10 @@ resource "aws_sqs_queue" "audio2script_output_fifo_queue" {
 }
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # These URLs are needed by applications for sending and receiving messages
-output "download_input_fifo_queue_url" {
-  description = "The URL for the input download FIFO SQS queue. "
-  value       = aws_sqs_queue.transcribe_input_fifo_queue.url
+# NOTE:Because this is an S3 event notification the download can not be a FIFO
+output "download_input_queue_url" {
+  description = "The URL for the input download SQS queue. "
+  value       = aws_sqs_queue.download_input_queue.url
 }
 
 # These URLs are needed by applications for sending and receiving messages
@@ -89,10 +90,12 @@ resource "local_file" "config_file" {
         #
         # Application Configuration File
         [DEFAULT] 
-        DOWNLOAD_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.download_input_fifo_queue.url}
-        TRANSCRIBE_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.transcribe_input_fifo_queue.url}
-        AUDIO2SCRIPT_INPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.audio2script_input_fifo_queue.url}
-        AUDIO2SCRIPT_OUTPUT_FIFO_QUEUE_URL = ${aws_sqs_queue.audio2script_output_fifo_queue.url}
+        # Because this is an S3 event notification the download can not be a FIFO
+        download_input_fifo_queue_url = ${aws_sqs_queue.download_input_queue.url}
+        transcribe_input_fifo_queue_url = ${aws_sqs_queue.transcribe_input_fifo_queue.url}
+        audio2script_input_fifo_queue_url = ${aws_sqs_queue.audio2script_input_fifo_queue.url}
+        audio2script_output_fifo_queue_url = ${aws_sqs_queue.audio2script_output_fifo_queue.url}
+
     EOT
 }
 
