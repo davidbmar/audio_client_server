@@ -18,15 +18,15 @@ variable "env" {
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # Create an input SQS queue
 # NOTE:Because this is an S3 event notification the download can not be a FIFO
-resource "aws_sqs_queue" "download_input_queue" {
-  name                      = "${var.env}_download_input"
+resource "aws_sqs_queue" "download_input_nofifo_queue" {
+  name                      = "${var.env}_download_input_nofifo_queue"
   fifo_queue                = false
   # You can add additional configuration parameters here
 }
 
 # Create an input FIFO SQS queue
 resource "aws_sqs_queue" "transcribe_input_fifo_queue" {
-  name                      = "${var.env}_transcribe_input.fifo"
+  name                      = "${var.env}_transcribe_input_fifo_queue.fifo"
   fifo_queue                = true
   content_based_deduplication = true
   # You can add additional configuration parameters here
@@ -34,7 +34,7 @@ resource "aws_sqs_queue" "transcribe_input_fifo_queue" {
 
 # Create an input FIFO SQS queue
 resource "aws_sqs_queue" "audio2script_input_fifo_queue" {
-  name                      = "${var.env}_audio2script_input.fifo"
+  name                      = "${var.env}_audio2script_input_fifo_queue.fifo"
   fifo_queue                = true
   content_based_deduplication = true
   # You can add additional configuration parameters here
@@ -42,7 +42,7 @@ resource "aws_sqs_queue" "audio2script_input_fifo_queue" {
 
 # Create an output FIFO SQS queue
 resource "aws_sqs_queue" "audio2script_output_fifo_queue" {
-  name                      = "${var.env}_audio2script_output.fifo"
+  name                      = "${var.env}_audio2script_output_fifo_queue.fifo"
   fifo_queue                = true
   content_based_deduplication = true
   # You can add additional configuration parameters here
@@ -50,24 +50,24 @@ resource "aws_sqs_queue" "audio2script_output_fifo_queue" {
 # -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 # These URLs are needed by applications for sending and receiving messages
 # NOTE:Because this is an S3 event notification the download can not be a FIFO
-output "download_input_queue_url" {
+output "download_input_nofifo_queue_url" {
   description = "The URL for the input download SQS queue. "
-  value       = aws_sqs_queue.download_input_queue.url
+  value       = aws_sqs_queue.download_input_nofifo_queue.url
 }
 
 # These URLs are needed by applications for sending and receiving messages
-output "transcribe_input_queue_url" {
+output "transcribe_input_fifo_queue_url" {
   description = "The URL for the input transcribe FIFO SQS queue. "
   value       = aws_sqs_queue.transcribe_input_fifo_queue.url
 }
 
 # These URLs are needed by applications for sending and receiving messages
-output "audio2script_input_queue_url" {
+output "audio2script_input_fifo_queue_url" {
   description = "The URL for the input audio2script FIFO SQS queue. "
   value       = aws_sqs_queue.audio2script_input_fifo_queue.url
 }
 
-output "audio2script_output_queue_url" {
+output "audio2script_output_fifo_queue_url" {
   description = "The URL for the output audio2script FFIFO SQS queue."
   value       = aws_sqs_queue.audio2script_output_fifo_queue.url
 }
@@ -91,7 +91,7 @@ resource "local_file" "config_file" {
         # Application Configuration File
         [DEFAULT] 
         # Because this is an S3 event notification the download can not be a FIFO
-        download_input_fifo_queue_url = ${aws_sqs_queue.download_input_queue.url}
+        download_input_nofifo_queue_url = ${aws_sqs_queue.download_input_nofifo_queue.url}
         transcribe_input_fifo_queue_url = ${aws_sqs_queue.transcribe_input_fifo_queue.url}
         audio2script_input_fifo_queue_url = ${aws_sqs_queue.audio2script_input_fifo_queue.url}
         audio2script_output_fifo_queue_url = ${aws_sqs_queue.audio2script_output_fifo_queue.url}
