@@ -4,6 +4,7 @@
 #
 # Function to generate the initial HTML structure with CSS and auto-refresh
 import csv
+import shutil
 
 def generate_initial_html_with_css():
     css = '''
@@ -55,15 +56,16 @@ def copy_to_web_directory(source_file, destination_dir='/var/www/html'):
     shutil.copy(source_file, destination_file)
     print(f'File copied to {destination_file}')
 
-def main_loop(csv_file_path, html_file_name):
+def csvfile_to_html(csv_file_path, html_file_name):
     with open(html_file_name, 'w', newline='') as file:
         file.write(generate_initial_html_with_css())
         file.write(csv_to_html(csv_file_path))
         file.write(finalize_html())
+    copy_to_web_directory(html_file_name, destination_dir='/var/www/html')
 
 
 if __name__ == "__main__":
     csv_file = 'output.csv'
     html_file_name = 'transcribed_lines.html'
-    main_loop(csv_file, html_file_name) 
+    csvfile_to_html(csv_file, html_file_name) 
     
