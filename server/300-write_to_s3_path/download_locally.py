@@ -104,13 +104,13 @@ def download_from_bucket():
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
 args = parser.parse_args()
-env=args.env
+ENV=args.env
 pp = pprint.PrettyPrinter(indent=3)
 
 
 # Get the info on which AWS infrastucture we are using from the TF file.
-config_file_path = f'./tf/{env}_audio_client_server.conf'
-config = load_configuration(config_file_path,"staging")
+config_file_path = f'./tf/{ENV}_audio_client_server.conf'
+config = load_configuration(config_file_path,ENV)
 DOWNLOAD_INPUT_NOFIFO_QUEUE_URL = config['download_input_nofifo_queue_url']
 TRANSCRIBE_INPUT_FIFO_QUEUE_URL = config['transcribe_input_fifo_queue_url']
 

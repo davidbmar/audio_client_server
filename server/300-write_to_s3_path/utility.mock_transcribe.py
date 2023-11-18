@@ -8,8 +8,9 @@ import json
 import hashlib
 import csv
 import argparse
+import pprint
 import random
-from audio2script_config_handler import load_configuration
+from config_handler import load_configuration
 
 
 
@@ -36,7 +37,10 @@ def send_queue(sqs_queue, filename, transcribed_message):
         'filename': filename,
         'transcribed_message': transcribed_message
     }
-    print(f"Sending the following message to SQS {sqs_queue}: {message_body}")
+    print(f"Sending the following message to SQS {sqs_queue}:")
+    pp.pprint(message_body)
+    print("\n")
+
 
     # Generate a MessageDeduplicationId
     message_deduplication_id = hashlib.sha256(json.dumps(message_body).encode()).hexdigest()
@@ -60,29 +64,31 @@ def trickle_data(sqs_queue, pairs, max_wait_seconds):
         print(f"Waiting for {wait_time} seconds...")
         time.sleep(wait_time)
 
+parser = argparse.ArgumentParser(description='Process some integers.')
+parser.add_argument('--trickle', type=int, nargs='?', const=5, help='Trickle data into the output file slowly max random seconds.')
+parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
+args = parser.parse_args()
+ENV=args.env
+pp = pprint.PrettyPrinter(indent=3)
+
+
 # Main execution
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Process some integers.')
-    parser.add_argument('--trickle', type=int, nargs='?', const=5, help='Trickle data into the output file slowly max random seconds.')
-    parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
-    args = parser.parse_args()
-    env=args.env
-
     # Get the info on which AWS infrastucture we are using from the TF file.
-    config_file_path = f'./tf/{env}_audio_client_server.conf'
-    config = load_configuration(config_file_path)
-    audio2script_input_queue_url_for_audio2script = config['audio2script_input_queue_url']
+    config_file_path = f'./tf/{ENV}_audio_client_server.conf'
+    config = load_configuration(config_file_path,ENV)
+    input_fifo_queue_url_for_audio2script = config['audio2script_input_fifo_queue_url']
 
     # Read the INPUT CSV file
     filename_transcribed_message_pairs = read_csv_file("utility.mock.input.csv")
 
     # Check if the --trickle flag is used
     if args.trickle:
-        trickle_data(audio2script_input_queue_url_for_audio2script, filename_transcribed_message_pairs, args.trickle)
+        trickle_data(input_fifo_queue_url_for_audio2script, filename_transcribed_message_pairs, args.trickle)
     else:
         # Send each message to the SQS queue without delay
         for filename, transcribed_message in filename_transcribed_message_pairs:
-            send_queue(audio2script_input_queue_url_for_audio2script, filename, transcribed_message)
+            send_queue(input_fifo_queue_url_for_audio2script, filename, transcribed_message)
 
 
 
