@@ -33,11 +33,13 @@ def main():
 
     if args.run_once:
         print("Retrieving messages once then exiting.")
-        retrieve_messages_from_sqs(input_queue_url)
+        messages=retrieve_messages_from_sqs(input_queue_url)
     else:
         print(f"Looping every {args.loop_every_x_seconds} seconds.")
         while True:
-            retrieve_messages_from_sqs(input_queue_url)
+            messages=retrieve_messages_from_sqs(input_queue_url)
+            print("-=-=-=-=Message-=-=-=-=-")
+            pp.pprint(messages) 
             time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":

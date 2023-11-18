@@ -14,8 +14,8 @@ def retrieve_messages_from_sqs(input_queue_url, num_messages=10):
     messages = response.get('Messages', [])
     receipt_handles = []  # List to store receipt handles for batch delete
     for message in messages:
-        pprint.pprint (message)
-        print("\n")
+        #pprint.pprint (message)
+        #print("\n")
         message_content = eval(message['Body'])
         update_csv_with_messages([message_content])
         receipt_handles.append(message['ReceiptHandle'])

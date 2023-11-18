@@ -1,4 +1,11 @@
 #!/usr/bin/python3
+#
+# DEPRECATED: this functionality is now in audio2script, where audio2script pulls the data once transcribed to the EC2 host and writes it to 
+#   CSV AND also makes the HTML file.  So this script is deprecated and being moved into functions of audio2script_html_functions.
+#
+#
+#
+
 import csv
 import shutil
 import argparse
