@@ -6,6 +6,7 @@ import re
 #import s3_operations
 import json
 import hashlib
+from datetime import datetime
 from faster_whisper import WhisperModel
 
 class SpeechTranscriber:
@@ -31,9 +32,11 @@ class SpeechTranscriber:
         # to see how this works, review the test utility code: utility.drivemessages.clientDisplay_TxtOnly.fifo.py
         message_deduplication_id = hashlib.sha256(json.dumps(message_body).encode()).hexdigest()
 
+        current_day = datetime.now().strftime("%Y%m%d")  # Format: YYYYMMDD
         response = self.sqs.send_message(
             QueueUrl=self.final_file_txt_file_queue_url,
             MessageBody=json.dumps(message_body),
+            MessageGroupId=current_day  # Group ID based on the current day, later you may change this to a user or session to ensure inorder processing.
         )
         print(f"Message sent with ID: {response['MessageId']}")
 
