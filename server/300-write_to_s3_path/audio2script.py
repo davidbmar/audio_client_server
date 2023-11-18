@@ -6,7 +6,7 @@ import argparse
 import configparser
 import os
 import pprint
-
+from audio2script_html_functions import csvfile_to_html
 from config_handler import load_configuration
 from audio2script_sqs_operations import retrieve_messages_from_sqs
 
@@ -40,6 +40,7 @@ def main():
             messages=retrieve_messages_from_sqs(input_queue_url)
             print("-=-=-=-=Message-=-=-=-=-")
             pp.pprint(messages) 
+            csvfile_to_html("output.csv","transcribed_lines.html")
             time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":
