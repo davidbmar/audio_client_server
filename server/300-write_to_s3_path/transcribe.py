@@ -3,11 +3,14 @@ import boto3
 import time
 import os
 import re
+import argparse
+import pprint
 #import s3_operations
 import json
 import hashlib
 from datetime import datetime
 from faster_whisper import WhisperModel
+from config_handler import load_configuration
 
 class SpeechTranscriber:
     def __init__(self, model_size="large-v2", device="cuda", compute_type="float16",
@@ -87,12 +90,12 @@ class SpeechTranscriber:
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument("--env", required=True, help="Environment to use (e.g., dev, staging, prod).")
 args = parser.parse_args()
-env=args.env
+ENV=args.env
 pp = pprint.PrettyPrinter(indent=3)
 
 # Get the info on which AWS infrastucture we are using from the TF file.
-config_file_path = f'./tf/{env}_audio_client_server.conf'
-config = load_configuration(config_file_path)
+config_file_path = f'./tf/{ENV}_audio_client_server.conf'
+config = load_configuration(config_file_path,ENV)
 INPUT_FIFO_QUEUE_URL_FOR_AUDIO2SCRIPT = config['audio2script_input_fifo_queue_url']
 INPUT_FIFO_QUEUE_URL_FOR_TRANSCRIBE = config['transcribe_input_fifo_queue_url']
 
