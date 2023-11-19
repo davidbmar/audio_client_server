@@ -20,6 +20,17 @@ args = parser.parse_args()
 pp = pprint.PrettyPrinter(indent=3)
 ENV=args.env
 
+def touch_file(filename):
+    """
+    Create a file if it does not exist, similar to the Unix 'touch' command.
+
+    Args:
+    filename (str): The name of the file to be created or checked.
+    """
+    with open(filename, 'a'):
+        pass  # The file is created if it does not exist, and not modified if it exists
+
+
 def main():
 
     # So before running this script the AWS infrastucture should be built which is the SQS queue.  main.tf handles this.
@@ -44,4 +55,5 @@ def main():
             time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":
+    touch_file('output.csv')
     main()
