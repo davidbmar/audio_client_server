@@ -6,7 +6,7 @@ import argparse
 import configparser
 import os
 import pprint
-from audio2script_html_functions import csvfile_to_html,copy_to_web_directory 
+from audio2script_html_functions import csvfile_to_html,copy_to_web_directory,sort_file
 from config_handler import load_configuration
 from audio2script_sqs_operations import retrieve_messages_from_sqs
 
@@ -30,6 +30,16 @@ def touch_file(filename):
     with open(filename, 'a'):
         pass  # The file is created if it does not exist, and not modified if it exists
 
+def main_run_loop():
+    csv_file = 'output.csv'
+    sorted_file = 'output.sorted'
+    html_file_name = 'transcribed_lines.html'
+
+    # input is the csv_file, and this outputs it to the sorted_file.
+    sort_file(csv_file, sorted_file)
+        
+    # now that we have a new sorted file, convert the sorted file to html and copy to the web directory.
+    csvfile_to_html(sorted_file, html_file_name) 
 
 def main():
 
@@ -45,13 +55,18 @@ def main():
     if args.run_once:
         print("Retrieving messages once then exiting.")
         messages=retrieve_messages_from_sqs(input_queue_url)
+   
+        main_run_loop()
+
     else:
         print(f"Looping every {args.loop_every_x_seconds} seconds.")
         while True:
             messages=retrieve_messages_from_sqs(input_queue_url)
             print("-=-=-=-=Message-=-=-=-=-")
             pp.pprint(messages) 
-            csvfile_to_html("output.csv","transcribed_lines.html")
+
+            main_run_loop()
+
             time.sleep(args.loop_every_x_seconds)
 
 if __name__ == "__main__":

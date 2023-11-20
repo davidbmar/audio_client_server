@@ -63,9 +63,26 @@ def csvfile_to_html(csv_file_path, html_file_name):
         file.write(finalize_html())
     copy_to_web_directory(html_file_name, destination_dir='/var/www/html')
 
+def sort_file(input_file, output_file):
+    # Read the data from the input file
+    with open(input_file, 'r') as file:
+        lines = file.readlines()
+
+    # Remove any empty lines and sort the lines based on the sequence number
+    sorted_lines = sorted([line for line in lines if line.strip()], key=lambda x: int(x.split('.')[0].split('-')[-1]))
+
+    # Write the sorted data to the output file
+    with open(output_file, 'w') as file:
+        file.writelines(sorted_lines)
 
 if __name__ == "__main__":
     csv_file = 'output.csv'
+    sorted_file = 'output.sorted'
     html_file_name = 'transcribed_lines.html'
-    csvfile_to_html(csv_file, html_file_name) 
-    
+
+    # input is the csv_file, and this outputs it to the sorted_file.
+    sort_file(csv_file, sorted_file)
+
+    # now convert the sorted file to html.
+    csvfile_to_html(sorted_file, html_file_name) 
+   
