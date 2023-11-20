@@ -6,7 +6,7 @@ import argparse
 import configparser
 import os
 import pprint
-from audio2script_html_functions import csvfile_to_html
+from audio2script_html_functions import csvfile_to_html,copy_to_web_directory 
 from config_handler import load_configuration
 from audio2script_sqs_operations import retrieve_messages_from_sqs
 
@@ -56,4 +56,5 @@ def main():
 
 if __name__ == "__main__":
     touch_file('output.csv')
+    copy_to_web_directory("web/record_to_s3.html", destination_dir='/var/www/html')
     main()
