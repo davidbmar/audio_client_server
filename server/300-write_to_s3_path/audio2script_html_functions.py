@@ -34,11 +34,24 @@ def csv_to_html(csv_file_input):
     """
     reads all the CSV data and puts it into a table inserable format.  Basically all the row elements without the headers.
     """
+    s3_website="https://presigned-url-audio-uploads.s3.us-east-2.amazonaws.com/"
     html_rows = ''
     with open(csv_file_input, 'r', newline='') as file:
         reader = csv.reader(file)
         for row in reader:
-            html_rows += '<tr>' + ''.join([f'<td>{cell}</td>' for cell in row]) + '</tr>\n'
+            row_html = []
+            for i, cell in enumerate(row):
+                if i == 0:
+                    # For the first column, prepend the URL
+                    #cell_html = f'<td><a href="{s3_website}{cell}" target="_blank">{cell}</a></td>'
+                    cell_html = f'<td><audio controls><source src="{s3_website}{cell}" type="audio/flac">Your browser does not support the audio element.</audio></td>'
+                else:
+                    # For other columns, use the cell value as is
+                    cell_html = f'<td>{cell}</td>'
+                row_html.append(cell_html)
+            # Append the constructed HTML for each row to html_rows
+            html_rows += '<tr>' + ''.join(row_html) + '</tr>\n'
+
     return html_rows
 
 
