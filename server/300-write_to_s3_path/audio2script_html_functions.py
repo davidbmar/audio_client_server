@@ -23,22 +23,27 @@ def generate_initial_html_with_css():
     </style>
     '''
 
-    #refresh_meta_tag = '<meta http-equiv="refresh" content="5">'
     javascript_content = '''
     <script>
+        var lastEntryIndex = 0; // Index of the last entry received
+    
         function updateTable() {
             var xhr = new XMLHttpRequest();
             xhr.onreadystatechange = function() {
                 if (this.readyState == 4 && this.status == 200) {
-                    // Update the table with the response
-                    document.getElementById("dynamic-content").innerHTML = this.responseText;
+                    var dynamicContent = document.getElementById("dynamic-content");
+                    dynamicContent.insertAdjacentHTML('beforeend', this.responseText);
+    
+                    // Update lastEntryIndex based on the actual number of entries received
+                    var receivedEntries = this.responseText.split("<tr>").length - 1;
+                    lastEntryIndex += receivedEntries;
                 }
             };
-            xhr.open("GET", "https://chattychapters.com:8767/update_table", true);
+            // Request the next set of entries
+            xhr.open("GET", "https://chattychapters.com/update_table?start=" + lastEntryIndex + "&end=" + (lastEntryIndex + 5), true);
             xhr.send();
         }
     
-        // Set the interval for updating the table
         setInterval(updateTable, 5000); // Update every 5 seconds
     </script>
     '''
@@ -94,7 +99,7 @@ def copy_to_web_directory(source_file, destination_dir='/var/www/html'):
 def csvfile_to_html(csv_file_path, html_file_name):
     with open(html_file_name, 'w', newline='') as file:
         file.write(generate_initial_html_with_css())
-        file.write(csv_to_html(csv_file_path))
+        #file.write(csv_to_html(csv_file_path))
         file.write(finalize_html())
     copy_to_web_directory(html_file_name, destination_dir='/var/www/html')
 
