@@ -22,10 +22,31 @@ def generate_initial_html_with_css():
         /* More styles can be added here */
     </style>
     '''
-    refresh_meta_tag = '<meta http-equiv="refresh" content="5">'
-    initial_html = f'<!DOCTYPE html>\n<html>\n<head>\n{css}\n{refresh_meta_tag}</head>\n<body>\n<table>\n'
+
+    #refresh_meta_tag = '<meta http-equiv="refresh" content="5">'
+    javascript_content = '''
+    <script>
+        function updateTable() {
+            var xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function() {
+                if (this.readyState == 4 && this.status == 200) {
+                    // Update the table with the response
+                    document.getElementById("dynamic-content").innerHTML = this.responseText;
+                }
+            };
+            xhr.open("GET", "https://chattychapters.com:8767/update_table", true);
+            xhr.send();
+        }
+    
+        // Set the interval for updating the table
+        setInterval(updateTable, 5000); // Update every 5 seconds
+    </script>
+    '''
+
+    initial_html = f'<!DOCTYPE html>\n<html>\n<head>\n{css}\n{javascript_content}</head>\n<body>\n<table>\n'
     # Start dynamic content marker
     initial_html += '<!-- Start of dynamic content -->\n'
+    initial_html += '<tbody id="dynamic-content">\n'
 
     return initial_html
 
@@ -57,7 +78,8 @@ def csv_to_html(csv_file_input):
 
 # Function to finalize the HTML structure
 def finalize_html():
-    html_content = "</table>\n</body>\n</html>"
+    html_content = '</tbody>\n'
+    html_content += "</table>\n</body>\n</html>"
 
     return html_content
 
