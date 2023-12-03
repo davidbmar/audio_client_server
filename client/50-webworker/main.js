@@ -103,19 +103,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
         isRecording = true;
         startRecording();
     }
-   
+  
     function startNewSegment() {
         if (isRecording) {
-            audioChunks = [];
-            mediaRecorder.start();
+            // Delay the start of the next segment
             setTimeout(() => {
-                if (mediaRecorder.state === 'recording') {
-                    mediaRecorder.stop();
-                }
-            }, 3000); // Record for 3 seconds
+                audioChunks = [];
+                mediaRecorder.start();
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 3000); // Record for 3 seconds
+            }, 100); // Short delay before starting the next segment
         }
-    } 
-    
+    }
+
     const startButton = document.getElementById('startRecording');
     const stopButton = document.getElementById('stopRecording');
 
