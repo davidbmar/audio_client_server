@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let isRecording = false;
     let sequenceNumber=15000
     let isWorkerStopping = false;
+    let recordingLength = 3000; // Default value in milliseconds
 
 
 
@@ -46,9 +47,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const hour = String(date.getHours()).padStart(2, '0');
         const minute = String(date.getMinutes()).padStart(2, '0');
         const second = String(date.getSeconds()).padStart(2, '0');
-        const msecond = String(date.getMilliseconds()).padStart(2, '0');
+        const msecond = String(date.getMilliseconds()).padStart(3, '0');
         const sequence = String(sequenceNumber).padStart(6, '0');
-        returnValue = `${year}-${month}-${day}-${hour}-${minute}-${second}${msecond}-${sequence}`;
+        returnValue = `${year}-${month}-${day}-${hour}-${minute}-${second}-${msecond}-${sequence}`;
         return returnValue
     }
 
@@ -73,12 +74,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         sequenceNumber++;
         startNewSegment(); // Start recording the next segment
     }
-    
+   
     function stopWorker() {
         console.log("Called stopWorker.");
     
+        // Hide the recording image
+        document.getElementById('recordingImage').style.display = 'none';
+    
         isRecording = false;
-        isWorkerStopping = true; // Indicate that the worker is being stopped
+        isWorkerStopping = true;
     
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
@@ -89,10 +93,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
             myWorker = undefined;
         }
     }
-
+ 
     function startWorker() {
         console.log("startWorker called");
 
+        // Show the recording image
+        document.getElementById('recordingImage').style.display = 'block';
+    
         if (typeof(Worker) !== "undefined") {
             if (!myWorker) {
                 myWorker = new Worker("worker.js");
@@ -103,7 +110,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         isRecording = true;
         startRecording();
     }
-  
+
     function startNewSegment() {
         if (isRecording) {
             // Delay the start of the next segment
@@ -114,7 +121,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     if (mediaRecorder.state === 'recording') {
                         mediaRecorder.stop();
                     }
-                }, 3000); // Record for 3 seconds
+                }, recordingLength); // Record for 3 seconds if the default setting value.
             }, 100); // Short delay before starting the next segment
         }
     }
@@ -137,6 +144,22 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     } else {
         console.error('Stop button not found');
+    }
+
+    const updateButton = document.getElementById('update');
+    const timeIntervalInput = document.getElementById('timeInterval');
+    
+    if (updateButton) {
+        updateButton.addEventListener('click', function() {
+            const newTimeInterval = parseInt(timeIntervalInput.value);
+            if (!isNaN(newTimeInterval) && newTimeInterval > 0) {
+                recordingLength = newTimeInterval;
+            } else {
+                console.error('Invalid input for time interval');
+            }
+        });
+    } else {
+        console.error('Update button not found');
     }
 
 });
