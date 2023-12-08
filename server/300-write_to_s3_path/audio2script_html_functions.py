@@ -99,21 +99,21 @@ def copy_to_web_directory(source_file, destination_dir='/var/www/html'):
 def csvfile_to_html(csv_file_path, html_file_name):
     with open(html_file_name, 'w', newline='') as file:
         file.write(generate_initial_html_with_css())
-        #file.write(csv_to_html(csv_file_path))
         file.write(finalize_html())
     copy_to_web_directory(html_file_name, destination_dir='/var/www/html')
 
+
 def sort_file(input_file, output_file):
-    # Read the data from the input file
     with open(input_file, 'r') as file:
         lines = file.readlines()
 
-    # Remove any empty lines and sort the lines based on the sequence number
-    sorted_lines = sorted([line for line in lines if line.strip()], key=lambda x: int(x.split('.')[0].split('-')[-1]))
 
-    # Write the sorted data to the output file
+    # Sort lines based on the year, month, and day in the filename
+    sorted_lines = sorted(lines, key=lambda x: x.split('-')[:6])
+
     with open(output_file, 'w') as file:
         file.writelines(sorted_lines)
+
 
 if __name__ == "__main__":
     csv_file = 'output.csv'
