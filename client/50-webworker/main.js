@@ -8,11 +8,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let isRecording = false;
     let sequenceNumber=15000
     let isWorkerStopping = false;
+    let userStopped = false; // New variable to track user-initiated stop as opposed to next segment stop.
     let recordingLength = 3000; // Default value in milliseconds
 
 
 
+
     function initAudioContext() {
+        console.log("initAudioContext called"); // Debug message
         audioContext = new AudioContext();
         // Check if the audio context is in a suspended state (autoplay policy)
         if (audioContext.state === 'suspended') {
@@ -21,8 +24,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function startRecording() {
+         console.log("startRecording called"); // Existing debug message
+         console.log("Current isRecording state before starting: ", isRecording); // New debug statement
+         isRecording = true;
+         userStopped = false; // Reset on start of recording.
+
          navigator.mediaDevices.getUserMedia({ audio: true })
              .then(stream => {
+                 console.log("Stream received:", stream); // Log the stream for debugging
                  mediaRecorder = new MediaRecorder(stream);
                  mediaRecorder.ondataavailable = handleDataAvailable;
                  mediaRecorder.onstop = handleStop;
@@ -34,12 +43,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }   
 
     function handleDataAvailable(event) {
+        console.log("handleDataAvailable called, Data size:", event.data.size); // Log data size
         if (event.data.size > 0) {
             audioChunks.push(event.data);
         }
     }
 
     function generateFileName() {
+        console.log("generateFileName called"); // Debug message
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -54,7 +65,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function handleStop() {
-        console.log("handleStop called");
+        console.log("handleStop called, audioChunks length:", audioChunks.length); // Log the length of audioChunks
+        console.log("isRecording: ", isRecording, " isWorkerStopping: ", isWorkerStopping); // New debug statement
+
     
         if (!isRecording || isWorkerStopping) {
             console.log("Exiting handleStop.");
@@ -74,21 +87,26 @@ document.addEventListener('DOMContentLoaded', (event) => {
         sequenceNumber++;
         startNewSegment(); // Start recording the next segment
     }
-   
-    function stopWorker() {
-        console.log("Called stopWorker.");
-    
-        // Hide the recording image
-        document.getElementById('recordingImage').style.display = 'none';
-    
-        isRecording = false;
-        isWorkerStopping = true;
+  
+    function stopRecording() {
+        console.log("User initiated stopRecording");
+        userStopped = true; // Indicate that this stop is user-initiated
+        isRecording = false; // Update recording state
     
         if (mediaRecorder && mediaRecorder.state === 'recording') {
             mediaRecorder.stop();
         }
+
+        stopWorker(); // Call stopWorker to handle worker-related stopping logic
+    }
+
+    function stopWorker() {
+        console.log("Called stopWorker for worker-related logic");
     
-        if (myWorker) {
+        // Hide the recording image
+        document.getElementById('recordingImage').style.display = 'none';
+    
+        if (userStopped && myWorker) {
             myWorker.terminate();
             myWorker = undefined;
         }
@@ -107,11 +125,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
         } else {
             console.log("Sorry, your browser does not support Web Workers...");
         }
-        isRecording = true;
-        startRecording();
+        //isRecording = true;
     }
 
     function startNewSegment() {
+        console.log("startNewSegment called"); // Existing debug message
+        console.log("Current isRecording state in startNewSegment: ", isRecording); // New debug statement
         if (isRecording) {
             // Delay the start of the next segment
             setTimeout(() => {
@@ -131,6 +150,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     if (startButton) {
         startButton.addEventListener('click', function() {
+            console.log("Start button clicked"); // New debug statement
             startWorker();
             startRecording();
         });
@@ -140,7 +160,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     if (stopButton) {
         stopButton.addEventListener('click', function() {
-            stopWorker();
+            console.log("Stop button clicked"); // New debug statement
+            stopRecording(); // Call the new stopRecording function
         });
     } else {
         console.error('Stop button not found');

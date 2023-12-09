@@ -6,8 +6,15 @@
 </head>
 <body>
     <h1>Web Worker Prototype on Chrome</h1>
+    <label for="timeInterval">Sound Clip Length (ms):</label>
+    <input id="timeInterval" type="number" value="3000"> <br>
+    <button id="update">Update</button><br>
+
+    <br><br>
     <button id="startRecording">Start Recording</button>
     <button id="stopRecording">Stop Recording</button>
+    <img id="recordingImage" src="mic.png" style="display: none;">
+
     <div id="result"></div>
 
     <script src="main.js"></script>
