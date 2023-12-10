@@ -32,6 +32,24 @@ print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 
+## Example usage
+#data = {'key1': 'value1', 'key2': [1, 2, 3], 'key3': {'nestedKey': 'nestedValue'}}
+#file_pretty_print('output.txt', data, indent=4)
+def file_pretty_print(file_path, *args, width=1000, **kwargs):
+    """
+    Writes the given arguments to a file in a pretty-printed format without wrapping lines.
+
+    :param file_path: Path of the file where the output will be written.
+    :param args: Arguments to be pretty-printed and written to the file.
+    :param width: The maximum width of a line in the output. Defaults to 200.
+    :param kwargs: Additional keyword arguments for pprint.pformat().
+    """
+    with open(file_path, 'a') as file:
+        for arg in args:
+            formatted = pprint.pformat(arg, width=width, **kwargs)
+            file.write(formatted + '\n')
+
+
 def extract_key(filename):
     """
     Extract the last 6 digits from the filename and return as an integer.
@@ -45,7 +63,7 @@ def extract_key(filename):
     match = re.search(r'(\d{6})\.\w+$', filename)
     return int(match.group(1)) if match else None
 
-def extract_and_sort_txt_from_json_object(json_object):
+def extract_txt_from_json_object(json_object):
     """
     Extract the 'txt' field from each dictionary in a JSON object,
     sort them based on the last 6 digits in the filename, and return a sorted JSON object.
@@ -54,15 +72,15 @@ def extract_and_sort_txt_from_json_object(json_object):
     - json_object (list): A list of dictionaries representing the JSON object.
 
     Returns:
-    - list: A sorted list of dictionaries representing the sorted JSON object.
+    - list: Only the txt representing the JSON object.
     """
     # Sort the list of dictionaries based on the extracted key
-    sorted_json_object = sorted(json_object, key=lambda x: extract_key(x['filename']))
+    # sorted_json_object = sorted(json_object, key=lambda x: extract_key(x['filename']))
 
     # Create a list to hold the sorted 'txt' fields
-    sorted_txt_list = [entry['txt'] for entry in sorted_json_object]
+    txt_list = [entry['txt'] for entry in json_object]
 
-    return sorted_txt_list
+    return txt_list
 
 
 def read_and_convert_to_json(input_filename, output_filename):
@@ -100,40 +118,44 @@ def read_and_convert_to_json(input_filename, output_filename):
 
 
 # Load the txt file
-txt_path = 'output.csv.sorted'
+txt_path = 'output.sorted'
 with open(txt_path, 'r') as f:
   txt = f.read()
 print("0.-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("raw txt:")
 print(txt)
-print("Pres any key to continue..")
+file_pretty_print('temp/0.txt', txt, indent=3)
+print("Press any key to continue..")
 input()
 
-json_object=read_and_convert_to_json("output.csv", "output.json")
+json_object=read_and_convert_to_json("output.sorted", "output.json")
 print("1.-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("json txt:")
 pp.pprint(json_object)
-print("Pres any key to continue..")
+file_pretty_print('temp/1.txt', json_object, indent=3)
+print("Press any key to continue..")
 input()
 
 
-sorted_txt_list = extract_and_sort_txt_from_json_object(json_object)
-print("2.-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
-print ("sorted_txt_list = extract_and_sort_txt_from_json_object(json_object)")
-print ("sorted_txt_list")
-pp.pprint(sorted_txt_list)
-print("Pres any key to continue..")
+txt_list = extract_txt_from_json_object(json_object)
+#print("2.-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+#print ("txt_list = extract_txt_from_json_object(json_object)")
+#print ("txt_list")
+pp.pprint(txt_list)
+file_pretty_print('temp/2.txt', txt_list, indent=3)
+print("Press any key to continue..")
 input()
 
 # Join the list into a single string
-giant_sorted_txt = ' '.join(sorted_txt_list)
-segments = [sentence.strip() for sentence in giant_sorted_txt.split('.') if sentence.strip()]
+giant_txt = ' '.join(txt_list)
+segments = [sentence.strip() for sentence in giant_txt.split('.') if sentence.strip()]
 # Split each string in the list on periods and flatten the resulting lists into a single list
 print("3.-=-=-=-=-Join the list into a single string=-=-=-=-=-=-=-=-=-=-=-")
 print("giant_sorted_txt = ' '.join(your_list)")
 print("segments = [sentence.strip() for sentence in giant_txt.split('.') if sentence.strip()]")
 pp.pprint(segments)
-print("Pres any key to continue..")
+file_pretty_print('temp/3.txt', segments, indent=3)
+print("Press any key to continue..")
 input()
 
 # Put the . back in
@@ -141,7 +163,8 @@ segments = [segment + '.' for segment in segments]
 print("4.-=-=-=-=-Put the . back in=-=-=-=-=-=-=-=-=-=-=-")
 print("segments = [segment + '.' for segment in segments]")
 pp.pprint(segments)
-print("Pres any key to continue..")
+file_pretty_print('temp/4.txt', segments, indent=3)
+print("Press any key to continue..")
 input()
 
 # Further split by ? 
@@ -150,7 +173,8 @@ segments = [sub_segment for segment in segments for sub_segment in re.split(r'(?
 print("5 -=-=-=-=-=Further split by ?-=-=-=-=-=-=-=-=-=-=-")
 print("segments = [segment.split('?') for segment in segments]")
 print(segments)
-print("Pres any key to continue..")
+file_pretty_print('temp/5.txt', segments, indent=3)
+print("Press any key to continue..")
 input()
 
 # Further split by comma
@@ -159,7 +183,8 @@ print("6 -=-=-=-=-=Further split by comma-=-=-=-=-=-=-=-=-=-=-")
 print("segments = [segment.split(',') for segment in segments]")
 #pp.pprint(segments)
 print(segments)
-print("Pres any key to continue..")
+file_pretty_print('temp/6.txt', segments, indent=3)
+print("Press any key to continue..")
 input()
 
 # Flatten
@@ -167,7 +192,8 @@ segments = [item for sublist in segments for item in sublist]
 print("7 -=-=-=-=-=Flatten-=-=-=-=-=-=-=-=-=-=-")
 print("segments = [item for sublist in segments for item in sublist]")
 pp.pprint(segments)
-print("Pres any key to continue..")
+file_pretty_print('temp/7.txt', segments, indent=3)
+print("Press any key to continue..")
 input()
 
 
@@ -257,23 +283,26 @@ def parse_title_summary_results(results):
   return out
 
 sentences = create_sentences(segments, MIN_WORDS=20, MAX_WORDS=80)
-print("5 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+print("8 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("sentences = create_sentences(segments, MIN_WORDS=20, MAX_WORDS=80)")
 pp.pprint(sentences)
+file_pretty_print('temp/8.txt', sentences, indent=3)
 print("Press any key to continue..")
 input()
 
 chunks = create_chunks(sentences, CHUNK_LENGTH=5, OVERLAP=1)
-print("6 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+print("9 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("chunks = create_chunks(sentences, CHUNK_LENGTH=5, OVERLAP=1)")
 pp.pprint(chunks)
+file_pretty_print('temp/9.txt', chunks, indent=3)
 print("Press any key to continue..")
 input()
 
 chunks_text = [chunk['text'] for chunk in chunks]
-print("7 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
+print("10 -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-")
 print("chunks_text = [chunk['text'] for chunk in chunks]")
 pp.pprint(chunks_text)
+file_pretty_print('temp/10.txt', chunks_text, indent=3)
 print("Press any key to continue..")
 input()
 
@@ -323,23 +352,27 @@ num_1_chunks = len(stage_1_summaries)
 print("\n\n\n")
 print (f"stage_1_outputs (all the titles)")
 pp.pprint(stage_1_outputs)
+file_pretty_print('temp/11.txt', stage_1_outputs, indent=3)
 print("Press any key to continue..")
 
 print("\n\n\n")
 print (f"stage_1_summaries (from the llm which summarized the chunk):\n\n\n")
 pp.pprint(stage_1_summaries)
+file_pretty_print('temp/12.txt', stage_1_summaries, indent=3)
 print("Press any key to continue..")
 input()
 
 print("\n\n\n")
 print (f"stage_1_titles:\n\n\n")
 pp.pprint(stage_1_titles)
+file_pretty_print('temp/13.txt', stage_1_titles, indent=3)
 print("Press any key to continue..")
 input()
 
 print("\n\n\n")
 print (f"num_1_chunks:\n\n\n")
 pp.pprint(num_1_chunks)
+file_pretty_print('temp/14.txt', num_1_chunks, indent=3)
 print("Press any key to continue..")
 input()
 

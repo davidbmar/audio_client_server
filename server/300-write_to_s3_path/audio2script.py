@@ -71,5 +71,5 @@ def main():
 
 if __name__ == "__main__":
     touch_file('output.csv')
-    copy_to_web_directory("web/record_to_s3.html", destination_dir='/var/www/html')
+    #copy_to_web_directory("web/record_to_s3.html", destination_dir='/var/www/html')
     main()
