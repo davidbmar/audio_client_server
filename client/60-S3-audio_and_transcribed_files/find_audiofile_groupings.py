@@ -45,7 +45,6 @@ def sort_files_by_timestamp(file_names):
 
     return sorted(file_names, key=timestamp_key)
 
-# Function to group files based on a time gap threshold
 def group_files_by_time_gap(file_names, gap_threshold):
     grouped_files = []
     current_group = []
@@ -56,17 +55,22 @@ def group_files_by_time_gap(file_names, gap_threshold):
         if timestamp is None:
             continue  # Skip files with invalid timestamps
 
-        if last_timestamp is None or (timestamp - last_timestamp) < gap_threshold:
-            current_group.append(file_name)
+        if last_timestamp is None or (timestamp - last_timestamp) <= gap_threshold:
+            if not current_group:
+                current_group.append(file_name)  # Start a new group
         else:
-            grouped_files.append(current_group)
-            current_group = [file_name]
+            if len(current_group) > 0:
+                # Add the first and last file of the current group
+                grouped_files.append((current_group[0], current_group[-1]))
+            current_group = [file_name]  # Start a new group
         last_timestamp = timestamp
+        current_group.append(file_name)  # Add file to the current group
 
     if current_group:
-        grouped_files.append(current_group)
+        # Add the first and last file of the last group
+        grouped_files.append((current_group[0], current_group[-1]))
 
-    return grouped_files
+    return [(f.rsplit('.', 1)[0], l.rsplit('.', 1)[0]) for f, l in grouped_files]
 
 # Define your S3 buckets
 bucket_audio_name = 'presigned-url-audio-uploads'
@@ -88,9 +92,14 @@ grouped_files = group_files_by_time_gap(sorted_files, time_gap_threshold)
 
 pp = pprint.PrettyPrinter(indent=3)
 
-# Print the grouped files
-for i, group in enumerate(grouped_files, start=1):
-    print(f"Group{i}:")
-    pp.pprint(group)
+## Print the grouped files
+#for i, group in enumerate(grouped_files, start=1):
+#    print(f"Group{i}:")
+#    pp.pprint(group)
+
+# Print the first and last file of each group
+for i, (first_file, last_file) in enumerate(grouped_files, start=1):
+    print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
+
 
 
