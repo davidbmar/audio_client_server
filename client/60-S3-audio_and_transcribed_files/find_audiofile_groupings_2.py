@@ -72,45 +72,34 @@ def group_files_by_time_gap(file_names, gap_threshold):
 
     return [(f.rsplit('.', 1)[0], l.rsplit('.', 1)[0]) for f, l in grouped_files]
 
-
-# get_grouped_files will return a the first file, and the last file (w/o the extension)
-# it will determine the groups by the gap_threashold_min.
-#[
-#    ("2023-11-03-22-35-5615-001020", "2023-11-03-22-37-5615-001050"),
-#    ("2023-12-09-13-32-18-618-015215", "2023-12-09-13-34-18-618-015250")
-#]
-# or generally like this:
-#[
-#    (first_file_of_group_1, last_file_of_group_1),
-#    (first_file_of_group_2, last_file_of_group_2),
-#    ...
-#    (first_file_of_group_n, last_file_of_group_n)
-#]
-def get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes):
-    # List files from both buckets
-    audio_files = list_files(bucket_audio_name)
-    text_files = list_files(bucket_text_name)
-
-    # Combine and deduplicate timestamps from both lists
-    all_files = list(set(audio_files + text_files))
-    sorted_files = sort_files_by_timestamp(all_files)
-
-    # Define the time gap threshold for grouping
-    time_gap_threshold = timedelta(minutes=gap_threshold_minutes)
-
-    # Group the files based on the time gap
-    grouped_files = group_files_by_time_gap(sorted_files, time_gap_threshold)
-
-    # Return the grouped files (first and last file of each group)
-    return [(group[0].rsplit('.', 1)[0], group[1].rsplit('.', 1)[0]) for group in grouped_files]
-
+# Define your S3 buckets
 bucket_audio_name = 'presigned-url-audio-uploads'
 bucket_text_name = 'audioclientserver-transcribedobjects-public'
-gap_threshold_minutes = 5
 
-grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
+# List files from both buckets
+audio_files = list_files(bucket_audio_name)
+text_files = list_files(bucket_text_name)
 
+# Combine and deduplicate timestamps from both lists
+all_files = list(set(audio_files + text_files))
+sorted_files = sort_files_by_timestamp(all_files)
+
+# Define the time gap threshold for grouping (15 minutes)
+time_gap_threshold = timedelta(minutes=15)
+
+# Group the files based on the time gap
+grouped_files = group_files_by_time_gap(sorted_files, time_gap_threshold)
+
+pp = pprint.PrettyPrinter(indent=3)
+
+## Print the grouped files
+#for i, group in enumerate(grouped_files, start=1):
+#    print(f"Group{i}:")
+#    pp.pprint(group)
+
+# Print the first and last file of each group
 for i, (first_file, last_file) in enumerate(grouped_files, start=1):
     print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
+
 
 
