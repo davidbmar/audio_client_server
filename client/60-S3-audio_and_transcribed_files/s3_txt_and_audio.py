@@ -6,13 +6,14 @@ def list_files(bucket_name, extension, start_time, end_time):
     s3 = boto3.client('s3')
     filtered_files = []
     paginator = s3.get_paginator('list_objects_v2')
+    new_end_time = increment_end_time(end_time)  # increment end time by 1 to ensure that it includes the last file!.
 
     # Iterate over each page of results
     for page in paginator.paginate(Bucket=bucket_name):
         if 'Contents' in page:
             for item in page['Contents']:
                 file_key = item['Key']
-                if file_key.endswith(extension) and start_time <= file_key <= end_time:
+                if file_key.endswith(extension) and start_time <= file_key <= new_end_time:
                     filtered_files.append(file_key)
     return filtered_files
 
@@ -100,15 +101,26 @@ def generate_html_page(table, bucket_audio_url, output_file):
     with open(output_file, 'w') as file:
         file.write(html_content)
 
+def increment_end_time(end_time):
+    parts = end_time.split('-')
+    last_sequence = int(parts[-1])  # Convert the last part to an integer
+    new_sequence = last_sequence + 1  # Increment the sequence
+    new_end_time = '-'.join(parts[:-1] + [f"{new_sequence:06d}"])  # Reconstruct with new sequence
+    return new_end_time
+
 if __name__ == "__main__":
 
    # Define your time filter, bucket names, and the full URL for the audio bucket
    start_time = '2023-12-11-23-33-33-394-015000'
-   end_time = '2023-12-11-23-37-33-653-015005'
+   end_time = '2023-12-11-23-37-33-653-015002'
+
    bucket_audio_name = 'presigned-url-audio-uploads'
    bucket_text_name = 'audioclientserver-transcribedobjects-public'
    bucket_audio_url = 'https://presigned-url-audio-uploads.s3.us-east-2.amazonaws.com'
-   
+  
+   #print(list_files(bucket_audio_name, ".flac", start_time, end_time))
+   #print(list_files(bucket_text_name, ".txt", start_time, end_time))
+ 
    # Generate the table and HTML page
    table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
    generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
