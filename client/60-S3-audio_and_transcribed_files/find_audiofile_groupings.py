@@ -104,13 +104,16 @@ def get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes
     # Return the grouped files (first and last file of each group)
     return [(group[0].rsplit('.', 1)[0], group[1].rsplit('.', 1)[0]) for group in grouped_files]
 
-bucket_audio_name = 'presigned-url-audio-uploads'
-bucket_text_name = 'audioclientserver-transcribedobjects-public'
-gap_threshold_minutes = 5
 
-grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
+if __name__ == "__main__":
 
-for i, (first_file, last_file) in enumerate(grouped_files, start=1):
-    print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
+   bucket_audio_name = 'presigned-url-audio-uploads'
+   bucket_text_name = 'audioclientserver-transcribedobjects-public'
+   gap_threshold_minutes = 5
+
+   grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
+
+   for i, (first_file, last_file) in enumerate(grouped_files, start=1):
+       print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
 
 

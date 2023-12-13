@@ -100,14 +100,16 @@ def generate_html_page(table, bucket_audio_url, output_file):
     with open(output_file, 'w') as file:
         file.write(html_content)
 
-# Define your time filter, bucket names, and the full URL for the audio bucket
-start_time = '2023-12-11-23-33-33-394-015000'
-end_time = '2023-12-11-23-37-33-653-015005'
-bucket_audio_name = 'presigned-url-audio-uploads'
-bucket_text_name = 'audioclientserver-transcribedobjects-public'
-bucket_audio_url = 'https://presigned-url-audio-uploads.s3.us-east-2.amazonaws.com'
+if __name__ == "__main__":
 
-# Generate the table and HTML page
-table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
-generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
+   # Define your time filter, bucket names, and the full URL for the audio bucket
+   start_time = '2023-12-11-23-33-33-394-015000'
+   end_time = '2023-12-11-23-37-33-653-015005'
+   bucket_audio_name = 'presigned-url-audio-uploads'
+   bucket_text_name = 'audioclientserver-transcribedobjects-public'
+   bucket_audio_url = 'https://presigned-url-audio-uploads.s3.us-east-2.amazonaws.com'
+   
+   # Generate the table and HTML page
+   table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
+   generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
 
