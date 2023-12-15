@@ -108,6 +108,19 @@ def increment_end_time(end_time):
     new_end_time = '-'.join(parts[:-1] + [f"{new_sequence:06d}"])  # Reconstruct with new sequence
     return new_end_time
 
+def concatenate_txt_files(bucket_name, start_time, end_time):
+    """Concatenate the contents of .txt files from an S3 bucket within a specified time range."""
+    txt_files = list_files(bucket_name, '.txt', start_time, end_time)
+    concatenated_content = ""
+
+    for file_key in txt_files:
+        file_content = get_file_content(bucket_name, file_key)
+        if file_content:
+            concatenated_content += file_content + "\n"  # Add a newline for separation
+
+    return concatenated_content
+
+
 if __name__ == "__main__":
 
    # Define your time filter, bucket names, and the full URL for the audio bucket
@@ -122,6 +135,13 @@ if __name__ == "__main__":
    #print(list_files(bucket_text_name, ".txt", start_time, end_time))
  
    # Generate the table and HTML page
-   table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
-   generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
+   #table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
+   #generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
+
+   # Get concatenated text content
+   concatenated_text = concatenate_txt_files(bucket_text_name, start_time, end_time)
+
+   # Now, concatenated_text can be sent to a summarizer or used as needed
+   print(concatenated_text)  # For demonstration purposes
+
 
