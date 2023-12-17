@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# s3_uploader.py
+# lib_s3.py
 
 import boto3
 from botocore.exceptions import NoCredentialsError
@@ -27,3 +27,9 @@ class S3Uploader:
             print("Credentials not available")
             return False
 
+if __name__ == "__main__":
+   # Create an S3Uploader instance
+   uploader = S3Uploader('audioclientserver-summary-public')
+   
+   # Upload a file
+   uploader.upload_file('temp/summary_output.json')

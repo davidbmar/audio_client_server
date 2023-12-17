@@ -1,5 +1,4 @@
 #!/usr/bin/python3
-# text_summary_lib.py
 
 from datetime import datetime
 import pprint
