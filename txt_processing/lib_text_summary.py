@@ -135,7 +135,11 @@ def summarize_stage_1(chunks_text):
   }
 
 
-def summarize_text(input_text):
+def summarize_text(input_text,name_of_object):
+
+   print (f"input_text:{input_text}")
+   input()    
+
    # Load the API key from an environment variable
    api_key = os.environ.get("OPENAI_API_KEY")
    # Check if the API key is available
@@ -176,14 +180,14 @@ def summarize_text(input_text):
    # Convert the list of dictionaries to a JSON string
    json_output = json.dumps(combined_output, indent=3)
 
-   with open('./temp/summary_output.json', 'w') as file:
+   with open(f'./temp/{name_of_object}', 'w') as file:
        file.write(json_output)
-       print ("Wrote ./temp/summary_output.json")
+       print (f"Wrote ./temp/{name_of_object}")
 
    # Return the JSON string
    return json_output
 
-def generate_summary_html(json_data):
+def generate_summary_html(json_data,name_of_object):
     html_content = '''
     <!DOCTYPE html>
     <html lang="en">
@@ -224,9 +228,9 @@ def generate_summary_html(json_data):
     '''
 
     # Save the HTML content to a file
-    with open('./temp/summary_output.html', 'w') as file:
+    with open(f'./temp/{name_of_object}.html', 'w') as file:
        file.write(html_content)
-       print ("Wrote ./temp/summary_output.html")
+       print (f"Wrote ./temp/{name_of_object}.html")
 
     return html_content
 

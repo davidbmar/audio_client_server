@@ -2,16 +2,9 @@
 import json
 import boto3
 import time
-import lib_text_summary
+from lib_text_summary import setup,summarize_text,generate_summary_html
 
 from lib_s3 import S3Uploader
-
-# Initialize the SQS and S3 clients
-sqs = boto3.client('sqs')
-s3 = boto3.client('s3')
-
-# Your SQS queue URL
-queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_summarize_nonfifo_queue'
 
 def download_and_print_s3_object(bucket, key):
     # Download the object from S3
@@ -24,13 +17,13 @@ def download_and_print_s3_object(bucket, key):
     print(content)
     return content
 
-def receive_and_delete_messages(queue_url, sqs):
+def receive_and_delete_messages(queue_url, sqs,s3):
     # Receive messages from the SQS queue
     response = sqs.receive_message(
         QueueUrl=queue_url,
         AttributeNames=['All'],
         MaxNumberOfMessages=10,
-        WaitTimeSeconds=60
+        WaitTimeSeconds=20
     )
     
     # Create an S3Uploader instance
@@ -52,12 +45,14 @@ def receive_and_delete_messages(queue_url, sqs):
                 if name_of_object.endswith('.txt'):
                     name_of_object = name_of_object[:-4] + '.json'
 
-                json_output = summarize_text(transcribed_text)
+                print(transcribed_text)
+
+                json_output = summarize_text(transcribed_text,name_of_object)
                 json_data = json.loads(json_output)
-                html_content = generate_summary_html(json_data)
+                html_content = generate_summary_html(json_data,name_of_object)
                 
                 # Upload the file with the new object name
-                uploader.upload_file('temp/summary_output.json', name_of_object)
+                uploader.upload_file(f'temp/{name_of_object}', name_of_object)
 
             # Delete the message from the queue
             sqs.delete_message(
@@ -72,5 +67,12 @@ def receive_and_delete_messages(queue_url, sqs):
 if __name__ == "__main__":
     setup()
 
-    receive_and_delete_messages(queue_url)
-    time.sleep(1)  # Optional: sleep for a short duration before polling again
+    # Initialize the SQS and S3 clients
+    sqs = boto3.client('sqs')
+    s3 = boto3.client('s3')
+  
+    # Your SQS queue URL
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_summarize_nonfifo_queue' 
+
+    receive_and_delete_messages(queue_url,sqs,s3)
+
