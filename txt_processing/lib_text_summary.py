@@ -137,9 +137,6 @@ def summarize_stage_1(chunks_text):
 
 def summarize_text(input_text,name_of_object):
 
-   print (f"input_text:{input_text}")
-   input()    
-
    # Load the API key from an environment variable
    api_key = os.environ.get("OPENAI_API_KEY")
    # Check if the API key is available

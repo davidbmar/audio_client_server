@@ -74,5 +74,10 @@ if __name__ == "__main__":
     # Your SQS queue URL
     queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_summarize_nonfifo_queue' 
 
-    receive_and_delete_messages(queue_url,sqs,s3)
+    while True:
+        try:
+            receive_and_delete_messages(queue_url, sqs, s3)
+        except Exception as e:
+            print(f"An error occurred: {e}")
+        time.sleep(1)
 
