@@ -35,3 +35,19 @@ RUN type -p curl >/dev/null || (sudo apt update -y && sudo apt install curl -y) 
 
 RUN apt install gh -y
 
+# Step 6: Install Additional Python Packages and AWS CLI
+RUN apt-get update -y && \
+    apt-get install -y python3-pip awscli && \
+    pip install boto3 websockets flask-cors && \
+    rm -rf /var/lib/apt/lists/*
+
+# Existing Dockerfile content...
+
+# Step 7: Install Terraform
+RUN apt-get update && apt-get install -y gnupg software-properties-common lsb-release && \
+    wget -O- https://apt.releases.hashicorp.com/gpg | gpg --dearmor | tee /usr/share/keyrings/hashicorp-archive-keyring.gpg && \
+    echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com jammy main" | tee /etc/apt/sources.list.d/hashicorp.list && \
+    apt-get update && apt-get install -y terraform
+
+
+
