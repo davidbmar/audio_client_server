@@ -49,5 +49,10 @@ RUN apt-get update && apt-get install -y gnupg software-properties-common lsb-re
     echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com jammy main" | tee /etc/apt/sources.list.d/hashicorp.list && \
     apt-get update && apt-get install -y terraform
 
+# Step 8: Install Git and Clone Repository
+RUN apt-get update -y && \
+    apt-get install -y git && \
+    rm -rf /var/lib/apt/lists/* && \
+    git clone https://github.com/davidbmar/audio_client_server.git
 
 
