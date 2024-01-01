@@ -61,9 +61,14 @@ RUN apt-get update -y && \
 #   a. One service downloads files continuously as a message comes on an SQS queue, then 
 #   b. once its downloaded it puts the name of this file in another SQS queue which the transcriber picks up and transcribes the audio files.  
 # Both the downloader, and transcriber should be run simultaneously, and to do this the approach is supervisord.  
-RUN apt-get update && apt-get install -y supervisor
-COPY /home/ubuntu/audio_client_server/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Install Supervisord
+RUN apt-get update && \
+    apt-get install -y supervisor && \
+    mkdir -p /etc/supervisor/conf.d /var/log/supervisor
+
+# Copy Supervisord configuration
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Set the default command
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
-
-
 
