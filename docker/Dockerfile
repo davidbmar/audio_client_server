@@ -55,4 +55,12 @@ RUN apt-get update -y && \
     rm -rf /var/lib/apt/lists/* && \
     git clone https://github.com/davidbmar/audio_client_server.git
 
+# NOTE LIKLEY THIS SHOULD BE ONCE WORKING HIGHER IN THE LAYERS.
+# Step 9: On the ruppod instance we would have two services.
+# I want to run two services simultaneously in a docker container.  
+#   a. One service downloads files continuously as a message comes on an SQS queue, then 
+#   b. once its downloaded it puts the name of this file in another SQS queue which the transcriber picks up and transcribes the audio files.  
+# Both the downloader, and transcriber should be run simultaneously, and to do this the approach is supervisord.  
+RUN apt-get update && apt-get install -y supervisor
+COPY /home/ubuntu/audio_client_server/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
