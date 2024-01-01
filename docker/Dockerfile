@@ -63,4 +63,7 @@ RUN apt-get update -y && \
 # Both the downloader, and transcriber should be run simultaneously, and to do this the approach is supervisord.  
 RUN apt-get update && apt-get install -y supervisor
 COPY /home/ubuntu/audio_client_server/docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+
 
