@@ -8,7 +8,7 @@ RUN sed -i -e 's/http:\/\/archive\.ubuntu\.com\/ubuntu\//mirror:\/\/mirrors\.ubu
 # RUN pip uninstall -y blinker
 
 # Step 2: Set Working Directory
-WORKDIR /home/ubuntu/audio_client_server
+WORKDIR /home/ubuntu
 
 RUN apt-get purge --auto-remove python3-blinker -y
 
@@ -53,7 +53,7 @@ RUN apt-get update && apt-get install -y gnupg software-properties-common lsb-re
 RUN apt-get update -y && \
     apt-get install -y git && \
     rm -rf /var/lib/apt/lists/* && \
-    git clone https://github.com/davidbmar/audio_client_server.git
+    git clone https://github.com/davidbmar/audio_client_server.git 
 
 # NOTE LIKLEY THIS SHOULD BE ONCE WORKING HIGHER IN THE LAYERS.
 # Step 9: On the ruppod instance we would have two services.
