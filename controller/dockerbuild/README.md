@@ -1,4 +1,4 @@
-```markdown
+
 # AWS Lambda Python 3.10 Deployment Package Creation with Docker
 
 This README provides instructions on how to create a Python 3.10 AWS Lambda deployment package using Docker. This approach ensures compatibility with the AWS Lambda execution environment, especially for handling binary dependencies.
