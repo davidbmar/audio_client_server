@@ -4,8 +4,8 @@ import pprint
 
 def lambda_handler(event, context):
     api_key = os.getenv('RUNPOD_API_KEY')
-    aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+    aws_access_key_id = os.getenv('AAKID')
+    aws_secret_access_key = os.getenv('ASAK')
     if not all([api_key, aws_access_key_id, aws_secret_access_key]):
         return {
             'statusCode': 400,
