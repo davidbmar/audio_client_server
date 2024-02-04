@@ -85,6 +85,7 @@ zip -r ../lambda_function.zip .
 ## Step 6: Deploy to AWS Lambda
 
 Deploy your zipped deployment package to AWS Lambda using the AWS CLI:
+YOUR_FUNCTION_NAME is "launch_runpod" which will launch a new runpod for the case that this code is checked in!!
 
 ```bash
 aws lambda update-function-code --function-name YOUR_FUNCTION_NAME --zip-file fileb://lambda_function.zip
