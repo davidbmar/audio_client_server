@@ -102,3 +102,63 @@ Using this method, you've created a deployment package compatible with AWS Lambd
 
 For more information on AWS Lambda and Docker, visit the [AWS Lambda Developer Guide](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html) and [Docker Documentation](https://docs.docker.com/).
 ```
+
+
+## For > 50 mb
+When you encounter the `RequestEntityTooLargeException` error during an AWS Lambda function update, it indicates that the deployment package you're trying to upload exceeds AWS Lambda's size limit for direct uploads. As of my last update in April 2023, the limits are:
+
+- 50 MB for direct upload via the AWS Management Console.
+- 256 MB for deployment packages uploaded through the AWS CLI or AWS SDKs, but these need to be in a .zip file format.
+- Up to 10 GB for deployment packages uploaded to an Amazon S3 bucket.
+
+Given the error message, it seems your deployment package is larger than the 50 MB limit for direct uploads. Here's a step-by-step guide to resolve this issue, focusing on the approach to use Amazon S3 as an intermediary storage for your Lambda function code.
+
+### Step 1: Reduce Package Size If Possible
+
+Before proceeding with the S3 method, ensure your package is as small as possible:
+
+- **Remove unnecessary files**: Exclude files not needed for the runtime execution of your Lambda function.
+- **Use Layers**: Move common dependencies to a Lambda Layer to reduce the size of your function code.
+- **Optimize Assets**: If your function includes assets (images, binaries), ensure they're optimized for size.
+
+### Step 2: Upload the ZIP file to Amazon S3
+
+If reducing the size is not enough or applicable, follow these steps:
+
+1. **Create an S3 Bucket** (if you don't already have one suitable for this purpose):
+   ```bash
+   aws s3 mb s3://your-bucket-name
+   for exmaple: 
+   aws s3 mb lambda-function-bucket-david 
+   ```
+   Replace `your-bucket-name` with your desired bucket name.
+
+2. **Upload your ZIP file to the S3 bucket**:
+   ```bash
+   aws s3 cp lambda_function.zip s3://your-bucket-name/path/to/your/file/
+   for example:
+   aws s3 cp lambda_function.zip s3://lambda-function-bucket-david
+
+   ```
+   Make sure the `lambda_function.zip` path is correct and `your-bucket-name/path/to/your/file/` is the desired location in your S3 bucket.
+
+### Step 3: Update Lambda Function Code to Use S3
+
+After uploading the ZIP file to S3, update your Lambda function to use the S3 object:
+
+```bash
+aws lambda update-function-code --function-name runPodCommands-2 --s3-bucket lambda-function-bucket-david --s3-key lambda_function.zip
+```
+
+Ensure you replace `your-bucket-name` and `path/to/your/file/lambda_function.zip` with the actual bucket name and object key of your uploaded ZIP file.
+
+### Alternative Solutions
+
+- **Use Docker Images**: For functions larger than the S3 upload limit, consider packaging and deploying your Lambda function as a container image. AWS Lambda supports container images of up to 10 GB in size.
+
+- **Review and Optimize Dependencies**: Sometimes, Lambda deployment packages can become unnecessarily large due to including unused dependencies or large files. A thorough review and optimization can significantly reduce the package size.
+
+### Conclusion
+
+Using S3 to store your Lambda function code is a reliable workaround for the size limit encountered with direct uploads. It allows for larger deployment packages and can be easily integrated into automated CI/CD pipelines for streamlined deployments. For long-term management, consider optimizing your function's dependencies and exploring the use of Lambda Layers for shared code and libraries.
+
