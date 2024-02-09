@@ -66,7 +66,7 @@ Create a temporary container from your image and copy the deployment package fro
 # Create a container from your image
 docker create --name temp_lambda lambda-function-image
 
-# However instead of the above you might do this instead to get into the container.
+# OR IF YOU WANT instead of the above you might do this instead to get into the container.
 docker run --name temp_lambda -d lambda-function-image
 docker exec -it temp_lambda /bin/bash
 
