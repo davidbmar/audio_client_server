@@ -26,7 +26,7 @@ def build_response(status_code, body=None):
         'body': json.dumps(body) if body else ''
     }
 
-async def lambda_handler(event, context):
+def lambda_handler(event, context):
     print('Request Event:', event)
     logger.info("Handler function started,")
     logger.info('Request Event: %s', event)
