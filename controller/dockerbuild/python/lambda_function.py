@@ -39,21 +39,26 @@ def lambda_handler(event, context):
     """
 
     print('Request Event:', event)
-    logger.info("Handler function started,")
     logger.info('Request Event: %s', event)
 
     path = event.get('path')
     http_method = event.get('httpMethod')
+
+
+    logger.info('http_method: %s', http_method)
     logger.info('path: %s', path)
 
-    # Check if the path is '/health'
-    if event.get("path") == "/health":
+    if http_method == "GET" and path == "/health":
         return {
             "statusCode": 200,
             "body": "Hello World Build: ##BUILD##"
         }
+    elif http_method == "POST" and path == "/createPOD":
+        return {
+            "statusCode": 200,
+            "body": "POD creation endpoint hit. POD created successfully."
+        }
     else:
-        # Path did not match '/health', return 404 Not Found
         return {
             "statusCode": 404,
             "body": "Not Found"
