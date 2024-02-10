@@ -27,39 +27,14 @@ def build_response(status_code, body=None):
     }
 
 def lambda_handler(event, context):
-    """
-    Simple AWS Lambda handler that responds to '/health' path with "Hello World".
-
-    Parameters:
-    - event: The event dict that contains information from the trigger.
-    - context: Provides information about the invocation, function, and execution environment.
-
-    Returns:
-    - A dict with statusCode and body keys.
-    """
-
     print('Request Event:', event)
     logger.info("Handler function started,")
     logger.info('Request Event: %s', event)
 
+
     path = event.get('path')
     http_method = event.get('httpMethod')
     logger.info('path: %s', path)
-
-    # Check if the path is '/health'
-    if event.get("path") == "/health":
-        return {
-            "statusCode": 200,
-            "body": "Hello World Build: ##BUILD##"
-        }
-    else:
-        # Path did not match '/health', return 404 Not Found
-        return {
-            "statusCode": 404,
-            "body": "Not Found"
-        }
-"""
-def lambda_handler(event, context):
     
     if http_method == 'GET' and path == health_path:
         response = build_response(200)
@@ -81,7 +56,6 @@ def lambda_handler(event, context):
         response = build_response(404, '404 Not Found')
     
     return response
-"""
 
 
 
