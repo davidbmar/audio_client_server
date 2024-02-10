@@ -22,7 +22,7 @@ def execute_graphql_query(query):
 
 
 # Function to handle the /listPods path
-def list_pods():
+def listPods():
     # Define the GraphQL query for listing pods
     query = '''
     query {
@@ -40,3 +40,40 @@ def list_pods():
     # Call a shared function to execute the GraphQL query
     return execute_graphql_query(query)
 
+def createPod():
+    api_key = os.getenv('RUNPOD_API_KEY')
+    aws_access_key_id = os.getenv('AAKID')
+    aws_secret_access_key = os.getenv('ASAKEY')
+    if not all([api_key, aws_access_key_id, aws_secret_access_key]):
+        return {
+            'statusCode': 400,
+            'body': 'Environment variables are missing'
+        }
+
+    aws_credentials = {
+        "AWS_ACCESS_KEY_ID": aws_access_key_id,
+        "AWS_SECRET_ACCESS_KEY": aws_secret_access_key
+    }
+
+    runpod.api_key = api_key
+
+    # Example functionality: Get and print GPUs
+    gpus = runpod.get_gpus()
+    gpu = runpod.get_gpu("NVIDIA A30")
+
+    # Create a pod with AWS credentials
+    pod = runpod.create_pod(
+        name="test",
+        image_name="davidbmar/audio_client_server:latest",
+        gpu_type_id="NVIDIA GeForce RTX 3070",
+        env=aws_credentials  # Passing the AWS credentials
+    )
+
+    # Ensure the response body is a JSON-encoded string
+    return build_response(200, {
+        'gpus': gpus,
+        'gpu': gpu,
+        'pod': pod
+    })
+
+               

@@ -1,103 +1,62 @@
-import runpod
-import os
-import pprint
-import logging
-import json
-#from service import register, login, verify
+#!/usr/bin/python3
+import argparse
+import sys
+from pprint import pprint
+from utilities import build_response, smart_pretty_print
+from pod_functions import createPod, listPods
 
-# Paths
-health_path = '/health'
-createPod_path = '/createPod'
-deletePod_path = '/deletePod'
-listPods_path = '/listPods'
-
-# Configure logging
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)  # Adjust as needed
-
-def build_response(status_code, body=None):
-    """Builds an HTTP response compatible with AWS Lambda Proxy integration"""
+def health():
     return {
-        'statusCode': status_code,
-        'headers': {
-            'Access-Control-Allow-Origin': '*',
-            'Content-Type': 'application/json'
-        },
-        'body': json.dumps(body) if body else ''
+        "statusCode": 200,
+        "body": "Hello World Build: ##BUILD##"
     }
 
 def lambda_handler(event, context):
-    """
-    Simple AWS Lambda handler that responds to '/health' path with "Hello World".
-
-    Parameters:
-    - event: The event dict that contains information from the trigger.
-    - context: Provides information about the invocation, function, and execution environment.
-
-    Returns:
-    - A dict with statusCode and body keys.
-    """
-
-    print('Request Event:', event)
-    logger.info('Request Event: %s', event)
-
     path = event.get('path')
     http_method = event.get('httpMethod')
 
-
-    logger.info('http_method: %s', http_method)
-    logger.info('path: %s', path)
-
     if http_method == "GET" and path == "/health":
-        return {
-            "statusCode": 200,
-            "body": "Hello World Build: ##BUILD##"
-        }
+        return health()
     elif http_method == "POST" and path == "/createPod":
         return createPod()
-        #return {
-            #"statusCode": 200,
-            #"body": "POD creation endpoint hit. POD created successfully."
-        #}
+    elif http_method == "GET" and path == "/listPods":
+        return listPods()
+    elif http_method == "DELETE" and path == "/deletePod":
+        return deletePod()
     else:
-        return {
-            "statusCode": 404,
-            "body": "Not Found"
-        }
+        return build_response(404, {'message': 'Path not found'})
 
-def createPod():
-    api_key = os.getenv('RUNPOD_API_KEY')
-    aws_access_key_id = os.getenv('AAKID')
-    aws_secret_access_key = os.getenv('ASAKEY')
-    if not all([api_key, aws_access_key_id, aws_secret_access_key]):
-        return {
-            'statusCode': 400,
-            'body': 'Environment variables are missing'
-        }
+#The main function is only used if run from the commandline, as opposed to lambda_handler.
+#Selective Pretty-Printing: The pprint function is used to format and print the output nicely only when the script is executed from the command line. This does not affect the Lambda function's operation, as Lambda's handler does not use pprint.
+#Handling Different Response Formats: The conditional checks (isinstance(response, dict)) determine whether the response is already a Python dictionary (as might be the case for CLI-specific paths) or needs parsing from a JSON string (as returned by the Lambda-compatible functions).
+#JSON Parsing: For Lambda response formats, it extracts and parses the body part of the response before pretty-printing it. This ensures that even Lambda-formatted responses are readable when printed from the CLI.
+def main(args):
+    parser = argparse.ArgumentParser(description="Manage PODs via command line or AWS Lambda.")
+    subparsers = parser.add_subparsers(dest='command')
 
-    aws_credentials = {
-        "AWS_ACCESS_KEY_ID": aws_access_key_id,
-        "AWS_SECRET_ACCESS_KEY": aws_secret_access_key
-    }
+    # Define subcommands
+    subparsers.add_parser('listPods', help='List all running pods')
+    subparsers.add_parser('createPod', help='Create a new pod')
+    subparsers.add_parser('deletePod', help='Delete an existing pod')
+    subparsers.add_parser('health', help='Check service health')
 
-    runpod.api_key = api_key
+    args = parser.parse_args(args)
 
-    # Example functionality: Get and print GPUs
-    gpus = runpod.get_gpus()
-    gpu = runpod.get_gpu("NVIDIA A30")
+    if args.command == 'listPods':
+        response = listPods()
+        smart_pretty_print(response)
+    elif args.command == 'createPod':
+        response = createPod()
+        smart_pretty_print(response)
+    elif args.command == 'deletePod':
+        response = deletePod()
+        smart_pretty_print(response)
+    elif args.command == 'health':
+        response = health()
+        smart_pretty_print(response)
+    else:
+        parser.print_help()
 
-    # Create a pod with AWS credentials
-    pod = runpod.create_pod(
-        name="test",
-        image_name="davidbmar/audio_client_server:latest",
-        gpu_type_id="NVIDIA GeForce RTX 3070",
-        env=aws_credentials  # Passing the AWS credentials
-    )
 
-    # Ensure the response body is a JSON-encoded string
-    return build_response(200, {
-        'gpus': gpus,
-        'gpu': gpu,
-        'pod': pod
-    })
-
+if __name__ == '__main__':
+    main(sys.argv[1:])
