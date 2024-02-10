@@ -53,42 +53,17 @@ def lambda_handler(event, context):
             "statusCode": 200,
             "body": "Hello World Build: ##BUILD##"
         }
-    elif http_method == "POST" and path == "/createPOD":
-        return {
-            "statusCode": 200,
-            "body": "POD creation endpoint hit. POD created successfully."
-        }
+    elif http_method == "POST" and path == "/createPod":
+        return createPod()
+        #return {
+            #"statusCode": 200,
+            #"body": "POD creation endpoint hit. POD created successfully."
+        #}
     else:
         return {
             "statusCode": 404,
             "body": "Not Found"
         }
-"""
-def lambda_handler(event, context):
-    
-    if http_method == 'GET' and path == health_path:
-        response = build_response(200)
-    elif http_method == 'POST':
-        if path == createPod_path:
-            register_body = json.loads(event.get('body') or '{}')
-            response = createPod()
-        elif path == deletePod_path:
-            register_body = json.loads(event.get('body') or '{}')
-            response = build_response(200)
-            #response = await login.login(login_body)
-        elif path == listPods_path:
-            register_body = json.loads(event.get('body') or '{}')
-            response = build_response(200)
-            #response = verify.verify(verify_body)
-        else:
-            response = build_response(404, '404 Not Found')
-    else:
-        response = build_response(404, '404 Not Found')
-    
-    return response
-"""
-
-
 
 def createPod():
     api_key = os.getenv('RUNPOD_API_KEY')
@@ -119,13 +94,10 @@ def createPod():
         env=aws_credentials  # Passing the AWS credentials
     )
 
-    # Example response
-    return {
-        'statusCode': 200,
-        'body': {
-            'gpus': gpus,
-            'gpu': gpu,
-            'pod': pod
-        }
-    }
+    # Ensure the response body is a JSON-encoded string
+    return build_response(200, {
+        'gpus': gpus,
+        'gpu': gpu,
+        'pod': pod
+    })
 
