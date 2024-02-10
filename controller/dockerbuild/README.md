@@ -16,9 +16,37 @@ Ensure your Lambda function code (`lambda_function.py`) and any requirements (`r
 Example `lambda_function.py`:
 
 ```python
+import runpod
+import os
+import pprint
+import logging
+import json
+#from service import register, login, verify
+
 def lambda_handler(event, context):
-    # Your code here
-    return {"statusCode": 200, "body": "Hello from Lambda!"}
+    """
+    Simple AWS Lambda handler that responds to '/health' path with "Hello World".
+
+    Parameters:
+    - event: The event dict that contains information from the trigger.
+    - context: Provides information about the invocation, function, and execution environment.
+
+    Returns:
+    - A dict with statusCode and body keys.
+    """
+    # Check if the path is '/health'
+    if event.get("path") == "/health":
+        return {
+            "statusCode": 200,
+            "body": "Hello World"
+        }
+    else:
+        # Path did not match '/health', return 404 Not Found
+        return {
+            "statusCode": 404,
+            "body": "Not Found"
+        }
+
 ```
 
 Example `requirements.txt`:
