@@ -1,5 +1,6 @@
 import os
 import requests
+import runpod
 from utilities import build_response
 
 # Shared function to execute GraphQL queries
