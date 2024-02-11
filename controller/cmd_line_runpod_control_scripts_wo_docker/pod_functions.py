@@ -77,4 +77,12 @@ def createPod():
         'pod': pod
     })
 
-               
+def stopPod(pod_id):               
+    api_key = os.getenv('RUNPOD_API_KEY')
+    runpod.api_key = api_key
+    return runpod.stop_pod(pod_id)  # Assuming this function returns a valid Lambda response
+
+def deletePod(pod_id):
+    api_key = os.getenv('RUNPOD_API_KEY')
+    runpod.api_key = api_key
+    return runpod.terminate_pod(pod_id)  # Assuming this function returns a valid Lambda response
