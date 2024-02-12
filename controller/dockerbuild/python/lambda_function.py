@@ -4,7 +4,7 @@ import sys
 import json
 from pprint import pprint
 from utilities import build_response, smart_pretty_print
-from pod_functions import createPod, listPods, stopPod, deletePod
+from pod_functions import createPod, listPods, stopPod, terminatePod
 
 def health():
     return {
@@ -43,12 +43,12 @@ def lambda_handler(event, context):
             return stopPod(pod_id)  # Assuming stopPod accepts a pod_id and returns a valid Lambda response
         else:
             return build_response(400, {'message': 'Missing pod_id'})
-    elif http_method == "DELETE" and path == "/deletePod":
+    elif http_method == "DELETE" and path == "/terminatePod":
         body = parse_body(event.get('body'))
         pod_id = body.get('pod_id')  # Use the corrected method to safely access pod_id
         if pod_id:
-            print(f"DELETE: Received pod_id: {pod_id}")
-            return deletePod(pod_id)  # Assuming deletePod now accepts a pod_id
+            print(f"TERMINATE: Received pod_id: {pod_id}")
+            return terminatePod(pod_id)  # Assuming deletePod now accepts a pod_id
         else:
             return build_response(400, {'message': 'Missing pod_id'})
     else:
@@ -65,12 +65,12 @@ def main():
     # Define subcommands
     subparsers.add_parser('listPods', help='List all running pods')
     subparsers.add_parser('createPod', help='Create a new pod')
-    delete_pod_parser = subparsers.add_parser('deletePod', help='Delete an existing pod')
-    stop_pod_parser = subparsers.add_parser('stopPod', help='Stop a running pod')
+    stop_pod_parser = subparsers.add_parser('stopPod', help='Stop an existing pod')
+    terminate_pod_parser = subparsers.add_parser('terminatePod', help='Terminate a running pod')
     subparsers.add_parser('health', help='Check service health')
 
-    # Add pod_id argument for stopPod and deletePod
-    for subparser in [delete_pod_parser, stop_pod_parser]:
+    # Add pod_id argument for terminatePod and deletePod
+    for subparser in [stop_pod_parser, terminate_pod_parser]:
         subparser.add_argument('pod_id', type=str, help='The ID of the pod')
 
     # Parse the command line arguments
@@ -85,17 +85,17 @@ def main():
         response = listPods()
     elif args.command == 'createPod':
         response = createPod()
-    elif args.command == 'deletePod':
-        response = deletePod(args.pod_id)
     elif args.command == 'stopPod':
         response = stopPod(args.pod_id)
+    elif args.command == 'terminatePod':
+        response = terminatePod(args.pod_id)
     elif args.command == 'health':
         response = health()
     else:
         parser.print_help()
         sys.exit(1)
 
-    if args.command in ['listPods', 'createPod', 'deletePod', 'stopPod', 'health']:
+    if args.command in ['listPods', 'createPod', 'stopPod', 'terminatePod', 'health']:
         smart_pretty_print(response)
 
 if __name__ == '__main__':

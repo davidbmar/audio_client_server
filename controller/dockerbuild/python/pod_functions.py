@@ -120,8 +120,26 @@ def stopPod(pod_id):
     except runpod.error.QueryError as e:
         # Handle case where pod does not exist or other query errors
         return build_response(404, {'message': str(e)})
-    
-def deletePod(pod_id):
+
+#Terminating a Pod permanently deletes all data outside your network volume. Be sure you've saved any data you want to access again.
+def terminatePod(pod_id):
     api_key = os.getenv('RUNPOD_API_KEY')
     runpod.api_key = api_key
-    return runpod.terminate_pod(pod_id)  # Assuming this function returns a valid Lambda response
+
+    try:
+        # Making the call to terminate the pod and processing the response
+        response = runpod.terminate_pod(pod_id)
+
+        # Since a successful termination returns None, check for that to indicate success
+        if response is None:
+            # Since response is None, we don't have an 'id' or 'desiredStatus', but we know it's a success
+            return build_response(200, {'message': 'Pod terminated successfully.'})
+        else:
+            # If response is not None, handle as unexpected response format
+            return build_response(502, {'message': 'Unexpected response format from runpod API'})
+
+    except runpod.error.QueryError as e:
+        # Handle case where pod does not exist or other query errors
+        return build_response(404, {'message': str(e)})
+    
+    
