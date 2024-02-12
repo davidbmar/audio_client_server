@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import argparse
 import sys
+import json
 from pprint import pprint
 from utilities import build_response, smart_pretty_print
 from pod_functions import createPod, listPods, stopPod, deletePod
@@ -15,6 +16,16 @@ def lambda_handler(event, context):
     path = event.get('path')
     http_method = event.get('httpMethod')
 
+    # Convert the event object to a string for pretty printing
+    event_string = json.dumps(event, indent=4)
+
+    # Common method to parse body and safely handle empty or None body
+    def parse_body(event_body):
+        try:
+            return json.loads(event_body) if event_body is not None else {}
+        except json.JSONDecodeError:
+            return {}  # Return empty dict if parsing fails
+
     if http_method == "GET" and path == "/health":
         return health()
     elif http_method == "POST" and path == "/createPod":
@@ -22,13 +33,22 @@ def lambda_handler(event, context):
     elif http_method == "GET" and path == "/listPods":
         return listPods()
     elif http_method == "POST" and path == "/stopPod":
+        print("-=-=-=- Received event:", event_string)
+        body = parse_body(event.get('body'))
+        print("-=-=-=- Received body:", body)
+        pod_id = body.get('pod_id')  # Corrected variable name and method to access it safely
+        print("-=-=-=- Received pod_id:", pod_id)
         if pod_id:
-            return stopPod(pod_id)  # Assuming stopPod returns a valid Lambda response
+            print(f"STOP POD: Received pod_id: {pod_id}")
+            return stopPod(pod_id)  # Assuming stopPod accepts a pod_id and returns a valid Lambda response
         else:
             return build_response(400, {'message': 'Missing pod_id'})
     elif http_method == "DELETE" and path == "/deletePod":
+        body = parse_body(event.get('body'))
+        pod_id = body.get('pod_id')  # Use the corrected method to safely access pod_id
         if pod_id:
-            return deletePod(pod_id)  # Assuming deletePod now accepts a pod_id and returns a valid Lambda response
+            print(f"DELETE: Received pod_id: {pod_id}")
+            return deletePod(pod_id)  # Assuming deletePod now accepts a pod_id
         else:
             return build_response(400, {'message': 'Missing pod_id'})
     else:

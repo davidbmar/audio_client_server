@@ -1,4 +1,5 @@
 import os
+import json
 import requests
 import runpod
 from utilities import build_response
@@ -77,11 +78,49 @@ def createPod():
         'pod': pod
     })
 
-def stopPod(pod_id):               
+#def stopPod(pod_id):
+#    api_key = os.getenv('RUNPOD_API_KEY')
+#    runpod.api_key = api_key
+#
+#    try:
+#        # Attempt to stop the pod and process the response
+#        response = runpod.stop_pod(pod_id)
+#        print(f"this is the response: {response}")
+#
+#        # If the response is a dictionary with an 'id' key, it indicates success
+#        if 'id' in response and 'desiredStatus' in response:
+#            print(f"id:     {response['id']}")
+#            print(f"status: {response['desiredStatus']}")
+#        else:
+#            print("Unexpected response format:", response)
+#
+#    except runpod.error.QueryError as e:
+#        # Handle the case where the pod does not exist or another query error occurs
+#        print("Error:", str(e))
+
+def stopPod(pod_id):
     api_key = os.getenv('RUNPOD_API_KEY')
     runpod.api_key = api_key
-    return runpod.stop_pod(pod_id)  # Assuming this function returns a valid Lambda response
 
+    try:
+        # Making the call to stop the pod and processing the response
+        response = runpod.stop_pod(pod_id)
+
+        # Check if the response indicates success
+        if 'id' in response and 'desiredStatus' in response:
+            # Use build_response for Lambda-friendly HTTP response
+            return build_response(200, {
+                'id': response['id'],
+                'desiredStatus': response['desiredStatus']
+            })
+        else:
+            # Handle unexpected response format
+            return build_response(502, {'message': 'Unexpected response format from runpod API'})
+
+    except runpod.error.QueryError as e:
+        # Handle case where pod does not exist or other query errors
+        return build_response(404, {'message': str(e)})
+    
 def deletePod(pod_id):
     api_key = os.getenv('RUNPOD_API_KEY')
     runpod.api_key = api_key
