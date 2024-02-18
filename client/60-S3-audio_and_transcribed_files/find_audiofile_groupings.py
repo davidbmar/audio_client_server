@@ -3,6 +3,7 @@ import boto3
 import pprint
 from datetime import datetime, timedelta
 from collections import defaultdict
+import os                                   # needed for lambda ie: os.environ.get('BUCKET_AUDIO_NAME'))
 
 def parse_timestamp(file_name):
     # Extract the timestamp including milliseconds
@@ -104,16 +105,62 @@ def get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes
     # Return the grouped files (first and last file of each group)
     return [(group[0].rsplit('.', 1)[0], group[1].rsplit('.', 1)[0]) for group in grouped_files]
 
+def generate_html_for_groups(grouped_files):
+    html_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Groups</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>File Groups</h1>
+    <div class="file-groups">
+"""
+
+    for i, (first_file, last_file) in enumerate(grouped_files, start=1):
+        html_content += f"""
+        <div class="group">
+            <h2>Group {i}</h2>
+            <p>First file: {first_file}</p>
+            <p>Last file: {last_file}</p>
+        </div>
+    """
+
+    html_content += """
+    </div>
+</body>
+</html>
+"""
+    return html_content
+
+def print_grouped_files(grouped_files):
+    for i, (first_file, last_file) in enumerate(grouped_files, start=1):
+        print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
+
+
+def lambda_handler(event, context):
+    # Set the bucket names and gap threshold from the Lambda event or environment variables
+    bucket_audio_name = event.get('bucket_audio_name', os.environ.get('BUCKET_AUDIO_NAME'))
+    bucket_text_name = event.get('bucket_text_name', os.environ.get('BUCKET_TEXT_NAME'))
+    gap_threshold_minutes = int(event.get('gap_threshold_minutes', os.environ.get('GAP_THRESHOLD_MINUTES', 5)))
+
+    grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
+
+    # For Lambda, return the result instead of printing
+    return {
+        'statusCode': 200,
+        'body': grouped_files
+    }
 
 if __name__ == "__main__":
+    bucket_audio_name = 'presigned-url-audio-uploads'
+    bucket_text_name = 'audioclientserver-transcribedobjects-public'
+    gap_threshold_minutes = 5
 
-   bucket_audio_name = 'presigned-url-audio-uploads'
-   bucket_text_name = 'audioclientserver-transcribedobjects-public'
-   gap_threshold_minutes = 5
+    grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
+    html_content=generate_html_for_groups(grouped_files)
 
-   grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
-
-   for i, (first_file, last_file) in enumerate(grouped_files, start=1):
-       print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
-
-
+    with open("index.html", "w") as html_file:
+        html_file.write(html_content)
