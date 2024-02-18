@@ -1,9 +1,8 @@
 {
-  "path": "/createPod",
+  "path": "/stopPod",
   "httpMethod": "POST",
   "headers": {
-    "Content-Type": "application/json",
+    "Content-Type": "application/json"
   },
-  "body": null
+  "body": "{\"pod_id\": \"abc123\"}"
 }
-
