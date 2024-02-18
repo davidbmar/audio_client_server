@@ -1,0 +1,6 @@
+# Standard public packages your Lambda function depends on
+boto3==1.34.34 # AWS SDK for Python
+requests==2.31.0  # Requests, if making HTTP requests
+
+# Any additional dependencies here
+runpod

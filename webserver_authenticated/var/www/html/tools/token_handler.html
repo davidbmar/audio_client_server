@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Handler</title>
+    <script>
+        window.onload = function() {
+            // Extract the access token from the URL fragment
+            const token = window.location.hash.substr(1).split('&').reduce(function (initial, item) {
+                if (item) {
+                    var parts = item.split('=');
+                    initial[parts[0]] = decodeURIComponent(parts[1]);
+                }
+                return initial;
+            }, {}).access_token;
+
+            fetch("/authenticated/", {
+                method: "GET",
+                headers: {
+                    'Authorization': 'Bearer ' + token
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data);
+                // Handle the server's response here
+            })
+            .catch(error => {
+                console.error('There was a problem with the fetch operation:', error.message);
+            });
+
+
+
+
+
+        }
+    </script>
+</head>
+<body>
+    <!-- Content if needed, or leave it empty as this page will process the token and then redirect or handle accordingly -->
+</body>
+</html>
+

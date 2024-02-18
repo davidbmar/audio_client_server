@@ -1,6 +1,8 @@
 #!/bin/bash
+sudo apt install python3-pip
 pip install boto3
 pip install awscli
+sudo apt install awscli
 
 #This is really for the client side working, as opposed to pure dev so this line for websockets may need to be in the main server setup.  But i want to be able to run this from an EC2 client, so putting here for now.
 pip install websockets

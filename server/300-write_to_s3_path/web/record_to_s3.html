@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html>
+<head>
+</head>  
+
+<html>
+<body>
+
+  <button id="start">Start</button>
+  <button id="stop">Stop</button>
+  <br>
+  <br>
+  <label for="timeInterval">Sound Clip Length (ms):</label>
+  <input id="timeInterval" type="number" value="60000"> <!-- Changed to 1000ms -->
+  <br>
+  <br>
+  <label for="chunkCount">Number of Chunks:</label>
+  <input id="chunkCount" type="number" value="1000"> <!-- New field -->
+  <br>
+  <br>
+  <label for="urlInput">Upload URL:</label>
+  <input id="urlInput" type="text" value="https://3llwzi00h3.execute-api.us-east-2.amazonaws.com/test/file-upload">
+  <br>
+  <br>
+  <label for="sequenceInput">Starting Sequence Number:</label>
+  <input id="sequenceInput" type="number" value="1000">
+  <br>
+  <br>
+  <br>
+  <label for="MIN_DECIBELS">MIN_DECIBELS:</label>
+  <input id="MIN_DECIBELS" type="text" value="-60"><br>
+  <label for="MIN_DECIBELS">Minimum amount of Decibels for silence detection. -100db more Senstive, -10dB less sensitive.</label>
+  <br>
+  <br>
+  <label for="fileFormat">File Format:</label>
+  <input type="radio" id="flacFormat" name="fileFormat" value="flac" checked>
+  <label for="flacFormat">FLAC</label>
+  <input type="radio" id="oggFormat" name="fileFormat" value="ogg">
+  <label for="oggFormat">OGG</label>
+  <br>
+  <br>
+
+  <button id="toggle">Toggle Append Mode</button>
+  <p id="appendMode">appendMode: Not Toggled</p>
+  <p id="soundDetected">soundDetected: not started</p>
+  <br>
+  <br>
+  <button id="update">Update</button>
+  
+  <div id="unifiedTableContainer" style="height: 400px; overflow-y: auto;">
+    <table id="unifiedTable">
+      <thead>
+        <tr>
+          <th>File Name</th>
+          <th>Play</th>
+        </tr>
+      </thead>
+      <tbody id="unifiedTableBody">
+        <!-- Rows will be added here dynamically -->
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+  // Initialize variables
+  let audioBuffer = [];
+  let mediaRecorder;
+  let intervalId;
+  let shouldContinueRecording = false;
+  let timeInterval = parseInt(document.getElementById('timeInterval').value);
+  let sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+  let chunkCount = parseInt(document.getElementById('chunkCount').value);
+  let uploadURL = document.getElementById('urlInput').value;
+  let shouldRestart = false; // New variable to handle restarts
+  let isMediaRecorderInitialized = false;  // Flag to check if MediaRecorder is initialized
+  let db;
+  let appendMode = false;
+  // New JavaScript code for sound detection
+  let soundDetected = false;
+  let checkInterval;
+  let MIN_DECIBELS = document.getElementById('MIN_DECIBELS').value;
+  //const MIN_DECIBELS = -60;  //-100dB makes the setting more senstive so it will consider more sound as noise, vs -10dB you need a louder sound to prevent the silence detected status from being triggered.
+  
+  function initializeIndexedDB() {
+    const request = indexedDB.open("audioDB", 1);
+  
+    request.onupgradeneeded = function(event) {
+      db = event.target.result;
+      const objectStore = db.createObjectStore("audioChunks", { autoIncrement: true });
+    };
+  
+    request.onsuccess = function(event) {
+      db = event.target.result;
+    };
+  
+    request.onerror = function(event) {
+      console.error("IndexedDB error:", event.target.errorCode);
+    };
+  }
+
+  function uploadAndLocallySaveAudio(audioFilename) {
+    console.log("In function uploadAndLocallySave Audio() for currentFilename:", audioFilename); // Debugging statement
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
+    const blob = new Blob(audioBuffer, { 'type' : `audio/${selectedFormat}` }); // flac or ogg 
+    uploadToS3(blob,audioFilename);
+    audioBuffer = [];
+   
+    // Save to IndexedDB
+    const transaction = db.transaction(["audioChunks"], "readwrite");
+    const objectStore = transaction.objectStore("audioChunks");
+    const addRequest = objectStore.add(blob);
+  
+    addRequest.onsuccess = function(event) {
+      const id = event.target.result;
+      //const fileName = generateFileName(sequenceNumber);
+      updateUnifiedTable(audioFilename,null,id)
+      sequenceNumber++;  // Originally, i had increment the sequence number at the end, but the compute might be taking too long causing some timing issues.
+    };
+  } 
+  
+  // Call the function to initialize IndexedDB
+  initializeIndexedDB();
+
+  const generateFileName = (sequenceNumber) => {
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hour = String(date.getHours()).padStart(2, '0');
+    const minute = String(date.getMinutes()).padStart(2, '0');
+    const second = String(date.getSeconds()).padStart(2, '0');
+    const sequence = String(sequenceNumber).padStart(6, '0');
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value;
+    return `${year}-${month}-${day}-${hour}-${minute}-${second}-${sequence}.${selectedFormat}`;
+  };
+ 
+  // This function uploads to linux host, in contrast, of uploading to S3.
+  async function uploadToLinuxHost(blob,filenameToUploadToHost) {
+    const selectedFormat = document.querySelector('input[name="fileFormat"]:checked').value; // New code
+    const formData = new FormData();
+    formData.append("file", blob, filenameToUploadToHost);
+  
+    await fetch(flaskUploadURL, {
+      method: 'POST',
+      body: formData,
+    }).then(response => response.text())  // Added this for debug
+      .then(data => console.log("Server Response:", data))  // Debug log
+      .catch((error) => console.error("Error:", error));  // Debug log
+  }
+
+  // This function uploads to S3, in contrast, of uploading to a linux host.
+  async function uploadToS3(blob,filenameToUploadToHost) {
+    let presignResponse = await fetch(uploadURL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      "bucket_name": "presigned-url-audio-uploads",
+      "file_key": filenameToUploadToHost,
+      "expiry_time": 3600,
+      "action": "upload"
+        })
+      });
+
+    let presignData = await presignResponse.json();
+    let presignedURL = presignData.url;
+
+    await fetch(presignedURL, {
+      method: 'PUT',
+      body: blob,
+      headers: {
+        'Content-Type': 'audio/flac'
+      }
+    }); 
+  } // end uploadToS3  //////////////////////////////////////////////////
+	  
+  document.getElementById('update').onclick = () => {
+    uploadURL = document.getElementById('urlInput').value;
+    timeInterval = parseInt(document.getElementById('timeInterval').value);
+    sequenceNumber = parseInt(document.getElementById('sequenceInput').value);
+    chunkCount = parseInt(document.getElementById('chunkCount').value); // Update the chunk count from the input
+  };
+    
+  document.getElementById('start').onclick = () => {
+    shouldContinueRecording = true;
+    startRecording();
+  };
+  
+  const startRecording = () => {
+    timeInterval = parseInt(document.getElementById('timeInterval').value);  // Update based on user input
+  
+    if (isMediaRecorderInitialized) {
+      mediaRecorder.start(timeInterval);  // Add timeslice parameter here
+      return;
+    }
+  
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.start(timeInterval);  // Add timeslice parameter here
+        isMediaRecorderInitialized = true;
+  
+        mediaRecorder.ondataavailable = e => {
+          audioBuffer.push(e.data);
+        };
+
+        // added code for silence detection
+        const audioContext = new AudioContext();
+        const audioStreamSource = audioContext.createMediaStreamSource(stream);
+        const analyser = audioContext.createAnalyser();
+        analyser.minDecibels = MIN_DECIBELS;
+        audioStreamSource.connect(analyser);
+        const bufferLength = analyser.frequencyBinCount;
+        const domainData = new Uint8Array(bufferLength);
+        const detectSound = () => {
+          analyser.getByteFrequencyData(domainData);
+          for (let i = 0; i < bufferLength; i++) {
+            if (domainData[i] > 0) {
+              soundDetected = true;              // Sound Detected, set the flag to true.
+              appendMode=true;                   // When there is sound flip to continue appending to the soundfile as opposed to breaking in the middle.
+              document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+              break;
+            }else{
+              soundDetected = false;             // When no sound is detected.
+              appendMode=false;                  // You can break the file as set by the interval.
+              document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+            }
+          }
+          window.requestAnimationFrame(detectSound);
+        };
+        window.requestAnimationFrame(detectSound);
+        checkInterval = setInterval(() => {
+          document.getElementById('soundDetected').innerText = soundDetected ? "Status: Sound Detected" : "Status: Silence Detected";
+          soundDetected = false;  // Reset for the next second
+        }, 50);
+       
+        mediaRecorder.onstop = e => {
+          currentFilename = generateFileName(sequenceNumber);
+          console.log("currentFilename:", currentFilename); // Debugging statement
+
+          if (audioBuffer.length > 0) {
+            if (appendMode){ 
+              // if in append mode, keep adding to the audioBufffer and do not upload yet.
+              // you would be in this section of code if you need to do nothing an keep appending in the code. The exception is that if your over the chunkcount.
+              console.log("in appendMode, currentFilename:", currentFilename); // Debugging statement
+              if (audioBuffer.length >= chunkCount) {  // if over the chunkcount then you have to flush no matter what.
+                console.log("AudioBuffer.length :" + audioBuffer.length + "chunkCount:"+ chunkCount); // Debugging statement
+                uploadAndLocallySaveAudio(currentFilename) 
+              }
+            } else {
+              console.log("upload the file, we are not in the special case, currentFilename:", currentFilename); // Debugging statement
+              uploadAndLocallySaveAudio(currentFilename) 
+            }
+  
+          }
+          if (shouldContinueRecording) {
+            mediaRecorder.start();
+          }
+        };
+  
+        // Use user-defined timeInterval for the interval function
+        intervalId = setInterval(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, timeInterval); // Use user-defined time interval
+        
+      })
+      .catch(err => console.error('getUserMedia error', err));
+  };
+  
+  document.getElementById('stop').onclick = () => {
+    shouldContinueRecording = false;
+    if (mediaRecorder && mediaRecorder.state == 'recording') {
+      mediaRecorder.stop();
+    }
+    if (intervalId) {
+      clearInterval(intervalId);
+    }
+    isMediaRecorderInitialized = false;  
+  };
+  // Add this code to your script
+  document.getElementById('toggle').onclick = () => {
+    appendMode = !appendMode; // Toggle the appendMode
+    console.log("append Mode:", appendMode); // Debugging statement
+    document.getElementById('appendMode').innerText = `appendMode:${appendMode}`;
+  };
+
+  </script>
+
+
+  <script>
+  // Function to update the unified table
+  function updateUnifiedTable(filename, transcribedText, audioBlobId) {
+    // Debugging statement to log the function call and parameters
+    console.log("updateUnifiedTable called with filename:", filename, "transcribedText", transcribedText, "audioBlobId:", audioBlobId);
+  
+    // Get the table body element
+    const tableBody = document.getElementById('unifiedTableBody');
+  
+    // Check if a row with this filename already exists
+    let existingRow = document.getElementById(filename);
+  
+    if (existingRow) {
+      // Update the transcription cell
+      existingRow.cells[2].innerHTML = transcribedText;
+    } else {
+      // Create a new row and cells
+      const newRow = tableBody.insertRow();
+      newRow.id = filename;  // Set the row ID to the filename
+      const cell1 = newRow.insertCell(0);
+      const cell2 = newRow.insertCell(1);
+      const cell3 = newRow.insertCell(2);
+  
+      // Populate the cells
+      cell1.innerHTML = filename;
+  
+      // Create a play button for audio playback
+      const playButton = document.createElement("button");
+      playButton.innerHTML = "Play";
+      playButton.addEventListener("click", () => {
+        console.log("Play button clicked");  // Debugging statement
+        // Fetch blob from IndexedDB and play
+        const transaction = db.transaction(["audioChunks"]);
+        const objectStore = transaction.objectStore("audioChunks");
+        const getRequest = objectStore.get(audioBlobId);
+  
+        getRequest.onsuccess = function(event) {
+          console.log("Blob fetched from IndexedDB");  // Debugging statement
+          const audioBlob = event.target.result;
+          const audioUrl = URL.createObjectURL(audioBlob);
+          const audio = new Audio(audioUrl);
+          audio.play();
+          console.log("Audio should be playing now");  // Debugging statement
+        };
+
+        getRequest.onerror = function(event) {
+          console.error("Error fetching blob from IndexedDB:", event.target.errorCode);
+        };
+      });
+  
+      cell2.appendChild(playButton);
+      cell3.innerHTML = transcribedText || "Transcribing...";  // If transcription is not yet available
+
+      // Scroll to the bottom
+      const unifiedTableContainer = document.getElementById('unifiedTableContainer');
+      unifiedTableContainer.scrollTop = unifiedTableContainer.scrollHeight;
+
+    }
+  }
+
+  // Helper function to create an audio play button
+  function createAudioPlayButton(audioBlobId) {
+    const playButton = document.createElement("button");
+    playButton.innerHTML = "Play";
+    playButton.addEventListener("click", () => {
+      // Fetch blob from IndexedDB and play
+      const transaction = db.transaction(["audioChunks"]);
+      const objectStore = transaction.objectStore("audioChunks");
+      const getRequest = objectStore.get(audioBlobId);
+  
+      getRequest.onsuccess = function(event) {
+        const audioBlob = event.target.result;
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+      };
+    });
+    return playButton;
+  }
+  </script>
+
+
+  <script>
+    <!-- Scroll to the bottom -->
+    document.addEventListener("DOMContentLoaded", function() {
+      window.scrollTo(0, document.body.scrollHeight);
+     });
+ </script> 
+</body>
+</html>
+
+
+
+
+
+
+
+

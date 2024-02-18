@@ -1,0 +1,3 @@
+# dev.tfvars
+env = "staging"
+# ... other dev-specific variables ...

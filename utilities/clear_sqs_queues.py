@@ -39,18 +39,22 @@ def clear_sqs_queue(queue_url, region_name='us-east-2'):
 if __name__ == "__main__":
     print("\n")
 
-    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/audio_client_server-browser_comm_websockets-sqs_queue.fifo'
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_download_input_nofifo_queue'
     print(f"queue_url:{queue_url}")
     clear_sqs_queue(queue_url)
 
-    print("\n")
-    print("-=-=-=-=- Queues for the FastTrack NoS3 Transcription Process -=-=-=-=-=-")
-
-    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/transcribe_NoS3.fifo'
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_transcribe_input_fifo_queue.fifo'
     print(f"queue_url:{queue_url}")
     clear_sqs_queue(queue_url)
 
-    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/clientDisplay_TxtOnly.fifo'
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2script_input_fifo_queue.fifo'
     print(f"queue_url:{queue_url}")
     clear_sqs_queue(queue_url)
+
+    queue_url = 'https://sqs.us-east-2.amazonaws.com/635071011057/staging_audio2script_output_fifo_queue.fifo'
+    print(f"queue_url:{queue_url}")
+    clear_sqs_queue(queue_url)
+
+
+
 

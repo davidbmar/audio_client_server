@@ -1,0 +1,9 @@
+{
+  "path": "/createPod",
+  "httpMethod": "POST",
+  "headers": {
+    "Content-Type": "application/json",
+  },
+  "body": null
+}
+

@@ -1,0 +1,3 @@
+# dev.tfvars
+env = "prod"
+# ... other dev-specific variables ...
