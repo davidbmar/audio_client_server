@@ -64,7 +64,7 @@ def compare_files(bucket_audio, bucket_text, start_time, end_time):
 
     return table
 
-def generate_html_page(table, bucket_audio_url, output_file):
+def generate_specific_grouped_files_html_page(table, bucket_audio_url, output_file):
     """Generate an HTML page from the table data."""
     html_content = """
     <html>
@@ -124,8 +124,8 @@ def concatenate_txt_files(bucket_name, start_time, end_time):
 if __name__ == "__main__":
 
    # Define your time filter, bucket names, and the full URL for the audio bucket
-   start_time = '2023-12-11-23-33-33-394-015000'
-   end_time = '2023-12-11-23-37-33-653-015002'
+   start_time = '2024-02-18-11-42-21-694-015000'
+   end_time = '2024-02-18-11-50-28-934-015041'
 
    bucket_audio_name = 'presigned-url-audio-uploads'
    bucket_text_name = 'audioclientserver-transcribedobjects-public'
@@ -135,8 +135,8 @@ if __name__ == "__main__":
    #print(list_files(bucket_text_name, ".txt", start_time, end_time))
  
    # Generate the table and HTML page
-   #table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
-   #generate_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
+   table = compare_files(bucket_audio_name, bucket_text_name, start_time, end_time)
+   generate_specific_grouped_files_html_page(table, bucket_audio_url, 'audio_transcriptions.html')
 
    # Get concatenated text content
    concatenated_text = concatenate_txt_files(bucket_text_name, start_time, end_time)

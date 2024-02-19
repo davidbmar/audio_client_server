@@ -4,6 +4,7 @@ import pprint
 from datetime import datetime, timedelta
 from collections import defaultdict
 import os                                   # needed for lambda ie: os.environ.get('BUCKET_AUDIO_NAME'))
+from s3_txt_and_audio import compare_files, generate_specific_grouped_files_html_page
 
 def parse_timestamp(file_name):
     # Extract the timestamp including milliseconds
@@ -123,6 +124,7 @@ def generate_html_for_groups(grouped_files):
         html_content += f"""
         <div class="group">
             <h2>Group {i}</h2>
+	    <p><a href='group_{i}.html'>(view details)</a></p>
             <p>First file: {first_file}</p>
             <p>Last file: {last_file}</p>
         </div>
@@ -138,6 +140,24 @@ def generate_html_for_groups(grouped_files):
 def print_grouped_files(grouped_files):
     for i, (first_file, last_file) in enumerate(grouped_files, start=1):
         print(f"Group {i}: First file: {first_file}, Last file: {last_file}")
+
+def check_file_existence_local(group_id, base_directory='/var/www/html/s3_groupings'):
+    """ 
+    Check if the HTML file for a given group exists in the specified local directory.
+
+    Parameters:
+    - group_id: The group number (e.g., 14 for 'group_14.html').
+    - base_directory: The directory to check for the file, defaults to the current directory.
+
+    Returns:
+    - True if the file exists, False otherwise.
+    """
+    # Construct the file name based on the group_id
+    file_name = f"group_{group_id}.html"
+    # Construct the full path to where the file should exist
+    file_path = os.path.join(base_directory, file_name)
+    # Check if the file exists at the path
+    return os.path.exists(file_path)
 
 
 def lambda_handler(event, context):
@@ -157,10 +177,25 @@ def lambda_handler(event, context):
 if __name__ == "__main__":
     bucket_audio_name = 'presigned-url-audio-uploads'
     bucket_text_name = 'audioclientserver-transcribedobjects-public'
+    bucket_audio_url = 'https://presigned-url-audio-uploads.s3.us-east-2.amazonaws.com'
     gap_threshold_minutes = 5
 
+    # Create the index file which shows all the groupings.
     grouped_files = get_grouped_files(bucket_audio_name, bucket_text_name, gap_threshold_minutes)
-    html_content=generate_html_for_groups(grouped_files)
+    html_grouping_index_content=generate_html_for_groups(grouped_files)
+    with open("/var/www/html/s3_groupings/index.html", "w") as html_file:
+        html_file.write(html_grouping_index_content)
 
-    with open("index.html", "w") as html_file:
-        html_file.write(html_content)
+    pprint.pprint(grouped_files)
+
+    # Determine if there is a view_details page already.
+    for group_id, (first_file, last_file) in enumerate(grouped_files, start=1):
+       if check_file_existence_local(group_id):
+          print(f"Group {group_id} has already been processed.")
+       else:
+          print(f"Group {group_id} needs processing.")
+          # Generate the table and HTML page
+          table = compare_files(bucket_audio_name, bucket_text_name, first_file, last_file)
+          generate_specific_grouped_files_html_page(table, bucket_audio_url, f'/var/www/html/s3_groupings/group_{group_id}.html')
+
+

@@ -1,0 +1,140 @@
+/* Basic Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #1A1A1D; /* Dark background */
+    color: #C5C6C7; /* Soft white text */
+}
+
+a {
+    color: #66FCF1; /* Bright cyan for links */
+    text-decoration: none;
+}
+
+a:hover {
+    color: #F1D302; /* Bright yellow for hover states */
+}
+
+.container {
+    max-width: 1200px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Navigation Bar */
+.navbar {
+    background-color: #0B0C10;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.navbar a {
+    float: left;
+    display: block;
+    color: #C5C6C7;
+    text-align: center;
+    padding: 14px 20px;
+}
+
+.navbar a:hover {
+    background-color: #1F2833;
+}
+
+/* Buttons */
+.button {
+    background-color: #45A29E; /* Teal */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.button:hover {
+    background-color: #66FCF1; /* Bright cyan */
+}
+
+/* Content Sections */
+.section {
+    padding: 60px 0;
+    border-bottom: 1px solid #2B2D2F;
+}
+
+.section-heading {
+    color: #66FCF1; /* Cyan for headings */
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.section-content {
+    margin-top: 20px;
+}
+
+/* Footer */
+.footer {
+    background-color: #0B0C10;
+    color: #C5C6C7;
+    text-align: center;
+    padding: 20px 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+}
+table {
+    border-collapse: separate;
+    border-spacing: 8px; /* Space between cells */
+    /* Additional table styles */
+}
+
+th, td {
+    padding: 3px; /* Increase padding inside cells for more space around content */
+    /* Other styles like border, text-align, etc., remain unchanged */
+}
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    padding: 20px;
+}
+
+.file-groups {
+    margin-top: 20px;
+}
+
+.group {
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.group h2 {
+    color: #007bff;
+}
+
+.group p {
+    color: #666;
+}
+@media (max-width: 768px) {
+    .group {
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+}
+
+
