@@ -1,0 +1,72 @@
+This is the instructions on how to do this and get the flask app encyrpted under ssl.
+
+Certainly! Here's a summary of the steps we've gone through to set up and configure your Flask API with HTTPS using Let's Encrypt on an EC2 instance:
+
+1. Prerequisites:
+   - An EC2 instance running Ubuntu
+   - Apache2 web server installed and configured
+   - Let's Encrypt SSL/TLS certificate obtained and configured for your domain
+
+2. Clone your Flask API project repository on the EC2 instance.
+
+3. Navigate to the project directory:
+   ```
+   cd /path/to/your/project
+   ```
+
+4. Install the project dependencies:
+   ```
+   pip install -r requirements.txt
+   ```
+
+   If you encounter permission issues, you can use `sudo`:
+   ```
+   sudo pip install -r requirements.txt
+   ```
+
+5. Configure the Flask application:
+   - Open the `.flaskenv` file in the project directory.
+   - Set the following environment variables:
+     ```
+     FLASK_APP=api
+     FLASK_RUN_HOST=0.0.0.0
+     FLASK_RUN_PORT=6060
+     FLASK_RUN_CERT=/etc/letsencrypt/live/your_domain/fullchain.pem
+     FLASK_RUN_KEY=/etc/letsencrypt/live/your_domain/privkey.pem
+     ```
+   - Replace `your_domain` with your actual domain name.
+
+6. Configure file permissions:
+   - Change the ownership of the Let's Encrypt directory to the user running the Flask application (e.g., `ubuntu`) and the `www-data` group:
+     ```
+     sudo chown -R ubuntu:www-data /etc/letsencrypt
+     ```
+   - Set the appropriate permissions for the Let's Encrypt directory and its contents:
+     ```
+     sudo chmod -R 750 /etc/letsencrypt
+     ```
+   - Set the appropriate permissions for the certificate and private key files:
+     ```
+     sudo chmod 640 /etc/letsencrypt/live/your_domain/fullchain.pem
+     sudo chmod 640 /etc/letsencrypt/live/your_domain/privkey.pem
+     ```
+
+7. Update the React application:
+   - Ensure that the React application is making API requests to the correct HTTPS URL of your Flask API (e.g., `https://your_domain:6060`).
+
+8. Run the Flask application:
+   ```
+   flask run
+   ```
+
+   This command will start the Flask development server with HTTPS enabled using the Let's Encrypt certificate.
+
+9. Test the setup:
+   - Open your React application in a web browser and verify that it can communicate with the Flask API over HTTPS.
+   - Check the browser console for any errors or warnings related to HTTPS or certificate issues.
+
+Note: In a production environment, it's recommended to use a production-grade WSGI server like Gunicorn or uWSGI instead of the Flask development server.
+
+Remember to replace `your_domain` with your actual domain name and `/path/to/your/project` with the actual path to your Flask API project directory.
+
+If you have any further questions or need assistance with any specific step, please let me know!

@@ -1,0 +1,2 @@
+to start type 
+npm start
