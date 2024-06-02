@@ -2,7 +2,7 @@ import { useAuth0 } from "@auth0/auth0-react";
 import React, { useEffect, useState } from "react";
 import { CodeSnippet } from "../components/code-snippet";
 import { PageLayout } from "../components/page-layout";
-import { getProtectedResource, getPresignedUrl, uploadAudioFile } from "../services/message.service";
+import { getProtectedResource, getPresignedUrl } from "../services/message.service";
 import { ReactMic } from 'react-mic';
 
 export const RecordPage = () => {
@@ -48,9 +48,15 @@ export const RecordPage = () => {
   const stopRecording = async () => {
     setIsRecording(false);
     const accessToken = await getAccessTokenSilently();
-    const presignedUrlResponse = await getPresignedUrl(accessToken);
-    if (presignedUrlResponse && presignedUrlResponse.url) {
-      await uploadAudioFile(presignedUrlResponse.url, audioBlob);
+    try {
+      const presignedUrlResponse = await getPresignedUrl(accessToken);
+      console.log("Presigned URL Response:", presignedUrlResponse);
+      if (presignedUrlResponse && presignedUrlResponse.url) {
+        console.log("Uploading audio blob to:", presignedUrlResponse.url);
+        await uploadAudioFile(presignedUrlResponse.url, audioBlob);
+      }
+    } catch (error) {
+      console.error("Error fetching presigned URL:", error);
     }
   };
 
@@ -61,6 +67,25 @@ export const RecordPage = () => {
   const onStop = (recordedBlob) => {
     console.log('recordedBlob is: ', recordedBlob);
     setAudioBlob(recordedBlob.blob);
+  };
+
+  const uploadAudioFile = async (url, blob) => {
+    try {
+      console.log("Uploading blob:", blob);
+      const response = await fetch(url, {
+        method: 'PUT',
+        body: blob,
+        headers: {
+          'Content-Type': 'audio/webm',
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to upload audio file: ${response.statusText}`);
+      }
+      console.log('Audio file uploaded successfully');
+    } catch (error) {
+      console.error('Error uploading audio file:', error);
+    }
   };
 
   return (
