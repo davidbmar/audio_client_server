@@ -1,6 +1,7 @@
 import os
 import logging
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt, jwk
 from jose.utils import base64url_decode
@@ -33,6 +34,22 @@ logging.debug("AWS_S3_BUCKET_NAME: %s", AWS_S3_BUCKET_NAME)
 logging.debug("REGION_NAME: %s", REGION_NAME)
 
 app = FastAPI()
+
+origins = [
+    "https://www.davidbmar.com",
+    "http://www.davidbmar.com",
+    "https://davidbmar.com",
+    "http://davidbmar.com"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/token")
 
@@ -78,6 +95,7 @@ def get_public_key(token):
 def verify_token(token: str, credentials_exception):
     try:
         public_key = get_public_key(token)
+        #payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=[AUTH0_AUDIENCE, "https://dev-onz3ew6jph17oszl.us.auth0.com/userinfo"], issuer=f"https://{AUTH0_DOMAIN}/")
         payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=AUTH0_AUDIENCE, issuer=f"https://{AUTH0_DOMAIN}/")
         sub: str = payload.get("sub")
         if sub is None:
