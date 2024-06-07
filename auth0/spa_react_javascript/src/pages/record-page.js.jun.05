@@ -42,44 +42,31 @@ export const RecordPage = () => {
   }, [getAccessTokenSilently, user]);
 
   const startRecording = () => {
-    console.log('Starting recording...');
     setIsRecording(true);
   };
 
-  const stopRecording = () => {
-    console.log('Stopping recording...');
+  const stopRecording = async () => {
     setIsRecording(false);
+    const accessToken = await getAccessTokenSilently();
+    try {
+      const presignedUrlResponse = await getPresignedUrl(accessToken);
+      console.log("Presigned URL Response:", presignedUrlResponse);
+      if (presignedUrlResponse && presignedUrlResponse.url) {
+        console.log("Uploading audio blob to:", presignedUrlResponse.url);
+        await uploadAudioFile(presignedUrlResponse.url, audioBlob);
+      }
+    } catch (error) {
+      console.error("Error fetching presigned URL:", error);
+    }
   };
 
   const onData = (recordedBlob) => {
-    console.log('Chunk of real-time data is: ', recordedBlob);
+    console.log('chunk of real-time data is: ', recordedBlob);
   };
 
-  const onStop = async (recordedBlob) => {
-    console.log('Recorded Blob is: ', recordedBlob);
-    console.log('Blob size: ', recordedBlob.blob.size);
-    console.log('Blob type: ', recordedBlob.blob.type);
-
+  const onStop = (recordedBlob) => {
+    console.log('recordedBlob is: ', recordedBlob);
     setAudioBlob(recordedBlob.blob);
-
-    // Ensure the blob is not empty before attempting to upload
-    if (recordedBlob.blob && recordedBlob.blob.size > 0) {
-      const accessToken = await getAccessTokenSilently();
-      try {
-        const presignedUrlResponse = await getPresignedUrl(accessToken);
-        console.log("Presigned URL Response:", presignedUrlResponse);
-        if (presignedUrlResponse && presignedUrlResponse.url) {
-          console.log("Uploading audio blob to:", presignedUrlResponse.url);
-          await uploadAudioFile(presignedUrlResponse.url, recordedBlob.blob);
-        } else {
-          console.error('No presigned URL received.');
-        }
-      } catch (error) {
-        console.error("Error fetching presigned URL:", error);
-      }
-    } else {
-      console.error('No valid audio blob available for upload.');
-    }
   };
 
   const uploadAudioFile = async (url, blob) => {
@@ -137,4 +124,3 @@ export const RecordPage = () => {
     </PageLayout>
   );
 };
-
