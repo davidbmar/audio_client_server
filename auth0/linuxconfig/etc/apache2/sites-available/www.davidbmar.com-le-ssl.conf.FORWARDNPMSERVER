@@ -1,0 +1,31 @@
+<IfModule mod_ssl.c>
+<VirtualHost *:443>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html
+
+    ServerName davidbmar.com
+    ServerAlias www.davidbmar.com
+
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    Include /etc/letsencrypt/options-ssl-apache.conf
+
+    SSLEngine On
+    SSLCertificateFile /etc/letsencrypt/live/davidbmar.com/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/davidbmar.com/privkey.pem
+
+    <Directory /var/www/html>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    RewriteEngine On
+
+    # Proxy settings for React application
+    ProxyPreserveHost On
+    ProxyPass / http://localhost:4040/
+    ProxyPassReverse / http://localhost:4040/
+</VirtualHost>
+</IfModule>
