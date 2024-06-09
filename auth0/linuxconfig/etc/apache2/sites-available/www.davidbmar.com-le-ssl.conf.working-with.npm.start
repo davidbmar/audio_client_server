@@ -17,8 +17,8 @@
     SSLProxyCipherSuite HIGH:!aNULL:!MD5
 
     # Proxy requests for the presigned URL endpoint to the Uvicorn server
-    ProxyPass /get-presigned-url/ http://localhost:8000/get-presigned-url/
-    ProxyPassReverse /get-presigned-url/ http://localhost:8000/get-presigned-url/
+    ProxyPass /api/ http://localhost:8000/api/
+    ProxyPassReverse /api/ http://localhost:8000/api/
 
     # Proxy requests to the Node.js server
     ProxyPass / http://localhost:4040/

@@ -15,6 +15,10 @@
     SSLCertificateFile /etc/letsencrypt/live/davidbmar.com/fullchain.pem
     SSLCertificateKeyFile /etc/letsencrypt/live/davidbmar.com/privkey.pem
 
+    # Proxy requests for the presigned URL endpoint to the Uvicorn server
+    ProxyPass /api/ http://localhost:8000/api/
+    ProxyPassReverse /api/ http://localhost:8000/api/
+
     <Directory /var/www/html>
         Options Indexes FollowSymLinks
         AllowOverride All
@@ -25,15 +29,16 @@
 
     # Don't rewrite requests for static files
     RewriteCond %{REQUEST_URI} !^/static/
+    RewriteCond %{REQUEST_URI} !^/api/
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteRule ^ /index.html [L]
 
-    # WebSocket proxy with SSL/TLS for wss://
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteCond %{HTTP:Connection} =Upgrade [NC]
-    RewriteRule /ws/(.*) ws://localhost:4040/ws/$1 [P,L]
+    # WebSocket proxy with SSL/TLS for wss:// (uncomment if using WebSocket)
+    # RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    # RewriteCond %{HTTP:Connection} =Upgrade [NC]
+    # RewriteRule /ws/(.*) ws://localhost:4040/ws/$1 [P,L]
 
-    # Normal HTTP proxy
+    # ProxyPass for Node.js server (comment out if not in use)
     # SSLProxyEngine On  ## commented out because now on ProxyPass using http as opposed to https
     # ProxyPass / http://localhost:4040/
     # ProxyPassReverse / http://localhost:4040/
