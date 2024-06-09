@@ -1,13 +1,11 @@
-import { useAuth0 } from "@auth0/auth0-react";
 import React, { useEffect, useState } from "react";
-import { CodeSnippet } from "../components/code-snippet";
+import { useAuth } from "../services/auth.service";
+import { getPresignedUrl, uploadAudioFile } from "../services/file.service";
 import { PageLayout } from "../components/page-layout";
-import { getProtectedResource, getPresignedUrl } from "../services/message.service";
 import { ReactMic } from 'react-mic';
 
 export const RecordPage = () => {
-  const [message, setMessage] = useState("");
-  const { getAccessTokenSilently, user } = useAuth0();
+  const { getAccessTokenSilently, getUserId } = useAuth();
   const [userId, setUserId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -15,31 +13,17 @@ export const RecordPage = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const getMessage = async () => {
-      const accessToken = await getAccessTokenSilently();
-      const userIdValue = user.sub;
+    const fetchUserId = async () => {
+      const userIdValue = getUserId();
       setUserId(userIdValue);
-      const { data, error } = await getProtectedResource(accessToken, userIdValue);
-
-      if (!isMounted) {
-        return;
-      }
-
-      if (data) {
-        setMessage(JSON.stringify(data, null, 2));
-      }
-
-      if (error) {
-        setMessage(JSON.stringify(error, null, 2));
-      }
     };
 
-    getMessage();
+    fetchUserId();
 
     return () => {
       isMounted = false;
     };
-  }, [getAccessTokenSilently, user]);
+  }, [getUserId]);
 
   const startRecording = () => {
     console.log('Starting recording...');
@@ -57,19 +41,14 @@ export const RecordPage = () => {
 
   const onStop = async (recordedBlob) => {
     console.log('Recorded Blob is: ', recordedBlob);
-    console.log('Blob size: ', recordedBlob.blob.size);
-    console.log('Blob type: ', recordedBlob.blob.type);
 
     setAudioBlob(recordedBlob.blob);
 
-    // Ensure the blob is not empty before attempting to upload
     if (recordedBlob.blob && recordedBlob.blob.size > 0) {
       const accessToken = await getAccessTokenSilently();
       try {
         const presignedUrlResponse = await getPresignedUrl(accessToken);
-        console.log("Presigned URL Response:", presignedUrlResponse);
         if (presignedUrlResponse && presignedUrlResponse.url) {
-          console.log("Uploading audio blob to:", presignedUrlResponse.url);
           await uploadAudioFile(presignedUrlResponse.url, recordedBlob.blob);
         } else {
           console.error('No presigned URL received.');
@@ -82,31 +61,13 @@ export const RecordPage = () => {
     }
   };
 
-  const uploadAudioFile = async (url, blob) => {
-    try {
-      console.log("Uploading blob:", blob);
-      const response = await fetch(url, {
-        method: 'PUT',
-        body: blob,
-        headers: {
-          'Content-Type': 'audio/webm',
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to upload audio file: ${response.statusText}`);
-      }
-      console.log('Audio file uploaded successfully');
-    } catch (error) {
-      console.error('Error uploading audio file:', error);
-    }
-  };
-
   return (
     <PageLayout>
       <div className="content-layout">
         <h1 id="page-title" className="content__title">
           Recording Studio
         </h1>
+
         <div className="content__body">
           <p id="page-description">
             <span>
@@ -120,7 +81,7 @@ export const RecordPage = () => {
           <p>
             <strong>User ID:</strong> {userId}
           </p>
-          <CodeSnippet title="Protected Message" code={message} />
+
           <div>
             <button onClick={startRecording} disabled={isRecording}>Start Recording</button>
             <button onClick={stopRecording} disabled={!isRecording}>Stop Recording</button>
