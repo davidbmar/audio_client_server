@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../services/auth.service";
+import { useAuth0 } from "@auth0/auth0-react";
+import { ReactMic } from "react-mic";
 import { getPresignedUrl, uploadAudioFile } from "../services/file.service";
 import { PageLayout } from "../components/page-layout";
-import { ReactMic } from 'react-mic';
 
 export const RecordPage = () => {
-  const { getAccessTokenSilently, getUserId } = useAuth();
+  const { getAccessTokenSilently, user } = useAuth0();
   const [userId, setUserId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState(null);
@@ -13,20 +13,30 @@ export const RecordPage = () => {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchUserId = async () => {
-      const userIdValue = getUserId();
+    const getUserId = async () => {
+      const accessToken = await getAccessTokenSilently();
+      const userIdValue = user.sub;
       setUserId(userIdValue);
+
+      if (!isMounted) {
+        return;
+      }
     };
 
-    fetchUserId();
+    getUserId();
 
     return () => {
       isMounted = false;
     };
-  }, [getUserId]);
+  }, [getAccessTokenSilently, user]);
 
   const startRecording = () => {
     console.log('Starting recording...');
+    if (typeof AudioContext !== 'undefined' && AudioContext.state === 'suspended') {
+      AudioContext.resume().then(() => {
+        console.log('AudioContext resumed');
+      });
+    }
     setIsRecording(true);
   };
 
@@ -41,6 +51,8 @@ export const RecordPage = () => {
 
   const onStop = async (recordedBlob) => {
     console.log('Recorded Blob is: ', recordedBlob);
+    console.log('Blob size: ', recordedBlob.blob.size);
+    console.log('Blob type: ', recordedBlob.blob.type);
 
     setAudioBlob(recordedBlob.blob);
 
@@ -48,7 +60,9 @@ export const RecordPage = () => {
       const accessToken = await getAccessTokenSilently();
       try {
         const presignedUrlResponse = await getPresignedUrl(accessToken);
+        console.log("Presigned URL Response:", presignedUrlResponse);
         if (presignedUrlResponse && presignedUrlResponse.url) {
+          console.log("Uploading audio blob to:", presignedUrlResponse.url);
           await uploadAudioFile(presignedUrlResponse.url, recordedBlob.blob);
         } else {
           console.error('No presigned URL received.');

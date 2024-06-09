@@ -7,17 +7,17 @@ from jose import JWTError, jwt, jwk
 from jose.utils import base64url_decode
 from pydantic import BaseModel
 from typing import Optional
-from dotenv import load_dotenv
 import boto3
 import requests
-import json
 
 # Load environment variables
+from dotenv import load_dotenv
 load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
+# Environment variables
 AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
 AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
@@ -25,13 +25,27 @@ AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
 REGION_NAME = os.getenv("REGION_NAME")
 
-# Verify environment variables
+# Log the loaded environment variables
 logging.debug("AUTH0_DOMAIN: %s", AUTH0_DOMAIN)
 logging.debug("AUTH0_AUDIENCE: %s", AUTH0_AUDIENCE)
 logging.debug("AWS_ACCESS_KEY_ID: %s", AWS_ACCESS_KEY_ID)
 logging.debug("AWS_SECRET_ACCESS_KEY: %s", AWS_SECRET_ACCESS_KEY)
 logging.debug("AWS_S3_BUCKET_NAME: %s", AWS_S3_BUCKET_NAME)
 logging.debug("REGION_NAME: %s", REGION_NAME)
+
+# Verify environment variables
+if not AUTH0_DOMAIN:
+    raise ValueError("No AUTH0_DOMAIN set for environment")
+if not AUTH0_AUDIENCE:
+    raise ValueError("No AUTH0_AUDIENCE set for environment")
+if not AWS_ACCESS_KEY_ID:
+    raise ValueError("No AWS_ACCESS_KEY_ID set for environment")
+if not AWS_SECRET_ACCESS_KEY:
+    raise ValueError("No AWS_SECRET_ACCESS_KEY set for environment")
+if not AWS_S3_BUCKET_NAME:
+    raise ValueError("No AWS_S3_BUCKET_NAME set for environment")
+if not REGION_NAME:
+    raise ValueError("No REGION_NAME set for environment")
 
 app = FastAPI()
 
@@ -49,7 +63,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/token")
 
@@ -95,7 +108,6 @@ def get_public_key(token):
 def verify_token(token: str, credentials_exception):
     try:
         public_key = get_public_key(token)
-        #payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=[AUTH0_AUDIENCE, "https://dev-onz3ew6jph17oszl.us.auth0.com/userinfo"], issuer=f"https://{AUTH0_DOMAIN}/")
         payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=AUTH0_AUDIENCE, issuer=f"https://{AUTH0_DOMAIN}/")
         sub: str = payload.get("sub")
         if sub is None:
@@ -116,9 +128,10 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     return verify_token(token, credentials_exception)
 
-@app.get("/get-presigned-url/")
+@app.get("/api/get-presigned-url/")
 async def get_presigned_url(current_user: TokenData = Depends(get_current_user)):
     try:
+        logging.debug("Generating presigned URL for user: %s", current_user.sub)
         s3_client = boto3.client(
             's3',
             aws_access_key_id=AWS_ACCESS_KEY_ID,
