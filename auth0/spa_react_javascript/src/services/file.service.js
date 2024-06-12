@@ -2,6 +2,8 @@ export const getPresignedUrl = async (accessToken) => {
   console.log('Fetching presigned URL with access token:', accessToken);
   try {
     const response = await fetch('/api/get-presigned-url', {
+      //const response = await fetch("http://localhost:8000/api/get-presigned-url/", {
+      // Note: i'm unsure if i should be using the localhost here or not.
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
