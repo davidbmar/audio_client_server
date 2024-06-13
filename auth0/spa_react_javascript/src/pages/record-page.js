@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { ReactMic } from "react-mic";
 import { getPresignedUrl, uploadAudioFile } from "../services/file.service";
@@ -8,7 +8,10 @@ export const RecordPage = () => {
   const { getAccessTokenSilently, user } = useAuth0();
   const [userId, setUserId] = useState("");
   const [isRecording, setIsRecording] = useState(false);
-  const [audioBlob, setAudioBlob] = useState(null);
+  const [isLoopRunning, setIsLoopRunning] = useState(false);
+  const [chunkLength, setChunkLength] = useState(5000); // Default to 5000 ms
+  const recordingRef = useRef(null);
+  const logIntervalRef = useRef(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -30,82 +33,117 @@ export const RecordPage = () => {
     };
   }, [getAccessTokenSilently, user]);
 
-  const startRecording = () => {
-    console.log('Starting recording...');
-    if (typeof AudioContext !== 'undefined' && AudioContext.state === 'suspended') {
-      AudioContext.resume().then(() => {
-        console.log('AudioContext resumed');
-      });
-    }
+  const startLoop = () => {
+    console.log(`[${new Date().toISOString()}] User pressed Start Recording Loop`);
+    setIsLoopRunning(true);
     setIsRecording(true);
   };
 
-  const stopRecording = () => {
-    console.log('Stopping recording...');
+  const stopLoop = () => {
+    console.log(`[${new Date().toISOString()}] User pressed Stop Recording Loop`);
+    setIsLoopRunning(false);
     setIsRecording(false);
   };
 
-  const onData = (recordedBlob) => {
-    console.log('Chunk of real-time data is: ', recordedBlob);
+  const startLoggingFlags = () => {
+    if (logIntervalRef.current) clearInterval(logIntervalRef.current);
+    logIntervalRef.current = setInterval(() => {
+      logFlags();
+    }, 1000);
   };
 
-  const onStop = async (recordedBlob) => {
-    console.log('Recorded Blob is: ', recordedBlob);
-    console.log('Blob size: ', recordedBlob.blob.size);
-    console.log('Blob type: ', recordedBlob.blob.type);
+  const stopLoggingFlags = () => {
+    if (logIntervalRef.current) {
+      clearInterval(logIntervalRef.current);
+      logIntervalRef.current = null;
+    }
+  };
 
-    setAudioBlob(recordedBlob.blob);
+  const logFlags = () => {
+    console.log(`[${new Date().toISOString()}] isRecording: ${isRecording}, isLoopRunning: ${isLoopRunning}`);
+  };
+
+  useEffect(() => {
+    logFlags(); // Log state whenever it changes
+  }, [isRecording, isLoopRunning]);
+
+  useEffect(() => {
+    if (isLoopRunning) {
+      startLoggingFlags();
+      if (!isRecording) setIsRecording(true);
+    } else {
+      stopLoggingFlags();
+      setIsRecording(false);
+    }
+  }, [isLoopRunning]);
+
+  useEffect(() => {
+    let timeoutId;
+    if (isRecording) {
+      timeoutId = setTimeout(() => {
+        console.log(`[${new Date().toISOString()}] Action triggered by chunk length`);
+        setIsRecording(false);
+        setTimeout(() => {
+          if (isLoopRunning) setIsRecording(true);
+        }, 100); // Small delay to ensure recording restarts
+      }, chunkLength);
+    }
+    return () => clearTimeout(timeoutId);
+  }, [isRecording, isLoopRunning, chunkLength]);
+
+  const onStop = async (recordedBlob) => {
+    console.log(`[${new Date().toISOString()}] Recorded Blob is: `, recordedBlob);
 
     if (recordedBlob.blob && recordedBlob.blob.size > 0) {
       const accessToken = await getAccessTokenSilently();
       try {
         const presignedUrlResponse = await getPresignedUrl(accessToken);
-        console.log("Presigned URL Response:", presignedUrlResponse);
+        console.log(`[${new Date().toISOString()}] Presigned URL Response:`, presignedUrlResponse);
         if (presignedUrlResponse && presignedUrlResponse.url) {
-          console.log("Uploading audio blob to:", presignedUrlResponse.url);
+          console.log(`[${new Date().toISOString()}] Uploading audio blob to:`, presignedUrlResponse.url);
           await uploadAudioFile(presignedUrlResponse.url, recordedBlob.blob);
+          console.log(`[${new Date().toISOString()}] Audio file uploaded successfully`);
         } else {
-          console.error('No presigned URL received.');
+          console.error(`[${new Date().toISOString()}] No presigned URL received.`);
         }
       } catch (error) {
-        console.error("Error fetching presigned URL:", error);
+        console.error(`[${new Date().toISOString()}] Error fetching presigned URL:`, error);
       }
     } else {
-      console.error('No valid audio blob available for upload.');
+      console.error(`[${new Date().toISOString()}] No valid audio blob available for upload.`);
     }
   };
 
   return (
     <PageLayout>
       <div className="content-layout">
-        <h1 id="page-title" className="content__title">
-          Recording Studio
-        </h1>
-
+        <h1 id="page-title" className="content__title">Recording Studio</h1>
         <div className="content__body">
           <p id="page-description">
-            <span>
-              This page retrieves a <strong>protected message</strong> from an
-              external API.
-            </span>
-            <span>
-              <strong>Only authenticated users can access this page.</strong>
-            </span>
+            <span>This page retrieves a <strong>protected message</strong> from an external API.</span>
+            <span><strong>Only authenticated users can access this page.</strong></span>
           </p>
-          <p>
-            <strong>User ID:</strong> {userId}
-          </p>
-
+          <p><strong>User ID:</strong> {userId}</p>
           <div>
-            <button onClick={startRecording} disabled={isRecording}>Start Recording</button>
-            <button onClick={stopRecording} disabled={!isRecording}>Stop Recording</button>
+            <label>
+              Chunk Length (ms):
+              <input
+                type="number"
+                value={chunkLength}
+                onChange={(e) => setChunkLength(Number(e.target.value))}
+                min="1000"
+              />
+            </label>
+            <button onClick={startLoop} disabled={isLoopRunning}>Start Recording Loop</button>
+            <button onClick={stopLoop} disabled={!isLoopRunning}>Stop Recording Loop</button>
             <ReactMic
               record={isRecording}
               className="sound-wave"
               onStop={onStop}
-              onData={onData}
+              onData={() => { }}
               strokeColor="#000000"
-              backgroundColor="#FF4081" />
+              backgroundColor="#FF4081"
+            />
           </div>
         </div>
       </div>
