@@ -10,6 +10,7 @@ export const RecordPage = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isLoopRunning, setIsLoopRunning] = useState(false);
   const [chunkLength, setChunkLength] = useState(5000); // Default to 5000 ms
+  const [recordedChunks, setRecordedChunks] = useState([]);
   const recordingRef = useRef(null);
   const logIntervalRef = useRef(null);
 
@@ -95,6 +96,8 @@ export const RecordPage = () => {
     console.log(`[${new Date().toISOString()}] Recorded Blob is: `, recordedBlob);
 
     if (recordedBlob.blob && recordedBlob.blob.size > 0) {
+      setRecordedChunks(prevChunks => [...prevChunks, recordedBlob.blob]);
+
       const accessToken = await getAccessTokenSilently();
       try {
         const presignedUrlResponse = await getPresignedUrl(accessToken);
@@ -145,6 +148,20 @@ export const RecordPage = () => {
               backgroundColor="#FF4081"
             />
           </div>
+
+          <div className="recorded-chunks">
+            <h2>Recorded Chunks</h2>
+            {recordedChunks.map((chunk, index) => (
+              <div key={index}>
+                <audio controls>
+                  <source src={URL.createObjectURL(chunk)} type="audio/wav" />
+                  Your browser does not support the audio element.
+                </audio>
+                <br />
+              </div>
+            ))}
+          </div>
+
         </div>
       </div>
     </PageLayout>
