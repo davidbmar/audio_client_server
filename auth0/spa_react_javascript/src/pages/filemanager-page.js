@@ -54,6 +54,28 @@ export const FileManagerPage = () => {
     // Implement search functionality here
   };
 
+  const loadAudio = async (file) => {
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const response = await fetch(`/api/get-file?file_path=${encodeURIComponent(`${currentPath}${file.name}`)}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch audio file');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.load();
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      }
+      setCurrentlyPlaying(file);
+    } catch (error) {
+      console.error("Error loading audio:", error);
+    }
+  };
+
   const handleFileAction = async (action, file) => {
     const accessToken = await getAccessTokenSilently();
     switch (action) {
@@ -86,13 +108,6 @@ export const FileManagerPage = () => {
           } catch (error) {
             console.error("Error deleting file:", error);
           }
-        }
-        break;
-      case "play":
-        setCurrentlyPlaying(file);
-        if (audioRef.current) {
-          audioRef.current.src = `/api/get-file?file_path=${encodeURIComponent(`${currentPath}${file.name}`)}`;
-          audioRef.current.play();
         }
         break;
       default:
@@ -182,7 +197,7 @@ export const FileManagerPage = () => {
                     <td>{new Date(file.last_modified).toLocaleString()}</td>
                     <td>{file.size}</td>
                     <td>
-                      <button onClick={() => handleFileAction("play", file)}>
+                      <button onClick={() => loadAudio(file)}>
                         Play
                       </button>
                       <button onClick={() => handleFileAction("rename", file)}>
