@@ -19,13 +19,14 @@ self.onmessage = async (event) => {
         console.error('Invalid presigned URL response:', data);
       }
     } catch (error) {
-      console.error('Error uploading blob to S3:', error);
+      console.error('Error fetching presigned URL:', error); // Capture error from fetching presigned URL
     }
   }
 };
 
 const uploadToS3 = async (url, blob) => {
   try {
+    console.log('Starting upload to S3'); // Debug message
     const response = await fetch(url, {
       method: 'PUT',
       body: blob,
@@ -38,7 +39,7 @@ const uploadToS3 = async (url, blob) => {
     }
     console.log('Audio file uploaded successfully'); // Debug message
   } catch (error) {
-    console.error('Error uploading audio file:', error);
+    console.error('Error uploading audio file:', error); // Capture error from upload process
   }
 };
 

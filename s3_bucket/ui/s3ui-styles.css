@@ -1,0 +1,105 @@
+/* General styles */
+body {
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header styles */
+header {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    background-color: #f4f4f4;
+    border-bottom: 1px solid #ddd;
+}
+
+.top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.breadcrumb {
+    display: flex;
+    list-style: none;
+    padding: 0;
+}
+
+.breadcrumb-item:not(:last-child)::after {
+    content: ">";
+    margin: 0 5px;
+}
+
+.search-bar {
+    display: flex;
+    width: 100%;
+}
+
+#file-search {
+    flex-grow: 1;
+    margin-right: 5px;
+    padding: 5px;
+}
+
+/* Main content styles */
+main {
+    display: flex;
+    margin-top: 20px;
+}
+
+.directory-tree {
+    width: 25%;
+    padding-right: 20px;
+}
+
+.file-list {
+    width: 75%;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+/* Button styles */
+button {
+    cursor: pointer;
+    padding: 5px 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+}
+
+button:hover {
+    background-color: #0056b3;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.action-btn img {
+    width: 16px;
+    height: 16px;
+}
+
+/* Add more specific styles as needed */

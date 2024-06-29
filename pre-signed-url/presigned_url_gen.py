@@ -1,5 +1,3 @@
-import os
-import logging
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
@@ -9,6 +7,10 @@ from pydantic import BaseModel
 from typing import Optional
 import boto3
 import requests
+import os
+import logging
+from datetime import datetime
+import pytz
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -128,6 +130,18 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     return verify_token(token, credentials_exception)
 
+def generate_file_name():
+    central = pytz.timezone('US/Central')
+    now = datetime.now(central)
+    year = now.year
+    month = str(now.month).zfill(2)
+    day = str(now.day).zfill(2)
+    hour = str(now.hour).zfill(2)
+    minute = str(now.minute).zfill(2)
+    second = str(now.second).zfill(2)
+    millisecond = str(now.microsecond // 1000).zfill(3)
+    return f"{year}-{month}-{day}-{hour}-{minute}-{second}-{millisecond}.mp3"
+
 @app.get("/api/get-presigned-url/")
 async def get_presigned_url(current_user: TokenData = Depends(get_current_user)):
     try:
@@ -146,7 +160,8 @@ async def get_presigned_url(current_user: TokenData = Depends(get_current_user))
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
 
         directory = f"{user_id}/"
-        object_name = f"{directory}example_audio_file.mp3"
+        filename = generate_file_name()  # Generate a unique filename
+        object_name = f"{directory}{filename}"
         logging.debug("Object Name: %s", object_name)
 
         bucket_name = AWS_S3_BUCKET_NAME
@@ -163,7 +178,45 @@ async def get_presigned_url(current_user: TokenData = Depends(get_current_user))
         logging.error("Error generating presigned URL: %s", str(e))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+@app.get("/api/get-s3-objects")
+async def get_s3_objects(current_user: TokenData = Depends(get_current_user)):
+    try:
+        logging.debug("Listing S3 objects for user: %s", current_user.sub)
+        s3_client = boto3.client(
+            's3',
+            aws_access_key_id=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            region_name=REGION_NAME
+        )
+        logging.debug("S3 Client: %s", s3_client)
+
+        user_id = current_user.sub
+        logging.debug("Current User ID: %s", user_id)
+        if not user_id:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
+
+        directory = f"{user_id}/"
+        logging.debug("User Directory: %s", directory)
+
+        bucket_name = AWS_S3_BUCKET_NAME
+        logging.debug("Bucket Name: %s", bucket_name)
+
+        response = s3_client.list_objects_v2(
+            Bucket=bucket_name,
+            Prefix=directory
+        )
+
+        logging.debug("S3 Response: %s", response)
+
+        if 'Contents' not in response:
+            return {"objects": []}
+
+        objects = [{'key': obj['Key'], 'size': obj['Size']} for obj in response['Contents']]
+        logging.debug("Objects: %s", objects)
+
+        return {"objects": objects}
+    except Exception as e:
+        logging.error("Error listing S3 objects: %s", str(e))
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+
 

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S3 File Browser</title>
+    <link rel="stylesheet" href="s3ui-styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="top-bar">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="#">Documents</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">Projects</li>
+                    </ol>
+                </nav>
+                <button id="create-directory">
+                    <img src="icons/create-directory-icon.png" alt=""> Create Directory
+                </button>
+            </div>
+            <div class="search-bar">
+                <input type="search" id="file-search" placeholder="Search files...">
+                <button id="search-button">
+                    <img src="icons/search-icon.png" alt="Search">
+                </button>
+            </div>
+        </header>
+        
+        <!-- Rest of the HTML content... -->
+
+    </div>
+
+    <!-- Modal templates... -->
+
+    <script src="s3ui-app.js"></script>
+</body>
+</html>
