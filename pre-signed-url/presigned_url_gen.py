@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt, jwk
@@ -11,6 +12,9 @@ import os
 import logging
 from datetime import datetime
 import pytz
+from fastapi import Path, Query
+from typing import List
+
 
 # Load environment variables
 from dotenv import load_dotenv
@@ -219,4 +223,100 @@ async def get_s3_objects(current_user: TokenData = Depends(get_current_user)):
         logging.error("Error listing S3 objects: %s", str(e))
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
+
+@app.get("/api/list-directory")
+async def list_directory(
+    path: str = Query(..., description="Directory path to list"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                 region_name=REGION_NAME)
+        
+        user_path = f"{current_user.sub}/{path.strip('/')}"
+        response = s3_client.list_objects_v2(Bucket=AWS_S3_BUCKET_NAME, Prefix=user_path, Delimiter='/')
+        
+        directories = [prefix.strip('/').split('/')[-1] for prefix in response.get('CommonPrefixes', [])]
+        files = [{'name': obj['Key'].split('/')[-1], 'size': obj['Size'], 'last_modified': obj['LastModified']} 
+                 for obj in response.get('Contents', []) if not obj['Key'].endswith('/')]
+        
+        return {"directories": directories, "files": files}
+    except Exception as e:
+        logging.error(f"Error listing directory: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.delete("/api/delete-file")
+async def delete_file(
+    file_path: str = Query(..., description="File path to delete"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                 region_name=REGION_NAME)
+        
+        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
+        s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
+        return {"message": "File deleted successfully"}
+    except Exception as e:
+        logging.error(f"Error deleting file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/rename-file")
+async def rename_file(
+    old_path: str = Query(..., description="Current file path"),
+    new_path: str = Query(..., description="New file path"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                 region_name=REGION_NAME)
+        
+        user_old_path = f"{current_user.sub}/{old_path.strip('/')}"
+        user_new_path = f"{current_user.sub}/{new_path.strip('/')}"
+        
+        s3_client.copy_object(Bucket=AWS_S3_BUCKET_NAME, CopySource={'Bucket': AWS_S3_BUCKET_NAME, 'Key': user_old_path}, Key=user_new_path)
+        s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_old_path)
+        
+        return {"message": "File renamed successfully"}
+    except Exception as e:
+        logging.error(f"Error renaming file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/create-directory")
+async def create_directory(
+    directory_path: str = Query(..., description="Directory path to create"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                 region_name=REGION_NAME)
+        
+        user_directory_path = f"{current_user.sub}/{directory_path.strip('/')}/"
+        s3_client.put_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_directory_path)
+        
+        return {"message": "Directory created successfully"}
+    except Exception as e:
+        logging.error(f"Error creating directory: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/get-file")
+async def get_file(
+    file_path: str = Query(..., description="File path to retrieve"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
+        full_path = os.path.join(YOUR_S3_BUCKET_MOUNT_POINT, user_file_path)
+        
+        if not os.path.exists(full_path):
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        return FileResponse(full_path)
+    except Exception as e:
+        logging.error(f"Error retrieving file: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
