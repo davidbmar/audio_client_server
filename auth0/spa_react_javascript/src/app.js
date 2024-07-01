@@ -11,6 +11,7 @@ import { ProfilePage } from "./pages/profile-page";
 import { RecordPage } from "./pages/record-page";
 import { ProtectedPage } from "./pages/protected-page";
 import { PublicPage } from "./pages/public-page";
+import { FileManagerPage } from "./pages/filemanager-page"; // Add this import
 
 export const App = () => {
   const { isLoading } = useAuth0();
@@ -42,6 +43,10 @@ export const App = () => {
       <Route
         path="/admin"
         element={<AuthenticationGuard component={AdminPage} />}
+      />
+      <Route
+        path="/file-manager" // Add this new route
+        element={<AuthenticationGuard component={FileManagerPage} />}
       />
       <Route path="/callback" element={<CallbackPage />} />
       <Route path="*" element={<NotFoundPage />} />

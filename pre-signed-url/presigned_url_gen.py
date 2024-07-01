@@ -1,5 +1,6 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt, jwk
@@ -9,6 +10,7 @@ from typing import Optional
 import boto3
 import requests
 import os
+import io
 import logging
 from datetime import datetime
 import pytz
@@ -303,19 +305,26 @@ async def create_directory(
         logging.error(f"Error creating directory: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 @app.get("/api/get-file")
 async def get_file(
     file_path: str = Query(..., description="File path to retrieve"),
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
+        s3_client = boto3.client('s3', 
+                                 aws_access_key_id=AWS_ACCESS_KEY_ID,
+                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+                                 region_name=REGION_NAME)
+        
         user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
-        full_path = os.path.join(YOUR_S3_BUCKET_MOUNT_POINT, user_file_path)
         
-        if not os.path.exists(full_path):
-            raise HTTPException(status_code=404, detail="File not found")
+        response = s3_client.get_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
         
-        return FileResponse(full_path)
+        def iterfile():  
+            yield from response['Body'].iter_chunks()
+        
+        return StreamingResponse(iterfile(), media_type=response['ContentType'])
     except Exception as e:
         logging.error(f"Error retrieving file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
