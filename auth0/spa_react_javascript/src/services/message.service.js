@@ -96,3 +96,18 @@ export const getAdminResource = async (accessToken) => {
     error,
   };
 };
+
+export const launchGPU = async (accessToken) => {
+  try {
+    const response = await axios.get(`${apiServerUrl}/api/admin/launchGPU`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error launching GPU:", error);
+    throw error;
+  }
+};
+

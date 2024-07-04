@@ -1,0 +1,4 @@
+First create something like this as .env
+RUNPOD_API_KEY=your_runpod_api_key_here
+AWS_ACCESS_KEY_ID=your_aws_access_key_id_here
+AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key_here

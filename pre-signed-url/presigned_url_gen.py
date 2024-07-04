@@ -329,3 +329,13 @@ async def get_file(
         logging.error(f"Error retrieving file: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.get("/api/admin/launchGPU")
+async def launch_gpu(current_user: TokenData = Depends(get_current_user)):
+    # Check if the user has the required permission
+    if "read:admin-messages" not in current_user.permissions:
+        raise HTTPException(status_code=403, detail="Permission denied")
+    
+    # For now, we'll just return a message. In the future, this could initiate a GPU instance.
+    return {"message": "GPU launch initiated successfully"}
+
+
