@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -45,4 +46,4 @@ async def delete_pod(pod: PodAction):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=9000)

@@ -86,7 +86,7 @@ To start the FastAPI server:
 ./runpod_api.py
 ```
 
-This will start the server on `http://localhost:8000`.
+This will start the server on `http://localhost:9000`.
 
 ### API Endpoints
 
@@ -104,22 +104,22 @@ Example using curl:
 
 List Pods:
 ```
-curl http://localhost:8000/pods
+curl http://localhost:9000/pods
 ```
 
 Create Pod:
 ```
-curl -X POST http://localhost:8000/pods -H "Content-Type: application/json" -d '{"name": "test-pod", "image": "ubuntu:latest", "gpu_type": "NVIDIA GeForce RTX 3070"}'
+curl -X POST http://localhost:9000/pods -H "Content-Type: application/json" -d '{"name": "test-pod", "image": "ubuntu:latest", "gpu_type": "NVIDIA GeForce RTX 3070"}'
 ```
 
 Stop Pod:
 ```
-curl -X POST http://localhost:8000/pods/stop -H "Content-Type: application/json" -d '{"pod_id": "pod_id_here"}'
+curl -X POST http://localhost:9000/pods/stop -H "Content-Type: application/json" -d '{"pod_id": "pod_id_here"}'
 ```
 
 Delete Pod:
 ```
-curl -X DELETE http://localhost:8000/pods -H "Content-Type: application/json" -d '{"pod_id": "pod_id_here"}'
+curl -X DELETE http://localhost:9000/pods -H "Content-Type: application/json" -d '{"pod_id": "pod_id_here"}'
 ```
 
 ## File Structure
