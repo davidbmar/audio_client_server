@@ -36,6 +36,7 @@ This Python script updates an AWS EC2 Security Group with ingress rules for API 
    ```
 
 ## How It Works
+0. This is to protect the port 9000 and allow access only from API GATEWAY ranges
 
 1. **Fetch IP Ranges**: The script downloads the latest AWS IP range information and filters for API Gateway IPs in the us-east-2 region.
 
