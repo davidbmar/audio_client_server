@@ -1,4 +1,3 @@
-Certainly! Here's an updated README.md that reflects the changes you've requested:
 
 ```markdown
 # RunPod Management System
