@@ -1,5 +1,4 @@
 
-```markdown
 # RunPod Management System
 
 This system provides both a Command Line Interface (CLI) and a RESTful API for managing RunPod instances, including listing, creating, stopping, and deleting pods.
