@@ -10,12 +10,6 @@ This system provides both a Command Line Interface (CLI) and a RESTful API for m
 
 ## Setup
 
-1. Clone this repository:
-   ```
-   git clone https://your-repository-url.git
-   cd runpod-management-system
-   ```
-
 2. Install the required packages:
    ```
    pip install -r requirements.txt
