@@ -1,6 +1,4 @@
-Certainly! Here's an updated README.md that reflects the changes you've requested:
 
-```markdown
 # RunPod Management System
 
 This system provides both a Command Line Interface (CLI) and a RESTful API for managing RunPod instances, including listing, creating, stopping, and deleting pods.
@@ -11,12 +9,6 @@ This system provides both a Command Line Interface (CLI) and a RESTful API for m
 - pip (Python package installer)
 
 ## Setup
-
-1. Clone this repository:
-   ```
-   git clone https://your-repository-url.git
-   cd runpod-management-system
-   ```
 
 2. Install the required packages:
    ```
