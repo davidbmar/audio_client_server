@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
 from fastapi import FastAPI, HTTPException, Request
 import logging
 from pydantic import BaseModel
@@ -17,7 +17,7 @@ app = FastAPI()
 @app.get("/health")
 async def health_check():
     logger.info("Health check endpoint accessed")
-    return {"status": "ok"}
+    return {"status": "ok", "source": "runpod_api"}
 
 class PodCreate(BaseModel):
     name: str
@@ -86,6 +86,12 @@ async def delete_pod(pod: PodAction):
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
     return {"message": "Internal server error"}
+
+# Add this catch-all route to handle any other paths
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "DELETE", "PUT", "PATCH"])
+async def catch_all(request: Request, path_name: str):
+    logger.info(f"Catch-all route accessed: {path_name}")
+    return {"message": f"Catch-all route accessed: {path_name}"}
 
 if __name__ == "__main__":
     import uvicorn
