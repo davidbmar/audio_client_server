@@ -17,6 +17,17 @@ def listPods():
     pods = runpod.get_pods()
     return {"pods": pods}
 
+
+import runpod
+
+def getPod(pod_id):
+    runpod.api_key = os.getenv('RUNPOD_API_KEY')
+    try:
+        pod = runpod.get_pod(pod_id)
+        return {"status": pod.get("status", "Unknown"), "desiredStatus": pod.get("desiredStatus", "Unknown")}
+    except runpod.error.QueryError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
 def createPod(name, image, gpu_type):
     runpod.api_key = os.getenv('RUNPOD_API_KEY')
     env = {
