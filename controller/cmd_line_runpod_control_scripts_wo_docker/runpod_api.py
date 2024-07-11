@@ -1,6 +1,8 @@
-#!/usr/bin/env python3
+#!/usr/bin/python3
+
 from fastapi import FastAPI, HTTPException, Depends, Request
-from fastapi.responses import JSONResponse  # Import JSONResponse
+from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
 from dotenv import load_dotenv
@@ -10,16 +12,15 @@ import requests
 from jwt import PyJWKClient
 from pod_functions import listPods, createPod, stopPod, deletePod, getPod
 import logging
-import urllib.request
 
 # Load environment variables
 load_dotenv()
 
-# Check for required environment variables
-required_env_vars = ['RUNPOD_API_KEY', 'AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AUTH0_DOMAIN', 'AUTH0_AUDIENCE']
-missing_vars = [var for var in required_env_vars if not os.getenv(var)]
-if missing_vars:
-    raise Exception(f"Missing required environment variables: {', '.join(missing_vars)}")
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
+
+print(f"Auth0 Domain: {AUTH0_DOMAIN}")
+print(f"Auth0 Audience: {AUTH0_AUDIENCE}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -28,17 +29,38 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 app = FastAPI()
+
+# Configure CORS
+origins = [
+    "https://www.davidbmar.com",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 security = HTTPBearer()
 
 # Auth0 configuration
-AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
 jwks_client = PyJWKClient(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
 
 def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
         token = credentials.credentials
-        logger.debug(f"Received token: {token[:10]}...") # Log the first 10 characters of the token
+        logger.debug(f"Received token: {token[:10]}...")  # Log the first 10 characters of the token
+
+        # Decode the token for debugging purposes
+        decoded_token = jwt.decode(token, options={"verify_signature": False})
+        print(f"Decoded token: {decoded_token}")
+
+        # Check if the expected audience is in the token's audience list
+        if AUTH0_AUDIENCE not in decoded_token['aud']:
+            logger.error(f"Invalid audience. Expected: {AUTH0_AUDIENCE}, got: {decoded_token['aud']}")
+            raise HTTPException(status_code=401, detail="Invalid audience")
 
         # Fetch JWKS
         jwks_url = f'https://{AUTH0_DOMAIN}/.well-known/jwks.json'
@@ -77,6 +99,9 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
         except jwt.ExpiredSignatureError:
             logger.error("Token has expired")
             raise HTTPException(status_code=401, detail="Token has expired")
+        except jwt.InvalidAudienceError:
+            logger.error("Invalid audience")
+            raise HTTPException(status_code=401, detail="Invalid audience")
         except jwt.JWTClaimsError as e:
             logger.error(f"Invalid claims: {e}")
             raise HTTPException(status_code=401, detail=f"Invalid claims: {str(e)}")
@@ -174,3 +199,4 @@ async def global_exception_handler(request: Request, exc: Exception):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=9000)
+
