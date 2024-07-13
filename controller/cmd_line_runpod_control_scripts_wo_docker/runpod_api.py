@@ -10,17 +10,9 @@ import os
 import jwt
 import requests
 from jwt import PyJWKClient
-from pod_functions import listPods, createPod, stopPod, deletePod, getPod
+from pod_functions import listPods, createPod, stopPod, deletePod, getPod, Pod
+from typing import List
 import logging
-
-# Load environment variables
-load_dotenv()
-
-AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
-AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
-
-print(f"Auth0 Domain: {AUTH0_DOMAIN}")
-print(f"Auth0 Audience: {AUTH0_AUDIENCE}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO,
@@ -28,18 +20,34 @@ logging.basicConfig(level=logging.INFO,
                     handlers=[logging.FileHandler("runpod_api.log"), logging.StreamHandler()])
 logger = logging.getLogger(__name__)
 
+# Load environment variables
+load_dotenv()
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+AUTH0_AUDIENCE = os.getenv('AUTH0_AUDIENCE')
+logger.info(f"Auth0 Domain: {AUTH0_DOMAIN}")
+logger.info(f"Auth0 Audience: {AUTH0_AUDIENCE}")
+
+# Check for RUNPOD_API_KEY
+if not os.getenv('RUNPOD_API_KEY'):
+    logger.error("RUNPOD_API_KEY is not set. Please set this environment variable.")
+    raise ValueError("RUNPOD_API_KEY is not set")
+else:
+    logger.info("RUNPOD_API_KEY is set")
+
 app = FastAPI()
 
 # Configure CORS
 origins = [
     "https://www.davidbmar.com",
+    "http://localhost:3000",  # Include this if you're testing locally
+
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["https://www.davidbmar.com"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["*"],  # Ensures that POST is allowed
     allow_headers=["*"],
 )
 
@@ -55,7 +63,7 @@ def verify_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
         # Decode the token for debugging purposes
         decoded_token = jwt.decode(token, options={"verify_signature": False})
-        print(f"Decoded token: {decoded_token}")
+        logger.debug(f"Decoded token: {decoded_token}")
 
         # Check if the expected audience is in the token's audience list
         if AUTH0_AUDIENCE not in decoded_token['aud']:
@@ -133,27 +141,35 @@ async def health_check():
     logger.info("Health check endpoint accessed")
     return {"status": "ok", "source": "runpod_api"}
 
-@app.get("/pods")
+@app.get("/pods", response_model=List[Pod])
 async def get_pods(user: dict = Depends(verify_token)):
     try:
-        logger.info("Fetching pods")
+        logger.info("Fetching pods - Starting")
+        logger.debug(f"User info: {user}")  # Log user info from the token
         result = listPods()
         logger.info(f"Pods fetched: {result}")
-        return result
+        if not isinstance(result, dict) or 'pods' not in result:
+            logger.error(f"Unexpected result structure: {result}")
+            raise ValueError("Unexpected result structure from listPods")
+        logger.info(f"Returning {len(result['pods'])} pods")
+        return result["pods"]
     except Exception as e:
-        logger.error(f"Error fetching pods: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Error fetching pods: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/pods/{pod_id}")
+@app.get("/pods/{pod_id}", response_model=Pod)
 async def get_pod(pod_id: str, user: dict = Depends(verify_token)):
     try:
         logger.info(f"Fetching pod: {pod_id}")
         result = getPod(pod_id)
-        logger.info(f"Pod fetched: {result}")
+        logger.info(f"Pod fetched: {result.id}")
         return result
-    except Exception as e:
+    except HTTPException as e:
         logger.error(f"Error fetching pod: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise e
+    except Exception as e:
+        logger.error(f"Unexpected error fetching pod: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @app.post("/pods")
 async def create_pod(pod: PodCreate, user: dict = Depends(verify_token)):
@@ -161,10 +177,11 @@ async def create_pod(pod: PodCreate, user: dict = Depends(verify_token)):
         logger.info(f"Creating pod: {pod}")
         result = createPod(pod.name, pod.image, pod.gpu_type)
         logger.info(f"Pod created: {result}")
+        logger.debug(f"Full pod creation response: {result}")
         return result
     except Exception as e:
-        logger.error(f"Error creating pod: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+        logger.error(f"Error creating pod: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/pods/stop")
 async def stop_pod(pod: PodAction, user: dict = Depends(verify_token)):
@@ -198,5 +215,5 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
+    logger.info("Starting the FastAPI server")
     uvicorn.run(app, host="0.0.0.0", port=9000)
-

@@ -15,6 +15,7 @@ export const NavBarTabs = () => {
           <NavBarTab path="/file-manager" label="My Sound Files" />
           <NavBarTab path="/protected" label="Protected" />
           <NavBarTab path="/admin" label="Admin" />
+          <NavBarTab path="/runpod" label="Runpod" />
         </>
       )}
     </div>

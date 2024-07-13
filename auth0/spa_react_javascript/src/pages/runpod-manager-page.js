@@ -1,5 +1,5 @@
 // runpod-manager-page.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { PageLayout } from "../components/page-layout";
 
@@ -15,44 +15,7 @@ export const RunPodManagerPage = () => {
   const [newPodImage, setNewPodImage] = useState("");
   const [newPodGpuType, setNewPodGpuType] = useState("");
 
-  useEffect(() => {
-    const getToken = async () => {
-      try {
-        const token = await getAccessTokenSilently();
-        setAccessToken(token);
-        console.log("Access token obtained successfully");
-      } catch (error) {
-        console.error("Error getting access token", error);
-        setError("Failed to get access token: " + error.message);
-      }
-    };
-    getToken();
-  }, [getAccessTokenSilently]);
-
-  useEffect(() => {
-    if (accessToken) {
-      listPods();
-    }
-  }, [accessToken]);
-
-  useEffect(() => {
-    const refreshToken = async () => {
-      try {
-        const token = await getAccessTokenSilently();
-        setAccessToken(token);
-        console.log("Access token refreshed successfully");
-      } catch (error) {
-        console.error("Error refreshing access token", error);
-        setError("Failed to refresh access token: " + error.message);
-      }
-    };
-
-    const tokenRefreshInterval = setInterval(refreshToken, 3600000); // Refresh every hour
-
-    return () => clearInterval(tokenRefreshInterval);
-  }, [getAccessTokenSilently]);
-
-  const handleApiCall = async (endpoint, method, body = null) => {
+  const handleApiCall = useCallback(async (endpoint, method, body = null) => {
     setLoading(true);
     setError(null);
     try {
@@ -71,6 +34,7 @@ export const RunPodManagerPage = () => {
         throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
       }
       const data = await response.json();
+      console.log("Raw API response:", data);  // Add this line
       return data;
     } catch (error) {
       console.error("API call error", error);
@@ -79,17 +43,31 @@ export const RunPodManagerPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [accessToken]);
 
-  const listPods = async () => {
+  const listPods = useCallback(async () => {
     try {
+      console.log("Fetching pods - Starting");
       const data = await handleApiCall("/pods", "GET");
-      if (data) setPods(data.pods);
+      console.log("Received pod data:", data);
+      if (Array.isArray(data)) {
+        setPods(data);
+        console.log(`Successfully set ${data.length} pods`);
+      } else {
+        console.error("Unexpected data structure:", data);
+        setError(`Invalid data received from the server. Expected an array, got: ${JSON.stringify(data)}`);
+      }
     } catch (error) {
       console.error("Error listing pods:", error);
+      setError(`Failed to fetch pods: ${error.message}`);
+      if (error.response) {
+        console.error("Response data:", error.response.data);
+        console.error("Response status:", error.response.status);
+        console.error("Response headers:", error.response.headers);
+      }
     }
-  };
-
+  }, [handleApiCall]);
+ 
   const createPod = async (e) => {
     e.preventDefault();
     const podData = {
@@ -99,17 +77,24 @@ export const RunPodManagerPage = () => {
     };
     try {
       const data = await handleApiCall("/pods", "POST", podData);
-      if (data) {
-        console.log("Pod created:", data.pod_id);
+      console.log("Pod creation response:", data);
+      if (data && data.pod && data.pod.id) {
+        console.log("Pod created successfully:", data.pod.id);
         setNewPodName("");
         setNewPodImage("");
         setNewPodGpuType("");
-        listPods();
+        listPods();  // Refresh the pod list
+        setError(null);  // Clear any previous errors
+      } else {
+        console.error("Unexpected response structure:", data);
+        setError("Unexpected response from server. Pod may not have been created.");
       }
     } catch (error) {
       console.error("Error creating pod:", error);
+      setError(`Failed to create pod: ${error.message}`);
     }
   };
+
 
   const stopPod = async (podId) => {
     try {
@@ -135,11 +120,31 @@ export const RunPodManagerPage = () => {
     }
   };
 
+  useEffect(() => {
+    const getToken = async () => {
+      try {
+        const token = await getAccessTokenSilently();
+        setAccessToken(token);
+        console.log("Access token obtained successfully");
+      } catch (error) {
+        console.error("Error getting access token", error);
+        setError("Failed to get access token: " + error.message);
+      }
+    };
+    getToken();
+  }, [getAccessTokenSilently]);
+
+  useEffect(() => {
+    if (accessToken) {
+      listPods();
+    }
+  }, [accessToken, listPods]);
+
   return (
     <PageLayout>
       <div className="content-layout">
         <h1 id="page-title" className="content__title">RunPod Manager</h1>
-        <div className="content__body" style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div className="content__body" style={{ maxWidth: '800px', margin: '0 auto' }}>
           <button onClick={listPods} disabled={loading}>Refresh Pod List</button>
 
           <h2>Create New Pod</h2>
@@ -178,12 +183,28 @@ export const RunPodManagerPage = () => {
           <h2>Pod List</h2>
           {loading && <div className="loading-spinner">Loading...</div>}
           {!loading && (
-            <ul>
-              {pods.map((pod, index) => (
-                <li key={index}>
-                  {pod}
-                  <button onClick={() => stopPod(pod)} disabled={loading}>Stop</button>
-                  <button onClick={() => deletePod(pod)} disabled={loading}>Delete</button>
+            <ul className="pod-list">
+              {pods.map((pod) => (
+                <li key={pod.id} className="pod-item">
+                  <div className="pod-info">
+                    <h3>{pod.name || 'Unnamed Pod'}</h3>
+                    <p><strong>ID:</strong> {pod.id}</p>
+                    <p><strong>Status:</strong> {pod.desiredStatus}</p>
+                    <p><strong>GPU:</strong> {pod.gpuCount}x {pod.machine?.gpuDisplayName || 'Unknown'}</p>
+                    <p><strong>vCPU:</strong> {pod.vcpuCount}</p>
+                    <p><strong>Memory:</strong> {pod.memoryInGb} GB</p>
+                    <p><strong>Volume:</strong> {pod.volumeInGb} GB</p>
+                    <p><strong>Image:</strong> {pod.imageName}</p>
+                    <p><strong>Last Status Change:</strong> {pod.lastStatusChange}</p>
+                    <p><strong>Cost per Hour:</strong> ${pod.costPerHr.toFixed(2)}</p>
+                    <p><strong>Pod Type:</strong> {pod.podType}</p>
+                  </div>
+                  <div className="pod-actions">
+                    <button onClick={() => stopPod(pod.id)} disabled={loading}>
+                      {pod.desiredStatus === 'STOPPED' ? 'Start' : 'Stop'}
+                    </button>
+                    <button onClick={() => deletePod(pod.id)} disabled={loading}>Delete</button>
+                  </div>
                 </li>
               ))}
             </ul>
