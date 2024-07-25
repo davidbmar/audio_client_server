@@ -1,0 +1,5 @@
+graph TD
+    A[S3 Bucket] -->|S3 Event Notification| B[Event Processing Lambda]
+    B -->|Add Message| C[SQS Queue]
+    D[UI Application] -->|Select Files| C
+    C -->|Poll Messages| E[Transcription Service POD]
