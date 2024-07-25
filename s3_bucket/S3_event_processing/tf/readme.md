@@ -9,7 +9,7 @@ Our system uses AWS S3 event notifications to trigger processing of audio files.
 ## Infrastructure
 
 - **S3 Bucket Name**: `presigned-url-api-us-east-2`
-- **SQS Queue Name**: `audio-client-server-prod-sqs-file-processing-use2`
+- **SQS Queue Name**: `audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2`
 - **Region**: `us-east-2` (US East - Ohio)
 
 ## Setup
@@ -36,7 +36,7 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 }
 
 resource "aws_sqs_queue" "audio_processing_queue" {
-  name = "audio-client-server-prod-sqs-file-processing-use2"
+  name = "audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2"
   # ... other configurations ...
 }
 ```
@@ -54,7 +54,7 @@ After applying the Terraform configuration, verify the setup:
 
 2. **Verify SQS Queue**:
    - Open AWS SQS Console
-   - Find the queue `audio-client-server-prod-sqs-file-processing-use2`
+   - Find the queue `audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2`
    - Check its details and access policy
 
 3. **Test the Setup**:
@@ -69,7 +69,7 @@ Upload MP3 files to the S3 bucket `presigned-url-api-us-east-2`. This will autom
 
 ### Processing Messages
 
-Your application should poll the SQS queue `audio-client-server-prod-sqs-file-processing-use2` for messages. Each message will contain details about the uploaded file.
+Your application should poll the SQS queue `audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2` for messages. Each message will contain details about the uploaded file.
 
 Example Python code to receive messages:
 
@@ -77,7 +77,7 @@ Example Python code to receive messages:
 import boto3
 
 sqs = boto3.client('sqs')
-queue_url = 'https://sqs.us-east-2.amazonaws.com/YOUR_ACCOUNT_ID/audio-client-server-prod-sqs-file-processing-use2'
+queue_url = 'https://sqs.us-east-2.amazonaws.com/YOUR_ACCOUNT_ID/audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2'
 
 response = sqs.receive_message(
     QueueUrl=queue_url,
