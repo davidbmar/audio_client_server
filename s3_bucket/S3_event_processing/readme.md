@@ -1,3 +1,5 @@
+Really the graph should show the just top part up until the invoke of the Transcription service.  This component really is about adding S3 events to the SQS queue.
+
 ```mermaid
 graph TD
     A[S3 Bucket] -->|S3 Event Notification| B[Event Processing Lambda]
