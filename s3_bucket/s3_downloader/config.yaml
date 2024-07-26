@@ -1,0 +1,4 @@
+aws_region: 'us-east-2'
+sqs_queue_url: 'https://sqs.us-east-2.amazonaws.com/635071011057/audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2'
+download_folder: './downloaded_files'
+s3_bucket_name: 'presigned-url-api-us-east-2'
