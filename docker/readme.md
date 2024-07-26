@@ -64,12 +64,14 @@ docker ps
 docker exec -it audio_client_server /bin/bash
 
 
-Step 4: Push Docker Image to Docker Hub
-> docker login
-Tag your local image to match the repository on Docker Hub.
-> docker tag audio_client_server:latest davidbmar/audio_client_server:latest
-Push the image to Docker Hub.
-> docker push davidbmar/audio_client_server:latest
+# Step 4: Push Docker Image to Docker Hub
+docker login
+
+# Tag your local image to match the repository on Docker Hub.
+docker tag audio_client_server:latest davidbmar/audio_client_server:latest
+
+# Push the image to Docker Hub.
+docker push davidbmar/audio_client_server:latest
 
 -------------------------------------------
 #Q: How do BUILD a new docker image and push this image to DockerHub?
