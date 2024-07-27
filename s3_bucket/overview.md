@@ -1,3 +1,15 @@
+### Organization of this directory
+
+1. **S3_event_processing**
+   - This sets up the S3 bucket so that it enables oncreate events and pops messages into the sqs queue.
+
+2. **s3_downloader**
+   - This should be run on the host which will pull down the audio files.  It polls the sqs queue in step 1, and downloads it to a local directory.  After downloading it should push it on the next queue for transcription.
+
+3. **transcribe**  
+   - This should pull files from the directory, and it should process them with whisper.
+
+
 When organizing IAM roles for an architecture where each user has their own S3 bucket, you'd typically configure a set of roles that cater to different aspects of your application's functionality and security requirements. Here’s a breakdown of how you might structure these roles:
 
 ### Roles Overview
