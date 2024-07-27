@@ -1,0 +1,6 @@
+aws_region: "us-east-2"
+transcription_input_sqs_queue_url: "https://sqs.us-east-2.amazonaws.com/635071011057/audioClientServer-DEV-audioProcessingTranscribeQueue"
+output_s3_bucket: "your-output-bucket-name"
+download_folder: "/home/ubuntu/working/audio_client_server/s3_bucket/downloaded_files"
+
+
