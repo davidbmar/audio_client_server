@@ -1,0 +1,6 @@
+boto3
+botocore
+PyYAML
+whisper
+torch
+

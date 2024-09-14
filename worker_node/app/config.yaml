@@ -1,0 +1,5 @@
+aws_region: 'us-east-2'
+download_folder: './receivedSoundFiles'
+input_sqs_queue_url: 'https://sqs.us-east-2.amazonaws.com/635071011057/audio-client-server-DEV-sqsFileProcessing-presigned-url-api-us-east-2'
+output_s3_bucket: 'audioclientserver-transcribedobjects-public'
+
