@@ -21,8 +21,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
     PyYAML
 
 # Copy Scripts and Configuration
-COPY main.py /app/
-COPY config.yaml /app/
+COPY app/main.py /app/
+COPY app/config.yaml /app/
 
 # Set Environment Variables
 ENV USE_WHISPER=True
@@ -30,4 +30,3 @@ ENV WHISPER_MODEL_SIZE=medium
 
 # Set Entry Point
 CMD ["python", "/app/main.py"]
-
