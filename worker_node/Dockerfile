@@ -17,6 +17,9 @@ COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# Install ctranslate2 with CUDA support
+RUN pip install --no-cache-dir ctranslate2>=3.15.0 --extra-index-url https://download.openmmlab.com/mmdeploy/third_party/ctranslate2_cu117/
+
 # Copy Scripts and Configuration
 COPY app/main.py /app/
 COPY app/config.yaml /app/
@@ -27,5 +30,5 @@ ENV USE_WHISPER=True
 ENV WHISPER_MODEL_SIZE=medium
 
 # Set Entry Point
-CMD ["python", "/app/main.py"]
+CMD ["tail", "-f", "/dev/null"]
 
