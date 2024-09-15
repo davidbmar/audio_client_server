@@ -13,16 +13,14 @@ RUN apt-get update -y && \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python Dependencies
+COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir \
-    boto3 \
-    faster-whisper==0.6.0 \
-    torch \
-    PyYAML
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy Scripts and Configuration
 COPY app/main.py /app/
 COPY app/config.yaml /app/
+COPY app/utils /app/utils
 
 # Set Environment Variables
 ENV USE_WHISPER=True
@@ -30,3 +28,4 @@ ENV WHISPER_MODEL_SIZE=medium
 
 # Set Entry Point
 CMD ["python", "/app/main.py"]
+
