@@ -1,14 +1,16 @@
 #!/usr/bin/python3
 
-import boto3
 import json
 import logging
 import os
 import yaml
 import signal
-import urllib.parse
-from botocore.exceptions import ClientError
+import time
+import requests
 from typing import Dict, Any
+
+# Import compute_md5 from aws_helpers
+from utils.aws_helpers import compute_md5
 
 # Setup logging
 logging.basicConfig(
@@ -34,10 +36,9 @@ def load_config(config_path: str) -> Dict[str, Any]:
 
     # Validate required configuration items
     required_keys = [
-        'aws_region',
+        'task_service_url',
+        'api_token',
         'download_folder',
-        'input_sqs_queue_url',
-        'output_s3_bucket',
     ]
     for key in required_keys:
         if key not in config:
@@ -49,14 +50,42 @@ def load_config(config_path: str) -> Dict[str, Any]:
 
     return config
 
-def step1_download_from_bucket(s3_client, s3_bucket: str, s3_key: str, local_audio_path: str) -> bool:
-    """Step 1: Download audio file from S3 bucket."""
+def get_task(config):
+    """Request a task from the Task Distribution Service."""
+    headers = {
+        'Authorization': f"Bearer {config['api_token']}"
+    }
     try:
-        s3_client.download_file(s3_bucket, s3_key, local_audio_path)
-        logger.info(f"Downloaded {s3_key} from S3 bucket {s3_bucket} to {local_audio_path}")
-        return True
-    except ClientError as e:
-        logger.error(f"Error downloading file from S3: {e}")
+        response = requests.get(config['task_service_url'], headers=headers)
+        if response.status_code == 200:
+            task = response.json()
+            logger.info(f"Received task: {json.dumps(task, indent=2)}")
+            return task
+        elif response.status_code == 204:
+            logger.info("No tasks available.")
+            return None
+        else:
+            logger.error(f"Failed to get task: {response.status_code} {response.text}")
+            return None
+    except Exception as e:
+        logger.error(f"Error requesting task: {e}")
+        return None
+
+def step1_download_from_presigned_url(presigned_url: str, local_audio_path: str) -> bool:
+    """Download audio file using a pre-signed URL."""
+    try:
+        response = requests.get(presigned_url, stream=True)
+        if response.status_code == 200:
+            with open(local_audio_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            logger.info(f"Downloaded audio file to {local_audio_path}")
+            return True
+        else:
+            logger.error(f"Failed to download file: {response.status_code} {response.text}")
+            return False
+    except Exception as e:
+        logger.error(f"Error downloading file: {e}")
         return False
 
 def step2_transcribe_audio(local_audio_path: str) -> str:
@@ -91,80 +120,21 @@ def step2_transcribe_audio(local_audio_path: str) -> str:
         logger.error(f"Error transcribing file {local_audio_path}: {e}", exc_info=True)
         return ""
 
-def step3_process_transcription(s3_client, transcription: str, filename: str, config: Dict[str, Any]) -> bool:
-    """Step 3: Process the transcription and upload to S3."""
+def step3_upload_to_presigned_url(presigned_url: str, local_file_path: str) -> bool:
+    """Upload transcription using a pre-signed URL."""
     try:
-        # Save transcription to a local file
-        transcription_output_path = os.path.join(
-            config['download_folder'], f"{os.path.splitext(filename)[0]}.txt"
-        )
-        with open(transcription_output_path, 'w') as f:
-            f.write(transcription)
-        logger.info(f"Saved transcription to {transcription_output_path}")
-
-        # Upload transcription file to S3
-        s3_key = f"transcriptions/{os.path.basename(transcription_output_path)}"
-        s3_client.upload_file(
-            transcription_output_path,
-            config['output_s3_bucket'],
-            s3_key
-        )
-        logger.info(f"Uploaded transcription to S3 bucket {config['output_s3_bucket']} with key {s3_key}")
-        return True
-    except ClientError as e:
-        logger.error(f"Error uploading transcription to S3: {e}")
-        return False
+        with open(local_file_path, 'rb') as f:
+            headers = {'Content-Type': 'text/plain'}
+            response = requests.put(presigned_url, data=f, headers=headers)
+        if response.status_code == 200 or response.status_code == 204:
+            logger.info(f"Uploaded transcription from {local_file_path}")
+            return True
+        else:
+            logger.error(f"Failed to upload file: {response.status_code} {response.text}")
+            return False
     except Exception as e:
-        logger.error(f"Error processing transcription for {filename}: {e}")
+        logger.error(f"Error uploading file: {e}")
         return False
-
-def process_message(sqs_client, s3_client, message: Dict[str, Any], config: Dict[str, Any]) -> None:
-    """Process a single SQS message."""
-    try:
-        # Parse the message body
-        body = json.loads(message['Body'])
-        logger.info(f"Parsed message body: {json.dumps(body, indent=2)}")
-
-        # Extract file information from S3 event notification
-        s3_bucket = body['Records'][0]['s3']['bucket']['name']
-        s3_key = body['Records'][0]['s3']['object']['key']
-
-        # URL-decode the S3 key
-        s3_key = urllib.parse.unquote_plus(s3_key)
-        logger.info(f"S3 Bucket: {s3_bucket}, S3 Key: {s3_key}")
-
-        # Define local file paths
-        filename = os.path.basename(s3_key)
-        local_audio_path = os.path.join(config['download_folder'], filename)
-
-        logger.info(f"Starting processing for file: {filename}")
-
-        # === Step 1: Download from Bucket ===
-        if not step1_download_from_bucket(s3_client, s3_bucket, s3_key, local_audio_path):
-            logger.error(f"Failed to download {filename}. Skipping message.")
-            return
-
-        # === Step 2: Transcribe Audio ===
-        transcription = step2_transcribe_audio(local_audio_path)
-        if not transcription:
-            logger.error(f"Failed to transcribe {filename}. Skipping message.")
-            return
-
-        # === Step 3: Process Transcription ===
-        if not step3_process_transcription(s3_client, transcription, filename, config):
-            logger.error(f"Failed to process transcription for {filename}. Skipping message.")
-            return
-
-        # Delete the message from the SQS queue
-        sqs_client.delete_message(
-            QueueUrl=config['input_sqs_queue_url'],
-            ReceiptHandle=message['ReceiptHandle']
-        )
-        logger.info(f"Deleted message from SQS for {filename}")
-
-    except Exception as e:
-        logger.error(f"Error processing message: {e}", exc_info=True)
-
 
 def main():
     """Main entry point of the application."""
@@ -173,46 +143,67 @@ def main():
         config = load_config('config.yaml')
         logger.info("Configuration loaded successfully.")
 
-        # Initialize AWS clients
-        session = boto3.Session(region_name=config['aws_region'])
-        sqs_client = session.client('sqs')
-        s3_client = session.client('s3')
-
-        logger.info("AWS clients initialized.")
-
         while keep_running:
-            try:
-                # Receive messages from SQS queue
-                response = sqs_client.receive_message(
-                    QueueUrl=config['input_sqs_queue_url'],
-                    MaxNumberOfMessages=10,
-                    WaitTimeSeconds=20,
-                )
+            # Request a task from the Task Distribution Service
+            task = get_task(config)
+            if not task:
+                # No tasks available, wait before retrying
+                time.sleep(10)
+                continue
 
-                messages = response.get('Messages', [])
+            # Extract task details
+            presigned_get_url = task['presigned_get_url']
+            presigned_put_url = task['presigned_put_url']
+            object_key = task['object_key']
+            filename = os.path.basename(object_key)
+            local_audio_path = os.path.join(config['download_folder'], filename)
 
-                if not messages:
-                    logger.info("No messages in queue. Continuing to poll...")
-                    continue
+            logger.info(f"Starting processing for file: {filename}")
 
-                logger.info(f"Received {len(messages)} message(s).")
+            # === Step 1: Download from Pre-Signed URL ===
+            if not step1_download_from_presigned_url(presigned_get_url, local_audio_path):
+                logger.error(f"Failed to download {filename}. Skipping task.")
+                continue
 
-                for message in messages:
-                    if not keep_running:
-                        break
-                    process_message(sqs_client, s3_client, message, config)
+            # Compute MD5 checksum of the downloaded file (optional)
+            audio_md5 = compute_md5(local_audio_path)
+            logger.info(f"MD5 checksum of downloaded audio file: {audio_md5}")
 
-            except ClientError as e:
-                logger.error(f"AWS API error: {e}")
-            except Exception as e:
-                logger.error(f"Unexpected error: {e}", exc_info=True)
+            # === Step 2: Transcribe Audio ===
+            transcription = step2_transcribe_audio(local_audio_path)
+            if not transcription:
+                logger.error(f"Failed to transcribe {filename}. Skipping task.")
+                continue
+
+            # Save transcription to a local file
+            transcription_output_path = os.path.join(
+                config['download_folder'], f"{os.path.splitext(filename)[0]}.txt"
+            )
+            with open(transcription_output_path, 'w') as f:
+                f.write(transcription)
+            logger.info(f"Saved transcription to {transcription_output_path}")
+
+            # Compute MD5 checksum of the transcription file (optional)
+            transcription_md5 = compute_md5(transcription_output_path)
+            logger.info(f"MD5 checksum of transcription file: {transcription_md5}")
+
+            # === Step 3: Upload Transcription via Pre-Signed URL ===
+            if not step3_upload_to_presigned_url(presigned_put_url, transcription_output_path):
+                logger.error(f"Failed to upload transcription for {filename}. Skipping task.")
+                continue
+
+            # Clean up local files
+            os.remove(local_audio_path)
+            os.remove(transcription_output_path)
+
+            logger.info(f"Completed processing for {filename}")
+
+        logger.info("Application is shutting down gracefully.")
 
     except KeyError as e:
         logger.error(f"Configuration error: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in main: {e}", exc_info=True)
-
-    logger.info("Application is shutting down gracefully.")
 
 if __name__ == "__main__":
     main()
