@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+# worker_node.py  # this is the app which runs on a GPU, generally runpod.io
 
 import json
 import logging
@@ -8,9 +9,6 @@ import signal
 import time
 import requests
 from typing import Dict, Any
-
-# Import compute_md5 from aws_helpers
-from utils.aws_helpers import compute_md5
 
 # Setup logging
 logging.basicConfig(
@@ -91,30 +89,9 @@ def step1_download_from_presigned_url(presigned_url: str, local_audio_path: str)
 def step2_transcribe_audio(local_audio_path: str) -> str:
     """Step 2: Transcribe the audio file."""
     try:
-        # Determine whether to use Whisper based on environment variable
-        use_whisper = os.getenv('USE_WHISPER', 'False').lower() == 'true'
-        if use_whisper:
-            # Use faster-whisper for transcription
-            from faster_whisper import WhisperModel
-            import torch
-
-            model_size = os.getenv('WHISPER_MODEL_SIZE', 'medium')
-            device = 'cuda' if torch.cuda.is_available() else 'cpu'
-            compute_type = 'float16' if device == 'cuda' else 'int8'
-
-            logger.info(f"Initializing Whisper model ({model_size}) on {device} with compute_type={compute_type}")
-            model = WhisperModel(model_size, device=device, compute_type=compute_type)
-
-            segments, info = model.transcribe(local_audio_path)
-
-            # Combine all segment texts
-            transcription = ''.join([segment.text for segment in segments])
-
-            logger.info(f"Transcribed {local_audio_path} using Whisper")
-        else:
-            # Mock transcription
-            transcription = f"This is a mock transcription of {local_audio_path}"
-            logger.info(f"Mock transcribed {local_audio_path}")
+        # Since we don't have a GPU, we'll mock the transcription process
+        transcription = f"This is a mock transcription of {os.path.basename(local_audio_path)}"
+        logger.info(f"Mock transcribed {local_audio_path}")
         return transcription
     except Exception as e:
         logger.error(f"Error transcribing file {local_audio_path}: {e}", exc_info=True)
@@ -165,10 +142,6 @@ def main():
                 logger.error(f"Failed to download {filename}. Skipping task.")
                 continue
 
-            # Compute MD5 checksum of the downloaded file (optional)
-            audio_md5 = compute_md5(local_audio_path)
-            logger.info(f"MD5 checksum of downloaded audio file: {audio_md5}")
-
             # === Step 2: Transcribe Audio ===
             transcription = step2_transcribe_audio(local_audio_path)
             if not transcription:
@@ -183,10 +156,6 @@ def main():
                 f.write(transcription)
             logger.info(f"Saved transcription to {transcription_output_path}")
 
-            # Compute MD5 checksum of the transcription file (optional)
-            transcription_md5 = compute_md5(transcription_output_path)
-            logger.info(f"MD5 checksum of transcription file: {transcription_md5}")
-
             # === Step 3: Upload Transcription via Pre-Signed URL ===
             if not step3_upload_to_presigned_url(presigned_put_url, transcription_output_path):
                 logger.error(f"Failed to upload transcription for {filename}. Skipping task.")
@@ -198,12 +167,12 @@ def main():
 
             logger.info(f"Completed processing for {filename}")
 
-        logger.info("Application is shutting down gracefully.")
-
     except KeyError as e:
         logger.error(f"Configuration error: {e}")
     except Exception as e:
         logger.error(f"Unexpected error in main: {e}", exc_info=True)
+
+    logger.info("Application is shutting down gracefully.")
 
 if __name__ == "__main__":
     main()

@@ -1,0 +1,11 @@
+#!/bin/bash
+git rm --cached 2024-09-12-23-38-05-841.mp3
+git rm --cached 2024-09-12-23-38-05-841.txt
+git rm --cached 2024-09-12-23-38-11-070.mp3
+git rm --cached 2024-09-12-23-38-11-070.txt
+git rm --cached 2024-09-12-23-38-16-208.mp3
+git rm --cached 2024-09-12-23-38-16-208.txt
+git rm --cached 2024-09-12-23-38-21-172.mp3
+git rm --cached 2024-09-12-23-38-21-172.txt
+git rm --cached 2024-09-12-23-38-22-440.mp3
+git rm --cached 2024-09-12-23-38-22-440.txt

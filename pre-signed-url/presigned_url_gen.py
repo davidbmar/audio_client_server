@@ -7,6 +7,7 @@ from jose import JWTError, jwt, jwk
 from jose.utils import base64url_decode
 from pydantic import BaseModel
 from typing import Optional
+import json
 import boto3
 import requests
 import os
@@ -18,43 +19,61 @@ from fastapi import Path, Query
 from typing import List
 
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
-# Environment variables
-AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN")
-AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE")
-AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
-AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
-REGION_NAME = os.getenv("REGION_NAME")
+import boto3
+import json
+import logging
+from fastapi import FastAPI
 
-# Log the loaded environment variables
-logging.debug("AUTH0_DOMAIN: %s", AUTH0_DOMAIN)
-logging.debug("AUTH0_AUDIENCE: %s", AUTH0_AUDIENCE)
-logging.debug("AWS_ACCESS_KEY_ID: %s", AWS_ACCESS_KEY_ID)
-logging.debug("AWS_SECRET_ACCESS_KEY: %s", AWS_SECRET_ACCESS_KEY)
-logging.debug("AWS_S3_BUCKET_NAME: %s", AWS_S3_BUCKET_NAME)
-logging.debug("REGION_NAME: %s", REGION_NAME)
+# This function gets all the information from AWS SECRETS Manager
+# Note for now the AWS Keys are not here.
+def get_secrets():
+    secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"  # Replace with your secret name
+    region_name = "us-east-2"  # e.g., "us-west-2"
 
-# Verify environment variables
+    # Create a Secrets Manager client
+    client = boto3.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+    except Exception as e:
+        logging.error(f"Error retrieving secrets: {str(e)}")
+        raise e
+
+    # Decrypt secret using the associated KMS key
+    secret = get_secret_value_response.get('SecretString')
+    if secret:
+        secret_dict = json.loads(secret)
+        return secret_dict
+    else:
+        logging.error("SecretString is empty")
+        raise ValueError("SecretString is empty")
+
+# Fetch the secrets
+secrets = get_secrets()
+
+# Assign variables from secrets
+AUTH0_DOMAIN = secrets.get("AUTH0_DOMAIN")
+AUTH0_AUDIENCE = secrets.get("AUTH0_AUDIENCE")
+AWS_S3_BUCKET_NAME = secrets.get("AWS_S3_BUCKET_NAME")
+REGION_NAME = secrets.get("REGION_NAME")
+
+# Verify required secrets
 if not AUTH0_DOMAIN:
-    raise ValueError("No AUTH0_DOMAIN set for environment")
+    raise ValueError("No AUTH0_DOMAIN set in secrets")
 if not AUTH0_AUDIENCE:
-    raise ValueError("No AUTH0_AUDIENCE set for environment")
-if not AWS_ACCESS_KEY_ID:
-    raise ValueError("No AWS_ACCESS_KEY_ID set for environment")
-if not AWS_SECRET_ACCESS_KEY:
-    raise ValueError("No AWS_SECRET_ACCESS_KEY set for environment")
+    raise ValueError("No AUTH0_AUDIENCE set in secrets")
 if not AWS_S3_BUCKET_NAME:
-    raise ValueError("No AWS_S3_BUCKET_NAME set for environment")
+    raise ValueError("No AWS_S3_BUCKET_NAME set in secrets")
 if not REGION_NAME:
-    raise ValueError("No REGION_NAME set for environment")
+    raise ValueError("No REGION_NAME set in secrets")
 
+# Initialize FastAPI app
 app = FastAPI()
 
 origins = [
@@ -76,6 +95,8 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/tok
 
 class TokenData(BaseModel):
     sub: Optional[str] = None
+    permissions: Optional[list] = []
+
 
 def get_jwks():
     jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
@@ -136,6 +157,11 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
     )
     return verify_token(token, credentials_exception)
 
+# Modify AWS clients to use default credentials, ie don't put AWS_KEY etc.
+def create_s3_client():
+    return boto3.client('s3', region_name=REGION_NAME)
+
+
 def generate_file_name():
     central = pytz.timezone('US/Central')
     now = datetime.now(central)
@@ -152,12 +178,8 @@ def generate_file_name():
 async def get_presigned_url(current_user: TokenData = Depends(get_current_user)):
     try:
         logging.debug("Generating presigned URL for user: %s", current_user.sub)
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=REGION_NAME
-        )
+        s3_client = create_s3_client()
+
         logging.debug("S3 Client: %s", s3_client)
 
         user_id = current_user.sub
@@ -188,12 +210,8 @@ async def get_presigned_url(current_user: TokenData = Depends(get_current_user))
 async def get_s3_objects(current_user: TokenData = Depends(get_current_user)):
     try:
         logging.debug("Listing S3 objects for user: %s", current_user.sub)
-        s3_client = boto3.client(
-            's3',
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            region_name=REGION_NAME
-        )
+        s3_client = create_s3_client()
+
         logging.debug("S3 Client: %s", s3_client)
 
         user_id = current_user.sub
@@ -232,10 +250,8 @@ async def list_directory(
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                                 region_name=REGION_NAME)
-        
+        s3_client = create_s3_client()
+
         user_path = f"{current_user.sub}/{path.strip('/')}"
         response = s3_client.list_objects_v2(Bucket=AWS_S3_BUCKET_NAME, Prefix=user_path, Delimiter='/')
         
@@ -254,9 +270,7 @@ async def delete_file(
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                                 region_name=REGION_NAME)
+        s3_client = create_s3_client()
         
         user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
         s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
@@ -272,9 +286,7 @@ async def rename_file(
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                                 region_name=REGION_NAME)
+        s3_client = create_s3_client()
         
         user_old_path = f"{current_user.sub}/{old_path.strip('/')}"
         user_new_path = f"{current_user.sub}/{new_path.strip('/')}"
@@ -293,9 +305,7 @@ async def create_directory(
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = boto3.client('s3', aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                                 region_name=REGION_NAME)
+        s3_client = create_s3_client()
         
         user_directory_path = f"{current_user.sub}/{directory_path.strip('/')}/"
         s3_client.put_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_directory_path)
@@ -312,10 +322,7 @@ async def get_file(
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = boto3.client('s3', 
-                                 aws_access_key_id=AWS_ACCESS_KEY_ID,
-                                 aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-                                 region_name=REGION_NAME)
+        s3_client = create_s3_client()
         
         user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
         
