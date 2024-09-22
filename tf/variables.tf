@@ -27,3 +27,31 @@ variable "api_token" {
 }
 
 
+# for maintablity, instead of the deault CORS origin, you can put this info, which would allow
+# the website to access the created bucket. (ie if you had another site other than www.davidbmar.com 
+variable "allowed_origins" {
+  description = "List of allowed origins for CORS."
+  type        = list(string)
+  default     = ["https://www.davidbmar.com"]
+}
+
+variable "allowed_methods" {
+  description = "List of allowed HTTP methods for CORS."
+  type        = list(string)
+  default     = ["PUT", "POST", "GET", "HEAD"]
+}
+
+variable "allowed_headers" {
+  description = "List of allowed headers for CORS."
+  type        = list(string)
+  default     = ["*"]
+}
+
+variable "expose_headers" {
+  description = "List of headers to expose."
+  type        = list(string)
+  default     = []
+}
+
+
+

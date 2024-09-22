@@ -2,26 +2,63 @@
 
 resource "aws_s3_bucket" "input_bucket" {
   bucket = var.input_bucket_name
+
+  versioning {
+    enabled = false
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
 
-#resource "aws_s3_bucket_acl" "input_bucket_acl" {
-#  bucket = aws_s3_bucket.input_bucket.id
-#  acl    = "private"
-#}
-#
+# CORS information so when generating new buckets is has the CORS permissions.
+# note look at tfvars and modify.
+resource "aws_s3_bucket_cors_configuration" "input_bucket_cors" {
+  bucket = aws_s3_bucket.input_bucket.id
+
+  cors_rule {
+    allowed_headers = var.allowed_headers
+    allowed_methods = var.allowed_methods
+    allowed_origins = var.allowed_origins
+    expose_headers  = var.expose_headers
+  }
+}
 
 resource "aws_s3_bucket" "output_bucket" {
   bucket = var.output_bucket_name
+
+  versioning {
+    enabled = false
+  }
+
+  server_side_encryption_configuration {
+    rule {
+      apply_server_side_encryption_by_default {
+        sse_algorithm = "AES256"
+      }
+    }
+  }
 }
 
-#resource "aws_s3_bucket_acl" "output_bucket_acl" {
-#  bucket = aws_s3_bucket.output_bucket.id
-#  acl    = "private"
-#}
-#
+# CORS information on OUTPUT bucket so when generating new buckets is has the CORS permissions.
+# CORS information so when generating new buckets is has the CORS permissions.
+# note look at tfvars and modify.
+resource "aws_s3_bucket_cors_configuration" "output_bucket_cors" {
+  bucket = aws_s3_bucket.input_bucket.id
 
+  cors_rule {
+    allowed_headers = var.allowed_headers
+    allowed_methods = var.allowed_methods
+    allowed_origins = var.allowed_origins
+    expose_headers  = var.expose_headers
+  }
+}
 
-# main.tf
 
 resource "aws_sqs_queue" "queue" {
   name                      = var.sqs_queue_name
@@ -32,19 +69,11 @@ resource "aws_s3_bucket_notification" "input_bucket_notification" {
   bucket = aws_s3_bucket.input_bucket.id
 
   queue {
-    id                        = aws_sqs_queue.queue.id
-    queue_arn                 = aws_sqs_queue.queue.arn
-    events                    = ["s3:ObjectCreated:*"]
-    filter_prefix             = ""  # Optional: specify if you want to filter by prefix
-    filter_suffix             = ".mp3"  # Optional: specify if you want to filter by suffix
-  }
-}
-
-# Add an SQS queue policy to allow S3 to send messages to the queue:
-
-resource "aws_sqs_queue_policy" "sqs_queue_policy" {
-  queue_url = aws_sqs_queue.queue.id
-  policy    = data.aws_iam_policy_document.sqs_policy.json
+    queue_arn     = aws_sqs_queue.queue.arn
+    events        = ["s3:ObjectCreated:*"]
+    filter_prefix = ""    # Optional
+    filter_suffix = ""    # Optional LATER SPECIFY, IE .MP3, .OGG, ETC WHATEVER.
+  } 
 }
 
 data "aws_iam_policy_document" "sqs_policy" {
@@ -63,7 +92,11 @@ data "aws_iam_policy_document" "sqs_policy" {
   }
 }
 
-# main.tf
+# Add an SQS queue policy to allow S3 to send messages to the queue:
+resource "aws_sqs_queue_policy" "sqs_queue_policy" {
+  queue_url = aws_sqs_queue.queue.id
+  policy    = data.aws_iam_policy_document.sqs_policy.json
+}
 
 resource "aws_iam_role" "application_role" {
   name               = "application-role"
@@ -89,7 +122,6 @@ resource "aws_iam_policy" "application_policy" {
   name   = "application-policy"
   policy = data.aws_iam_policy_document.application_policy.json
 }
-
 data "aws_iam_policy_document" "application_policy" {
   statement {
     effect = "Allow"
@@ -105,7 +137,7 @@ data "aws_iam_policy_document" "application_policy" {
       "${aws_s3_bucket.input_bucket.arn}/*",
       "${aws_s3_bucket.output_bucket.arn}/*",
       aws_sqs_queue.queue.arn,
-      "arn:aws:secretsmanager:${var.region}:${data.aws_caller_identity.current.account_id}:secret:*"
+      "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:*"
     ]
   }
 }
@@ -130,7 +162,6 @@ data "aws_region" "current" {}
 resource "aws_secretsmanager_secret" "api_token_secret" {
   name = "APIServerConfig"
 }
-
 resource "aws_secretsmanager_secret_version" "api_token_secret_version" {
   secret_id     = aws_secretsmanager_secret.api_token_secret.id
   secret_string = jsonencode({ api_token = var.api_token })
