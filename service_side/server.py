@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+#audio_client_server/service_side/server.py
 import boto3
 import json
 import time
@@ -114,26 +115,28 @@ def authenticate(f):
 def get_task():
     if not task_store:
         return jsonify({'message': 'No tasks available'}), 204  # No Content
-    # Retrieve the next task
     task_metadata = task_store.pop(0)
     object_key = task_metadata['object_key']
     bucket_name = task_metadata['bucket_name']
 
     try:
+        # Decode the object key if it was URL-encoded
+        decoded_object_key = unquote(object_key)
+
         # Generate pre-signed URL for downloading the input file
         presigned_get_url = s3.generate_presigned_url(
             'get_object',
-            Params={'Bucket': bucket_name, 'Key': object_key},
+            Params={'Bucket': bucket_name, 'Key': decoded_object_key},
             ExpiresIn=PRESIGNED_URL_EXPIRATION
         )
         # Generate pre-signed URL for uploading the transcription
-        output_key = f"transcriptions/{object_key}.txt"
+        output_key = f"transcriptions/{decoded_object_key}.txt"
         presigned_put_url = s3.generate_presigned_url(
             'put_object',
             Params={'Bucket': OUTPUT_BUCKET, 'Key': output_key},
             ExpiresIn=PRESIGNED_URL_EXPIRATION
         )
-        # Construct the task with pre-signed URLs
+        # Return task with pre-signed URLs
         task = {
             'object_key': object_key,
             'presigned_get_url': presigned_get_url,
@@ -141,7 +144,7 @@ def get_task():
         }
         return jsonify(task), 200
     except ClientError as e:
-        print(f"Error generating pre-signed URLs: {e}")
+        logging.error(f"Error generating pre-signed URLs: {e}")
         return jsonify({'error': 'Server error generating pre-signed URLs'}), 500
 
 if __name__ == '__main__':
