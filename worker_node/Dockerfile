@@ -54,5 +54,5 @@ ENV USE_WHISPER=True
 ENV WHISPER_MODEL_SIZE=medium
 
 # Set Entry Point
-CMD ["python", "/app/main.py"]
-
+#CMD ["python3", "/app/worker_node.py"]
+CMD ["tail", "-f", "/dev/null"]
