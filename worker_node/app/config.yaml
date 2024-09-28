@@ -1,5 +1,5 @@
 #task_service_url: 'https://task-service.yourdomain.com/get-task'
-task_service_url: 'http://localhost:5000/get-task'
+task_service_url: 'http://ec2-3-137-2-81.us-east-2.compute.amazonaws.com:5000/get-task'
 api_token: 'YOUR_SECURE_API_TOKEN'
 download_folder: './downloads'
 
