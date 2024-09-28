@@ -1,88 +1,50 @@
 from fastapi import FastAPI, Depends, HTTPException, status, Query
-from fastapi.responses import FileResponse
 from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError, jwt, jwk
-from jose.utils import base64url_decode
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 import json
 import boto3
 import requests
-import os
-import io
 import logging
 from datetime import datetime
 import pytz
-from fastapi import Path, Query
-from typing import List
+from jose import JWTError, jwt, jwk  # Importing JWTError, jwt, and jwk
 
-
-# Configure logging
+# Configure logging for debugging and error tracking
 logging.basicConfig(level=logging.DEBUG)
 
-import boto3
-import json
-import logging
-from fastapi import FastAPI
-
-# This function gets all the information from AWS SECRETS Manager
-# Note for now the AWS Keys are not here.
+# Function to retrieve secrets from AWS Secrets Manager
 def get_secrets():
-    secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"  # Replace with your secret name
-    region_name = "us-east-2"  # e.g., "us-west-2"
-
-    # Create a Secrets Manager client
-    client = boto3.client(
-        service_name='secretsmanager',
-        region_name=region_name
-    )
+    secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"
+    region_name = "us-east-2"
+    client = boto3.client(service_name='secretsmanager', region_name=region_name)
 
     try:
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-    except Exception as e:
-        logging.error(f"Error retrieving secrets: {str(e)}")
-        raise e
-
-    # Decrypt secret using the associated KMS key
-    secret = get_secret_value_response.get('SecretString')
-    if secret:
-        secret_dict = json.loads(secret)
+        secret_value = client.get_secret_value(SecretId=secret_name)
+        secret_dict = json.loads(secret_value.get('SecretString', '{}'))
         return secret_dict
-    else:
-        logging.error("SecretString is empty")
-        raise ValueError("SecretString is empty")
+    except Exception as e:
+        logging.error(f"Error retrieving secrets: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve secrets")
 
-# Fetch the secrets
+# Load secrets into variables
 secrets = get_secrets()
-
-# Assign variables from secrets
 AUTH0_DOMAIN = secrets.get("AUTH0_DOMAIN")
 AUTH0_AUDIENCE = secrets.get("AUTH0_AUDIENCE")
 AWS_S3_BUCKET_NAME = secrets.get("AWS_S3_BUCKET_NAME")
 REGION_NAME = secrets.get("REGION_NAME")
 
-# Verify required secrets
-if not AUTH0_DOMAIN:
-    raise ValueError("No AUTH0_DOMAIN set in secrets")
-if not AUTH0_AUDIENCE:
-    raise ValueError("No AUTH0_AUDIENCE set in secrets")
-if not AWS_S3_BUCKET_NAME:
-    raise ValueError("No AWS_S3_BUCKET_NAME set in secrets")
-if not REGION_NAME:
-    raise ValueError("No REGION_NAME set in secrets")
+# Ensure all required secrets are set
+if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE, AWS_S3_BUCKET_NAME, REGION_NAME]):
+    raise ValueError("Missing required secrets")
 
 # Initialize FastAPI app
 app = FastAPI()
 
-origins = [
-    "https://www.davidbmar.com",
-    "http://www.davidbmar.com",
-    "https://davidbmar.com",
-    "http://davidbmar.com"
-]
-
+# CORS configuration
+origins = ["https://www.davidbmar.com", "http://www.davidbmar.com"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -91,258 +53,196 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# OAuth2PasswordBearer for Auth0
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/token")
 
+# Data model for token payload
 class TokenData(BaseModel):
     sub: Optional[str] = None
-    permissions: Optional[list] = []
+    permissions: Optional[List[str]] = []
 
-
+# Function to get JWKS (JSON Web Key Set) from Auth0
 def get_jwks():
     jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
     response = requests.get(jwks_url)
     if response.status_code != 200:
-        logging.error("Failed to fetch JWKS: %s", response.text)
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to fetch JWKS")
-    logging.debug("JWKS: %s", response.json())
+        raise HTTPException(status_code=500, detail="Failed to fetch JWKS")
     return response.json()
 
-def get_public_key(token):
-    try:
-        unverified_header = jwt.get_unverified_header(token)
-        logging.debug("Unverified header: %s", unverified_header)
-        jwks = get_jwks()
-        rsa_key = {}
-        for key in jwks["keys"]:
-            if key["kid"] == unverified_header["kid"]:
-                rsa_key = {
-                    "kty": key["kty"],
-                    "kid": key["kid"],
-                    "use": key["use"],
-                    "n": key["n"],
-                    "e": key["e"],
-                    "alg": key["alg"]
-                }
-        if not rsa_key:
-            logging.error("Invalid token: Unable to find matching key")
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
-        logging.debug("RSA Key: %s", rsa_key)
-        public_key = jwk.construct(rsa_key, algorithm=rsa_key["alg"])
-        logging.debug("Constructed Public Key: %s", public_key)
-        return public_key
-    except Exception as e:
-        logging.error("Error getting public key: %s", str(e))
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Error getting public key")
-
+# Function to verify the JWT token using public key from JWKS
 def verify_token(token: str, credentials_exception):
     try:
-        public_key = get_public_key(token)
-        payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=AUTH0_AUDIENCE, issuer=f"https://{AUTH0_DOMAIN}/")
-        sub: str = payload.get("sub")
-        if sub is None:
-            logging.error("Token payload does not contain 'sub'")
+        jwks = get_jwks()
+        unverified_header = jwt.get_unverified_header(token)
+
+        # Find the correct RSA key from the JWKS
+        rsa_key = next((key for key in jwks['keys'] if key['kid'] == unverified_header['kid']), None)
+
+        if not rsa_key:
             raise credentials_exception
-        token_data = TokenData(sub=sub)
-        logging.debug("Token verified: %s", token_data)
-        return token_data
-    except JWTError as e:
-        logging.error("JWTError: %s", str(e))
+
+        # Construct public key from JWKS
+        public_key = jwk.construct(rsa_key)
+
+        # Decode the token
+        payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=AUTH0_AUDIENCE, issuer=f"https://{AUTH0_DOMAIN}/")
+
+        return TokenData(sub=payload.get("sub"))
+    except JWTError:
         raise credentials_exception
 
+# Dependency to get the current user
 async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
+        detail="Invalid credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     return verify_token(token, credentials_exception)
 
-# Modify AWS clients to use default credentials, ie don't put AWS_KEY etc.
+# S3 client
 def create_s3_client():
     return boto3.client('s3', region_name=REGION_NAME)
 
-
+# Generate a timestamped file name
 def generate_file_name():
-    central = pytz.timezone('US/Central')
-    now = datetime.now(central)
-    year = now.year
-    month = str(now.month).zfill(2)
-    day = str(now.day).zfill(2)
-    hour = str(now.hour).zfill(2)
-    minute = str(now.minute).zfill(2)
-    second = str(now.second).zfill(2)
-    millisecond = str(now.microsecond // 1000).zfill(3)
-    return f"{year}-{month}-{day}-{hour}-{minute}-{second}-{millisecond}.mp3"
+    now = datetime.now(pytz.timezone('US/Central'))
+    return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".mp3"
 
-@app.get("/api/get-presigned-url/")
+# Endpoint to generate a presigned URL for file upload
+@app.get("/api/get-presigned-url")
 async def get_presigned_url(current_user: TokenData = Depends(get_current_user)):
     try:
-        logging.debug("Generating presigned URL for user: %s", current_user.sub)
         s3_client = create_s3_client()
-
-        logging.debug("S3 Client: %s", s3_client)
-
-        user_id = current_user.sub
-        logging.debug("Current User ID: %s", user_id)
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
-
-        directory = f"{user_id}/"
-        filename = generate_file_name()  # Generate a unique filename
-        object_name = f"{directory}{filename}"
-        logging.debug("Object Name: %s", object_name)
-
-        bucket_name = AWS_S3_BUCKET_NAME
-        logging.debug("Bucket Name: %s", bucket_name)
-
+        file_name = generate_file_name()
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
-            Params={'Bucket': bucket_name, 'Key': object_name},
-            ExpiresIn=7200  # 2 hours
+            Params={'Bucket': AWS_S3_BUCKET_NAME, 'Key': f"{current_user.sub}/{file_name}"},
+            ExpiresIn=7200
         )
-        logging.debug("Presigned URL: %s", presigned_url)
         return {"url": presigned_url}
     except Exception as e:
-        logging.error("Error generating presigned URL: %s", str(e))
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logging.error(f"Error generating presigned URL: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
 
+
+# Endpoint to list all objects in the user's S3 folder
 @app.get("/api/get-s3-objects")
 async def get_s3_objects(current_user: TokenData = Depends(get_current_user)):
     try:
-        logging.debug("Listing S3 objects for user: %s", current_user.sub)
-        s3_client = create_s3_client()
-
-        logging.debug("S3 Client: %s", s3_client)
-
-        user_id = current_user.sub
-        logging.debug("Current User ID: %s", user_id)
-        if not user_id:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid user ID")
-
-        directory = f"{user_id}/"
-        logging.debug("User Directory: %s", directory)
-
-        bucket_name = AWS_S3_BUCKET_NAME
-        logging.debug("Bucket Name: %s", bucket_name)
-
-        response = s3_client.list_objects_v2(
-            Bucket=bucket_name,
-            Prefix=directory
-        )
-
-        logging.debug("S3 Response: %s", response)
+        s3_client = create_s3_client()  # Create S3 client
+        directory = f"{current_user.sub}/"  # Directory specific to the user
+        response = s3_client.list_objects_v2(Bucket=AWS_S3_BUCKET_NAME, Prefix=directory)  # List objects in the directory
 
         if 'Contents' not in response:
-            return {"objects": []}
+            return {"objects": []}  # Return an empty list if there are no objects
 
+        # Prepare a list of objects with keys and sizes
         objects = [{'key': obj['Key'], 'size': obj['Size']} for obj in response['Contents']]
-        logging.debug("Objects: %s", objects)
-
         return {"objects": objects}
     except Exception as e:
-        logging.error("Error listing S3 objects: %s", str(e))
-        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
+        logging.error(f"Error listing S3 objects: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to list S3 objects")
 
-
-@app.get("/api/list-directory")
-async def list_directory(
-    path: str = Query(..., description="Directory path to list"),
-    current_user: TokenData = Depends(get_current_user)
-):
-    try:
-        s3_client = create_s3_client()
-
-        user_path = f"{current_user.sub}/{path.strip('/')}"
-        response = s3_client.list_objects_v2(Bucket=AWS_S3_BUCKET_NAME, Prefix=user_path, Delimiter='/')
-        
-        directories = [prefix.strip('/').split('/')[-1] for prefix in response.get('CommonPrefixes', [])]
-        files = [{'name': obj['Key'].split('/')[-1], 'size': obj['Size'], 'last_modified': obj['LastModified']} 
-                 for obj in response.get('Contents', []) if not obj['Key'].endswith('/')]
-        
-        return {"directories": directories, "files": files}
-    except Exception as e:
-        logging.error(f"Error listing directory: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
+# Endpoint to delete a file from the user's S3 folder
 @app.delete("/api/delete-file")
-async def delete_file(
-    file_path: str = Query(..., description="File path to delete"),
-    current_user: TokenData = Depends(get_current_user)
-):
+async def delete_file(file_path: str = Query(..., description="File path to delete"), current_user: TokenData = Depends(get_current_user)):
     try:
-        s3_client = create_s3_client()
-        
-        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
-        s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
+        s3_client = create_s3_client()  # Create S3 client
+        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"  # Path to the user's file
+        s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)  # Delete the file from S3
         return {"message": "File deleted successfully"}
     except Exception as e:
-        logging.error(f"Error deleting file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Error deleting file: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to delete file")
 
+# Endpoint to rename a file in the user's S3 folder
 @app.post("/api/rename-file")
-async def rename_file(
-    old_path: str = Query(..., description="Current file path"),
-    new_path: str = Query(..., description="New file path"),
-    current_user: TokenData = Depends(get_current_user)
-):
+async def rename_file(old_path: str = Query(..., description="Current file path"), new_path: str = Query(..., description="New file path"), current_user: TokenData = Depends(get_current_user)):
     try:
-        s3_client = create_s3_client()
-        
-        user_old_path = f"{current_user.sub}/{old_path.strip('/')}"
-        user_new_path = f"{current_user.sub}/{new_path.strip('/')}"
-        
+        s3_client = create_s3_client()  # Create S3 client
+        user_old_path = f"{current_user.sub}/{old_path.strip('/')}"  # Path to the old file
+        user_new_path = f"{current_user.sub}/{new_path.strip('/')}"  # Path to the new file
+
+        # Copy the old file to the new location and delete the old file
         s3_client.copy_object(Bucket=AWS_S3_BUCKET_NAME, CopySource={'Bucket': AWS_S3_BUCKET_NAME, 'Key': user_old_path}, Key=user_new_path)
         s3_client.delete_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_old_path)
-        
+
         return {"message": "File renamed successfully"}
     except Exception as e:
-        logging.error(f"Error renaming file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Error renaming file: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to rename file")
 
+# Endpoint to create a new directory in the user's
+# Endpoint to create a new directory in the user's S3 folder
 @app.post("/api/create-directory")
 async def create_directory(
     directory_path: str = Query(..., description="Directory path to create"),
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = create_s3_client()
-        
+        s3_client = create_s3_client()  # Create S3 client
+        # Ensure directory path ends with a trailing slash
         user_directory_path = f"{current_user.sub}/{directory_path.strip('/')}/"
-        s3_client.put_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_directory_path)
-        
+        s3_client.put_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_directory_path)  # Create an empty object to represent the directory
+
         return {"message": "Directory created successfully"}
     except Exception as e:
-        logging.error(f"Error creating directory: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logging.error(f"Error creating directory: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to create directory")
 
-
+# Endpoint to retrieve and stream a file from the user's S3 folder
 @app.get("/api/get-file")
 async def get_file(
     file_path: str = Query(..., description="File path to retrieve"),
     current_user: TokenData = Depends(get_current_user)
 ):
     try:
-        s3_client = create_s3_client()
-        
-        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"
-        
-        response = s3_client.get_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
-        
-        def iterfile():  
-            yield from response['Body'].iter_chunks()
-        
-        return StreamingResponse(iterfile(), media_type=response['ContentType'])
-    except Exception as e:
-        logging.error(f"Error retrieving file: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        s3_client = create_s3_client()  # Create S3 client
+        user_file_path = f"{current_user.sub}/{file_path.strip('/')}"  # Full path to the file in S3
 
+        # Get the file from S3
+        response = s3_client.get_object(Bucket=AWS_S3_BUCKET_NAME, Key=user_file_path)
+
+        # Stream the file in chunks
+        def iterfile():
+            yield from response['Body'].iter_chunks()
+
+        return StreamingResponse(iterfile(), media_type=response['ContentType'])  # Return the file as a stream
+    except Exception as e:
+        logging.error(f"Error retrieving file: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to retrieve file")
+
+# Endpoint to list contents of a directory in the user's S3 folder
+@app.get("/api/list-directory")
+async def list_directory(
+    path: str = Query(..., description="Directory path to list"),
+    current_user: TokenData = Depends(get_current_user)
+):
+    try:
+        s3_client = create_s3_client()  # Create S3 client
+
+        # Strip slashes from the path and prepend the user's sub to the directory path
+        user_path = f"{current_user.sub}/{path.strip('/')}"
+        response = s3_client.list_objects_v2(Bucket=AWS_S3_BUCKET_NAME, Prefix=user_path, Delimiter='/')
+
+        # Extract directories and files from the S3 response
+        directories = [prefix.strip('/').split('/')[-1] for prefix in response.get('CommonPrefixes', [])]
+        files = [{'name': obj['Key'].split('/')[-1], 'size': obj['Size'], 'last_modified': obj['LastModified']}
+                 for obj in response.get('Contents', []) if not obj['Key'].endswith('/')]
+
+        return {"directories": directories, "files": files}  # Return the list of directories and files
+    except Exception as e:
+        logging.error(f"Error listing directory: {e}")  # Log the error
+        raise HTTPException(status_code=500, detail="Failed to list directory")
+
+# Admin-only endpoint to initiate GPU resources
 @app.get("/api/admin/launchGPU")
 async def launch_gpu(current_user: TokenData = Depends(get_current_user)):
-    # Check if the user has the required permission
+    # Check if the user has the required permission to launch GPU
     if "read:admin-messages" not in current_user.permissions:
-        raise HTTPException(status_code=403, detail="Permission denied")
-    
-    # For now, we'll just return a message. In the future, this could initiate a GPU instance.
-    return {"message": "GPU launch initiated successfully"}
+        raise HTTPException(status_code=403, detail="Permission denied")  # Deny access if permission is missing
 
+    # Placeholder response for GPU launch
+    return {"message": "GPU launch initiated successfully"}
 
