@@ -12,7 +12,9 @@ RUN apt-get update -y && \
     git \
     wget \
     gnupg \
-    ca-certificates && \
+    ca-certificates \
+    vim-tiny \
+    vim && \
     rm -rf /var/lib/apt/lists/*
 
 # Set distribution variable
@@ -44,15 +46,11 @@ ENV LD_LIBRARY_PATH=/usr/local/cuda/lib64:/usr/lib/x86_64-linux-gnu:$LD_LIBRARY_
 # Install Python Dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir --verbose -r requirements.txt
 
 # Copy Scripts and Configuration
 COPY app/ /app/
 
-# Set Environment Variables
-ENV USE_WHISPER=True
-ENV WHISPER_MODEL_SIZE=medium
-
 # Set Entry Point
-#CMD ["python3", "/app/worker_node.py"]
 CMD ["tail", "-f", "/dev/null"]
+
