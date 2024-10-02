@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# worker_node.py  # this is the app which runs on a GPU, generally runpod.io
+# worker_node.py  # This is the app which runs on a GPU, generally on runpod.io
 
 import json
 import logging
@@ -43,8 +43,7 @@ def load_config(config_path: str) -> Dict[str, Any]:
             raise KeyError(f"Required configuration item '{key}' is missing from config.yaml")
 
     # Create download folder if it doesn't exist
-    if not os.path.exists(config['download_folder']):
-        os.makedirs(config['download_folder'])
+    os.makedirs(config['download_folder'], exist_ok=True)
 
     return config
 
@@ -87,11 +86,22 @@ def step1_download_from_presigned_url(presigned_url: str, local_audio_path: str)
         return False
 
 def step2_transcribe_audio(local_audio_path: str) -> str:
-    """Step 2: Transcribe the audio file."""
+    """Transcribe the audio file."""
     try:
-        # Since we don't have a GPU, we'll mock the transcription process
-        transcription = f"This is a mock transcription of {os.path.basename(local_audio_path)}"
-        logger.info(f"Mock transcribed {local_audio_path}")
+        # Implement your transcription logic here using faster-whisper
+        from faster_whisper import WhisperModel
+
+        # Load the model (adjust the model size as needed)
+        model_size = "medium"
+        model = WhisperModel(model_size, device="cuda", compute_type="float16")
+
+        # Transcribe the audio file
+        segments, info = model.transcribe(local_audio_path)
+
+        # Combine the transcribed text from segments
+        transcription = "".join([segment.text for segment in segments])
+
+        logger.info(f"Transcribed {local_audio_path}")
         return transcription
     except Exception as e:
         logger.error(f"Error transcribing file {local_audio_path}: {e}", exc_info=True)
@@ -103,7 +113,7 @@ def step3_upload_to_presigned_url(presigned_url: str, local_file_path: str) -> b
         with open(local_file_path, 'rb') as f:
             headers = {'Content-Type': 'text/plain'}
             response = requests.put(presigned_url, data=f, headers=headers)
-        if response.status_code == 200 or response.status_code == 204:
+        if response.status_code in [200, 204]:
             logger.info(f"Uploaded transcription from {local_file_path}")
             return True
         else:
@@ -148,9 +158,10 @@ def main():
                 logger.error(f"Failed to transcribe {filename}. Skipping task.")
                 continue
 
-            # Save transcription to a local file
+            # Save transcription to a local file with the same name but .txt extension
+            transcription_output_filename = f"{filename}.txt"
             transcription_output_path = os.path.join(
-                config['download_folder'], f"{os.path.splitext(filename)[0]}.txt"
+                config['download_folder'], transcription_output_filename
             )
             with open(transcription_output_path, 'w') as f:
                 f.write(transcription)
