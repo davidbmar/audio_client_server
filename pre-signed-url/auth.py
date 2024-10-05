@@ -4,14 +4,35 @@ from jose import jwt, jwk, JWTError
 from typing import Optional, List
 from pydantic import BaseModel
 import requests
+import boto3
+import json
+import logging
 
-# Load secrets from the original get_secrets function (this should be modified to import the secrets if centralized)
-secrets = {
-    "AUTH0_DOMAIN": "your-auth0-domain",
-    "AUTH0_AUDIENCE": "your-auth0-audience"
-}
-AUTH0_DOMAIN = secrets["AUTH0_DOMAIN"]
-AUTH0_AUDIENCE = secrets["AUTH0_AUDIENCE"]
+# Configure logging for debugging and error tracking
+logging.basicConfig(level=logging.DEBUG)
+
+# Function to retrieve secrets from AWS Secrets Manager
+def get_secrets():
+    secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"  # Make sure this matches your secrets identifier
+    region_name = "us-east-2"
+    client = boto3.client(service_name='secretsmanager', region_name=region_name)
+
+    try:
+        secret_value = client.get_secret_value(SecretId=secret_name)
+        secret_dict = json.loads(secret_value.get('SecretString', '{}'))
+        return secret_dict
+    except Exception as e:
+        logging.error(f"Error retrieving secrets: {e}")
+        raise HTTPException(status_code=500, detail="Failed to retrieve secrets")
+
+# Load secrets into variables
+secrets = get_secrets()
+AUTH0_DOMAIN = secrets.get("AUTH0_DOMAIN")
+AUTH0_AUDIENCE = secrets.get("AUTH0_AUDIENCE")
+
+# Ensure all required secrets are set
+if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE]):
+    raise ValueError("Missing required secrets")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/token")
 
