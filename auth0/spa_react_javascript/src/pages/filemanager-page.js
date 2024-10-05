@@ -1,3 +1,4 @@
+// Import necessary hooks
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { PageLayout } from "../components/page-layout";
@@ -9,6 +10,7 @@ export const FileManagerPage = () => {
   const [directories, setDirectories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
+  const [transcriptions, setTranscriptions] = useState({});
   const audioRef = useRef(null);
 
   const loadDirectoryContents = useCallback(async (path) => {
@@ -22,14 +24,60 @@ export const FileManagerPage = () => {
       const data = await response.json();
       setFiles(data.files);
       setDirectories(data.directories);
+      fetchTranscriptions(data.files);
     } catch (error) {
       console.error("Error loading directory contents:", error);
     }
   }, [getAccessTokenSilently]);
 
-  useEffect(() => {
-    loadDirectoryContents(currentPath);
-  }, [currentPath, loadDirectoryContents]);
+  const fetchTranscriptions = async (files) => {
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const transcriptionPromises = files.map(async (file) => {
+        const response = await fetch(`/api/get-transcription?file_path=${encodeURIComponent(currentPath + file.name)}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+        if (response.ok) {
+          const transcription = await response.text();
+          return { name: file.name, transcription };
+        } else {
+          return { name: file.name, transcription: "No transcription available." };
+        }
+      });
+      const transcriptionsArray = await Promise.all(transcriptionPromises);
+      const transcriptionData = transcriptionsArray.reduce((acc, { name, transcription }) => {
+        acc[name] = transcription;
+        return acc;
+      }, {});
+      setTranscriptions(transcriptionData);
+    } catch (error) {
+      console.error("Error fetching transcriptions:", error);
+    }
+  };
+
+  const loadAudio = async (file) => {
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const response = await fetch(`/api/get-file?file_path=${encodeURIComponent(currentPath + file.name)}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (!response.ok) throw new Error('Failed to fetch audio file');
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      if (audioRef.current) {
+        audioRef.current.src = url;
+        audioRef.current.load();
+        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
+      }
+      setCurrentlyPlaying(file);
+    } catch (error) {
+      console.error("Error loading audio:", error);
+    }
+  };
 
   const createDirectory = async () => {
     const directoryName = prompt("Enter new directory name:");
@@ -52,28 +100,6 @@ export const FileManagerPage = () => {
   const performSearch = () => {
     console.log("Searching for:", searchTerm);
     // Implement search functionality here
-  };
-
-  const loadAudio = async (file) => {
-    try {
-      const accessToken = await getAccessTokenSilently();
-      const response = await fetch(`/api/get-file?file_path=${encodeURIComponent(`${currentPath}${file.name}`)}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch audio file');
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      if (audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current.load();
-        audioRef.current.play().catch(e => console.error("Error playing audio:", e));
-      }
-      setCurrentlyPlaying(file);
-    } catch (error) {
-      console.error("Error loading audio:", error);
-    }
   };
 
   const handleFileAction = async (action, file) => {
@@ -116,6 +142,10 @@ export const FileManagerPage = () => {
     }
   };
 
+  useEffect(() => {
+    loadDirectoryContents(currentPath);
+  }, [currentPath, loadDirectoryContents]);
+
   const renderBreadcrumb = () => {
     const paths = currentPath.split("/").filter(Boolean);
     return (
@@ -147,10 +177,10 @@ export const FileManagerPage = () => {
             </button>
           </div>
           <div className="search-bar">
-            <input 
-              type="search" 
-              id="file-search" 
-              placeholder="Search files..." 
+            <input
+              type="search"
+              id="file-search"
+              placeholder="Search files..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -159,7 +189,7 @@ export const FileManagerPage = () => {
             </button>
           </div>
         </header>
-        
+
         <main>
           <div className="file-list">
             <table>
@@ -169,6 +199,7 @@ export const FileManagerPage = () => {
                   <th>Last Modified</th>
                   <th>Size</th>
                   <th>Actions</th>
+                  <th>Transcription</th>
                 </tr>
               </thead>
               <tbody>
@@ -189,6 +220,7 @@ export const FileManagerPage = () => {
                         Delete
                       </button>
                     </td>
+                    <td>-</td>
                   </tr>
                 ))}
                 {files.map((file, index) => (
@@ -207,6 +239,7 @@ export const FileManagerPage = () => {
                         Delete
                       </button>
                     </td>
+                    <td>{transcriptions[file.name] || "Loading transcription..."}</td>
                   </tr>
                 ))}
               </tbody>
