@@ -142,10 +142,12 @@ export const RecordPage = () => {
             <ReactMic
               record={isRecording}
               className="sound-wave"
-              onStop={onStop}
-              onData={() => { }}
+                          onStop={onStop}
+              onData={() => {}}
               strokeColor="#000000"
               backgroundColor="#FF4081"
+              mimeType="audio/webm;codecs=opus" // Use compressed audio format
+              sampleRate={16000} // Reduce sample rate for smaller file size
             />
           </div>
 

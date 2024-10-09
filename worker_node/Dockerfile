@@ -15,7 +15,7 @@ RUN apt-get update -y && \
     ca-certificates \
     vim-tiny \
     vim && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/*   # This cleans up after the package installation
 
 # Set distribution variable
 ENV distribution=ubuntu2204
@@ -51,6 +51,9 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Copy Scripts and Configuration
 COPY app/ /app/
 
-# Set Entry Point
-CMD ["tail", "-f", "/dev/null"]
+# Entry point: Run your Python script
+CMD ["python3", "worker_node.py"]
+
+# To ensure the container keeps running (even if your script fails), consider:
+# CMD ["python3", "worker_node.py", "||", "tail", "-f", "/dev/null"]
 
