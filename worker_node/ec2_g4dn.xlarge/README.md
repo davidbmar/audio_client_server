@@ -1,265 +1,206 @@
-Here is a summary of the steps to install **Faster Whisper** and run it. You can copy this content directly into a `.md` file for documentation purposes.
+Here is a complete **Faster Whisper Installation Guide** for provisioning an EC2 instance, installing, and running Faster Whisper using Python 3.12. This guide includes troubleshooting steps and ensures compatibility with CUDA and cuDNN for GPU-based transcription.
 
 ---
 
 # Faster Whisper Installation Guide
 
-This guide explains how to install **Faster Whisper** using Python 3.12 and transcribe an audio file using its Python API.
-
-## Prerequisites
-
-- Ubuntu system
-- Python 3.12 installed
-- Basic understanding of virtual environments
+This guide will help you install **Faster Whisper** on an Ubuntu-based EC2 instance and transcribe an audio file using its Python API. It includes steps to fix common issues such as CUDA, cuDNN, and Python package conflicts.
 
 ---
 
-## Step 1: Check Your Ubuntu Version
+## **Step 1: Provision an EC2 Instance**
 
-Before starting, verify your Ubuntu version to ensure your package sources are configured correctly.
+1. Launch an EC2 instance with a GPU, such as `g4dn.xlarge` or higher, with Ubuntu 20.04 or 22.04 AMI.
+2. Open the necessary ports and configure security groups for SSH access.
+
+---
+
+## **Step 2: Verify and Fix Ubuntu Codename**
+
+Before installing dependencies, ensure the correct codename is in `/etc/apt/sources.list`. For example, use `focal` for Ubuntu 20.04.
 
 ```bash
 lsb_release -a
 ```
 
-Ensure the output shows a valid codename like `focal` (20.04) or `jammy` (22.04). If your codename is incorrect (e.g., `noble`), follow these steps to fix it.
+If the codename is incorrect (e.g., `noble`), follow these steps:
 
-1. **Backup your sources list:**
-
-    ```bash
-    sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
-    ```
-
-2. **Edit the sources list:**
-
-    ```bash
-    sudo nano /etc/apt/sources.list
-    ```
-
-    Replace incorrect codenames with the correct one, then save and exit (`Ctrl+O`, `Enter`, `Ctrl+X`).
-
-3. **Update package lists:**
-
-    ```bash
-    sudo apt-get update
-    ```
-
----
-
-## Step 2: Install System Dependencies
-
-Install the necessary system packages and libraries for audio processing.
-
-1. **Update package lists:**
-
-    ```bash
-    sudo apt-get update
-    ```
-
-2. **Install FFmpeg and development libraries:**
-
-    ```bash
-    sudo apt-get install -y ffmpeg libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libavfilter-dev libswscale-dev libswresample-dev pkg-config
-    ```
-
-3. **Install build tools:**
-
-    ```bash
-    sudo apt-get install -y build-essential
-    ```
-
----
-
-## Step 3: Create a Python Virtual Environment
-
-Set up a Python 3.12 virtual environment to isolate dependencies.
-
-1. **Create a new virtual environment:**
-
-    ```bash
-    python3 -m venv faster-whisper-env
-    ```
-
-2. **Activate the virtual environment:**
-
-    ```bash
-    source faster-whisper-env/bin/activate
-    ```
-
-Your prompt should now show `(faster-whisper-env)`.
-
----
-
-## Step 4: Upgrade `pip`
-
-Make sure `pip` is up-to-date to avoid installation issues.
-
-```bash
-pip install --upgrade pip
-```
-
----
-
-## Step 5: Install Faster Whisper
-
-### 5.1 Install Required Dependencies
-
-Since some dependencies may not have pre-built wheels for Python 3.12, we'll install them manually.
-
-1. **Install `wheel` and `setuptools`:**
-
-    ```bash
-    pip install wheel setuptools
-    ```
-
-2. **Install `av`:**
-
-    ```bash
-    pip install av
-    ```
-
-   If the installation of `av` fails, you can try installing it from the GitHub repository:
+1. **Backup the sources list**:
 
    ```bash
-   pip install git+https://github.com/PyAV-Org/PyAV.git@main
+   sudo cp /etc/apt/sources.list /etc/apt/sources.list.backup
    ```
 
-### 5.2 Install Faster Whisper Without `av`
+2. **Edit the sources list**:
 
-If `av` is incompatible with Python 3.12, proceed by installing **Faster Whisper** without `av`.
+   ```bash
+   sudo nano /etc/apt/sources.list
+   ```
 
-```bash
-pip install faster-whisper --no-deps
-```
+3. Replace incorrect codenames with the correct one and update the package list:
 
-### 5.3 Install Remaining Dependencies
-
-Manually install the remaining dependencies:
-
-```bash
-pip install ctranslate2 huggingface-hub onnxruntime tokenizers
-```
-
-### 5.4 Verify Installation
-
-Run the following command to verify that **Faster Whisper** was installed correctly:
-
-```bash
-pip show faster-whisper
-```
+   ```bash
+   sudo apt-get update
+   ```
 
 ---
 
-## Step 6: Use the Python API for Transcription
+## **Step 3: Install System Dependencies**
 
-Since the CLI tool may not be available due to `av` issues, we’ll use the Python API to transcribe audio.
+1. **Update and upgrade packages**:
 
-1. **Create a Python script** named `transcribe.py`:
+   ```bash
+   sudo apt-get update && sudo apt-get upgrade -y
+   ```
 
-    ```bash
-    nano transcribe.py
-    ```
+2. **Install FFmpeg and development libraries**:
 
-    Paste the following content into the file:
+   ```bash
+   sudo apt-get install -y ffmpeg libavformat-dev libavcodec-dev libavdevice-dev libavutil-dev libavfilter-dev libswscale-dev libswresample-dev pkg-config
+   ```
 
-    ```python
-    from faster_whisper import WhisperModel
+3. **Install build tools**:
 
-    # Initialize the model
-    model_size = "small"
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+   ```bash
+   sudo apt-get install -y build-essential
+   ```
 
-    # Transcribe the audio file
-    segments, info = model.transcribe("audio_sample.mp3", language="en")
+---
 
-    print("Detected language:", info.language)
-    print("Transcription:")
+## **Step 4: Set up CUDA and cuDNN**
 
-    for segment in segments:
-        print(f"[{segment.start:.2f} - {segment.end:.2f}]: {segment.text}")
-    ```
+1. **Add NVIDIA's CUDA repository**:
+
+   ```bash
+   wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-ubuntu2004.pin
+   sudo mv cuda-ubuntu2004.pin /etc/apt/preferences.d/cuda-repository-pin-600
+   sudo apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/7fa2af80.pub
+   sudo add-apt-repository "deb https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/ /"
+   sudo apt-get update
+   ```
+
+2. **Install CUDA**:
+
+   ```bash
+   sudo apt-get -y install cuda
+   ```
+
+3. **Install cuDNN**:
+
+   ```bash
+   sudo apt-get install libcudnn8 libcudnn8-dev -y
+   ```
+
+4. **Verify CUDA installation**:
+
+   ```bash
+   nvcc --version
+   ```
+
+5. **Set up environment variables**:
+
+   Add the following lines to `~/.bashrc`:
+
+   ```bash
+   export PATH=/usr/local/cuda/bin:$PATH
+   export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+   ```
+
+   Then, reload the environment variables:
+
+   ```bash
+   source ~/.bashrc
+   ```
+
+---
+
+## **Step 5: Create a Python Virtual Environment**
+
+1. **Install Python 3.12 and `venv`**:
+
+   ```bash
+   sudo apt-get install python3.12 python3.12-venv python3.12-dev -y
+   ```
+
+2. **Create and activate the virtual environment**:
+
+   ```bash
+   python3 -m venv faster-whisper-env
+   source faster-whisper-env/bin/activate
+   ```
+
+---
+
+## **Step 6: Install Faster Whisper and Dependencies**
+
+1. **Upgrade pip**:
+
+   ```bash
+   pip install --upgrade pip
+   ```
+
+2. **Install dependencies**:
+
+   ```bash
+   pip install wheel setuptools ctranslate2 huggingface-hub onnxruntime tokenizers
+   ```
+
+3. **Install Faster Whisper**:
+
+   ```bash
+   pip install faster-whisper
+   ```
+
+---
+
+## **Step 7: Test Faster Whisper Installation**
+
+1. **Create a test script** named `test_faster_whisper.py`:
+
+   ```python
+   from faster_whisper import WhisperModel
+
+   # Load the small model
+   model = WhisperModel("small", device="cuda", compute_type="float16")
+
+   # Transcribe an audio file
+   segments, info = model.transcribe("audio_sample.mp3")
+
+   print(f"Detected language: {info.language}")
+   for segment in segments:
+       print(f"[{segment.start:.2f} -> {segment.end:.2f}]: {segment.text}")
+   ```
 
 2. **Download a sample audio file**:
 
-    ```bash
-    wget https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3 -O audio_sample.mp3
-    ```
+   ```bash
+   wget https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3 -O audio_sample.mp3
+   ```
 
 3. **Run the transcription script**:
 
-    ```bash
-    python transcribe.py
-    ```
+   ```bash
+   python3 test_faster_whisper.py
+   ```
+
+If successful, you should see the detected language and transcribed segments.
 
 ---
 
-## Step 7: Verify Transcription Output
+## **Step 8: Automate Provisioning**
 
-The output should display the detected language and transcription:
-
-```
-Detected language: en
-Transcription:
-[0.00 - 5.00]: [Transcribed text here]
-```
+To automate this process across multiple EC2 instances, create a shell script for these steps or use infrastructure-as-code tools like **Terraform** or **AWS CloudFormation**. You can also create a custom AMI after setting up the first instance, which can be reused for other instances.
 
 ---
 
-## Step 8: Deactivate the Virtual Environment
+## **Troubleshooting**
 
-When you're done, deactivate the virtual environment:
+### Issue: `libcudnn_ops_infer.so.8 not found`
+Ensure CUDA and cuDNN are installed properly, and that the environment variables `PATH` and `LD_LIBRARY_PATH` are correctly set.
 
-```bash
-deactivate
-```
-
----
-
-## Optional: Create a Symbolic Link for Global Access
-
-If you want to access the `faster-whisper` command without activating the virtual environment each time, you can create a symbolic link:
-
-```bash
-sudo ln -s ~/faster-whisper-env/bin/faster-whisper /usr/local/bin/faster-whisper
-```
-
-Verify the link:
-
-```bash
-which faster-whisper
-```
+### Issue: `No module named 'faster_whisper'`
+Make sure the virtual environment is activated when running the script and that `faster-whisper` is installed inside the virtual environment.
 
 ---
 
-## Conclusion
-
-You have successfully installed **Faster Whisper** using Python 3.12 and set up transcription via the Python API. If you encounter any issues, consider using an older Python version like 3.10 for better compatibility.
-
----
-
-## Troubleshooting
-
-### Issue: `ImportError` or `ModuleNotFoundError`
-
-Ensure you are running the script within the activated virtual environment and that the required packages are installed.
-
-### Issue: Audio Loading Errors
-
-If you encounter issues with audio loading, consider using the `soundfile` library as an alternative to `av`.
-
-1. **Install `soundfile`:**
-
-    ```bash
-    sudo apt-get install libsndfile1
-    pip install soundfile
-    ```
-
-2. **Modify your Python script** to use `soundfile` for loading audio.
-
----
-
-This completes the setup and installation guide for **Faster Whisper** using Python 3.12.
-
----
-
-Let me know if you'd like any adjustments or additional steps in this `.md` file!
+This guide ensures you can install and run Faster Whisper on an EC2 instance with proper CUDA and cuDNN support. Let me know if any adjustments are needed!
