@@ -1,0 +1,8 @@
+# Update your package lists
+sudo apt update
+
+# Install PostgreSQL client from apt
+sudo apt install postgresql-client
+
+psql -h terraform-20241016044926222400000001.cny2uiqswlls.us-east-2.rds.amazonaws.com -U dbm_db_admin -p 5432
+
