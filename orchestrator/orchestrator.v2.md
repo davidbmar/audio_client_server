@@ -1,3 +1,6 @@
+Orchestrator V2 Proposal
+
+# Document
 This `.md` document that explains orchestrator v2 key concepts of the system, focusing on the multiple SQS queues, worker node behavior, visibility timeout, retry handling, and the overall architecture. This will provide the foundation for thinking about implementation.
 What is different here over Orchestrator V1, is that there is a RDS database, and there are multiple SQS queues.
 ---
@@ -7,6 +10,47 @@ What is different here over Orchestrator V1, is that there is a RDS database, an
 ## Overview
 
 This document outlines a resilient and scalable architecture for task management using **AWS SQS** queues, a central **orchestrator**, and **worker nodes** that process tasks asynchronously. The architecture includes handling both **graceful failures** and **unexpected worker node failures** (e.g., spot instance termination) with the use of **Visibility Timeouts** and a **Retry Queue**.
+
+
+## Sequence Diagram
+
+```mermaid
+sequenceDiagram
+    participant Orchestrator
+    participant TaskQueue as SQS Task Queue
+    participant StatusQueue as SQS Status Update Queue
+    participant RetryQueue as SQS Retry Queue
+    participant WorkerNode as Worker Node
+    participant RDS as RDS Database
+
+    Orchestrator->>TaskQueue: Puts new tasks
+    WorkerNode->>TaskQueue: Polls for new tasks
+    TaskQueue->>WorkerNode: Delivers task details (Task becomes invisible)
+    
+    WorkerNode->>WorkerNode: Processes task (e.g., transcribe audio)
+    WorkerNode->>StatusQueue: Sends status update (In-progress)
+    
+    loop Heartbeat
+        WorkerNode->>StatusQueue: Sends heartbeat
+    end
+    
+    alt Worker Node Fails Unexpectedly (Spot Instance Failure)
+        TaskQueue->>WorkerNode: Task becomes available again after visibility timeout
+        WorkerNode->>TaskQueue: Another worker picks up the task
+    end
+
+    alt Task Fails Gracefully (Worker Reports Failure)
+        WorkerNode->>RetryQueue: Sends task to retry queue
+        RetryQueue->>Orchestrator: Orchestrator polls for retry tasks
+        Orchestrator->>TaskQueue: Resubmits failed task to task queue after delay
+    end
+
+    WorkerNode->>StatusQueue: Sends status update (Completed/Failed)
+    StatusQueue->>Orchestrator: Polls for task status updates
+    Orchestrator->>RDS: Updates task status in the database
+```
+
+---
 
 ### Key Components
 
@@ -91,45 +135,6 @@ This document outlines a resilient and scalable architecture for task management
 
 ---
 
-## Sequence Diagram
-
-```mermaid
-sequenceDiagram
-    participant Orchestrator
-    participant TaskQueue as SQS Task Queue
-    participant StatusQueue as SQS Status Update Queue
-    participant RetryQueue as SQS Retry Queue
-    participant WorkerNode as Worker Node
-    participant RDS as RDS Database
-
-    Orchestrator->>TaskQueue: Puts new tasks
-    WorkerNode->>TaskQueue: Polls for new tasks
-    TaskQueue->>WorkerNode: Delivers task details (Task becomes invisible)
-    
-    WorkerNode->>WorkerNode: Processes task (e.g., transcribe audio)
-    WorkerNode->>StatusQueue: Sends status update (In-progress)
-    
-    loop Heartbeat
-        WorkerNode->>StatusQueue: Sends heartbeat
-    end
-    
-    alt Worker Node Fails Unexpectedly (Spot Instance Failure)
-        TaskQueue->>WorkerNode: Task becomes available again after visibility timeout
-        WorkerNode->>TaskQueue: Another worker picks up the task
-    end
-
-    alt Task Fails Gracefully (Worker Reports Failure)
-        WorkerNode->>RetryQueue: Sends task to retry queue
-        RetryQueue->>Orchestrator: Orchestrator polls for retry tasks
-        Orchestrator->>TaskQueue: Resubmits failed task to task queue after delay
-    end
-
-    WorkerNode->>StatusQueue: Sends status update (Completed/Failed)
-    StatusQueue->>Orchestrator: Polls for task status updates
-    Orchestrator->>RDS: Updates task status in the database
-```
-
----
 
 ## Conclusion
 
