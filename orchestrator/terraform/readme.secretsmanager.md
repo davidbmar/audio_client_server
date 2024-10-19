@@ -1,7 +1,7 @@
 Initally secrets manager should be populated with these values.  
 
 
-###Naming Convention for Secrets:
+### Naming Convention for Secrets:
 <dev or prod>/<shortRepoName>/Component/SubComponent/<version>
 ie:
 /dev/audioClientServer/Orchestrator/v2
