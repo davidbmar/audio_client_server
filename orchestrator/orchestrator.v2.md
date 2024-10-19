@@ -1,4 +1,4 @@
-Here's a comprehensive design document using **multiple SQS queues** without heartbeats for failure detection. We'll leverage **Visibility Timeout** to handle failures and retries. This design simplifies the architecture, ensuring task assignment, status updates, and retries are managed efficiently.
+V2 Orchestrator: Using **multiple SQS queues** without heartbeats for failure detection. We'll leverage **Visibility Timeout** to handle failures and retries. This design simplifies the architecture, ensuring task assignment, status updates, and retries are managed efficiently.
 
 ---
 
@@ -153,6 +153,3 @@ sequenceDiagram
 - **Orchestrator Logic**:
   - Build the orchestrator to manage task assignment, poll the status queue, and update task statuses in the **RDS Database**.
 
----
-
-This document provides a solid foundation for implementing a simplified and scalable task management system using multiple SQS queues and visibility timeout without heartbeats. Let me know if you’d like to proceed with the implementation!
