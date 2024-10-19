@@ -1,38 +1,26 @@
 # variables.tf
-
-variable "db_name" {
-  description = "The name of the RDS database"
-  type        = string
-  default     = "my_rds_db"
-}
-
 variable "db_username" {
-  description = "The username for the RDS master user"
+  description = "The username for the RDS database"
   type        = string
 }
 
 variable "db_password" {
-  description = "The password for the RDS master user"
+  description = "The password for the RDS database"
   type        = string
   sensitive   = true
 }
+
+variable "db_name" {
+  description = "The name of the RDS database"
+  type        = string
+}
+
 
 variable "ec2_security_group_id" {
   description = "The security group ID of the EC2 instance that will access the RDS database"
   type        = string
 }
 
-
-# SQS Queues
-variable "task_queue_url" {
-  type        = string
-  description = "URL for the Orchestrator task queue for the worker nodes to pickup tasks."
-}
-
-variable "status_update_queue_url" {
-  type        = string
-  description = "URL for the status update queue, for reporting failures or issues and status."
-}
 
 # ---- ENVIRONMENT ------
 variable "environment" {

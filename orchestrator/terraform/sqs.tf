@@ -14,12 +14,3 @@ resource "aws_sqs_queue" "status_update_queue" {
   message_retention_seconds    = 345600
 }
 
-# SQS Output URLs
-output "task_queue_url" {
-  value = aws_sqs_queue.task_queue.id
-}
-
-output "status_update_queue_url" {
-  value = aws_sqs_queue.status_update_queue.id
-}
-

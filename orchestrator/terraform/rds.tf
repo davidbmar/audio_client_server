@@ -1,10 +1,5 @@
 # rds.tf
 
-# Specify the AWS provider and region
-provider "aws" {
-  region = "us-east-2"
-}
-
 # Reference the default VPC where your EC2 instance is located
 data "aws_vpc" "default" {
   default = true
