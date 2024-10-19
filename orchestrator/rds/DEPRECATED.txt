@@ -1,0 +1,2 @@
+Everything in this directory is deprecated once the new orchestratorv2 is working.  
+Basically remove, and all this is now in the ../terraform directory.  So delete this.
