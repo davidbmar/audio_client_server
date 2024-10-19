@@ -12,6 +12,8 @@ resource "aws_secretsmanager_secret_version" "orchestrator_secret_version" {
     db_name                   = var.db_name
     db_username               = var.db_username
     db_password               = var.db_password
+    input_bucket	      = var.input_bucket
+    output_bucket             = var.output_bucket
   })
 }
 

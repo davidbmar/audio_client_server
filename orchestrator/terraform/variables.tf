@@ -1,4 +1,13 @@
 # variables.tf
+variable "input_bucket" {
+  description = "The S3 bucket which users are uploading audio files to."
+  type        = string
+}
+variable "output_bucket" {
+  description = "S3 bucket which the worker node will upload transcribed text to."
+  type        = string
+}
+
 variable "db_username" {
   description = "The username for the RDS database"
   type        = string
