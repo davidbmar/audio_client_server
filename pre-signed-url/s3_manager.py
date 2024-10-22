@@ -4,6 +4,8 @@ from datetime import datetime
 import pytz
 import logging
 import json
+from urllib.parse import quote
+
 
 # Function to retrieve secrets from AWS Secrets Manager
 def get_secrets():
@@ -48,14 +50,15 @@ def generate_file_name():
     now = datetime.now(pytz.timezone('US/Central'))
     return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".mp3"
 
-# Function for creating a presigned URL for upload
 def get_presigned_url(user_id: str):
     try:
         s3_client = create_s3_client()
         file_name = generate_file_name()
+        user_id_encoded = quote(user_id, safe='')
+        key = f"{user_id_encoded}/{file_name}"
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
-            Params={'Bucket': INPUT_AUDIO_BUCKET, 'Key': f"{user_id}/{file_name}"},
+            Params={'Bucket': INPUT_AUDIO_BUCKET, 'Key': key},
             ExpiresIn=7200
         )
         return {"url": presigned_url}
@@ -67,17 +70,32 @@ def get_presigned_url(user_id: str):
 def list_s3_objects(user_id: str, path: str):
     try:
         s3_client = create_s3_client()
-        directory = f"{user_id}/{path.strip('/')}"
+        # Decode user_id if it's already URL-encoded to avoid double encoding
+        user_id_decoded = unquote(user_id)
+        directory = f"{user_id_decoded}/{path.strip('/')}"
+
+        # Log the constructed directory and prefix for debugging
+        logging.debug(f"Constructed directory for S3: {directory}")
+
+        # Make the S3 API call to list objects with the correct prefix
         response = s3_client.list_objects_v2(Bucket=INPUT_AUDIO_BUCKET, Prefix=directory)
 
+        # Log the raw response from S3 to check what's returned
+        logging.debug(f"S3 ListObjectsV2 response: {response}")
+
+        # Check if 'Contents' is in the response, which indicates objects were returned
         if 'Contents' not in response:
+            logging.debug(f"No contents found in S3 bucket for prefix: {directory}")
             return {"objects": []}
 
+        # Extract the objects and their details
         objects = [{'key': obj['Key'], 'size': obj['Size']} for obj in response['Contents']]
+
         return {"objects": objects}
     except Exception as e:
         logging.error(f"Error listing S3 objects: {e}")
         raise
+
 
 # Function to delete a file in the user's folder
 def delete_file(user_id: str, file_path: str):
@@ -132,19 +150,40 @@ def get_file(user_id: str, file_path: str, bucket_name: str = INPUT_AUDIO_BUCKET
         logging.error(f"Error retrieving file from bucket {bucket_name}: {e}")
         raise
 
-# Function to list directories and files in a user's folder
 def list_directory(user_id: str, path: str):
     try:
         s3_client = create_s3_client()
-        user_path = f"{user_id}/{path.strip('/')}"
+        user_id_encoded = quote(user_id, safe='|')
+        user_path = f"{user_id_encoded}/{path.strip('/')}/"  # Ensure the path ends with a slash
+        if path == '/':
+            user_path = f"{user_id_encoded}/"  # Special case for root path
+        else:
+            user_path = f"{user_id_encoded}/{path.strip('/')}/"
+
+        logging.debug(f"user_id_encoded: '{user_id_encoded}'")
+        logging.debug(f"path (original): '{path}'")
+        logging.debug(f"user_path (formatted for S3): '{user_path}'")
+        logging.debug(f"Listing S3 objects with Prefix: '{user_path}'")
         response = s3_client.list_objects_v2(Bucket=INPUT_AUDIO_BUCKET, Prefix=user_path, Delimiter='/')
 
-        directories = [prefix.strip('/').split('/')[-1] for prefix in response.get('CommonPrefixes', [])]
-        files = [{'name': obj['Key'].split('/')[-1], 'size': obj['Size'], 'last_modified': obj['LastModified']} for obj in response.get('Contents', []) if not obj['Key'].endswith('/')]
+        directories = [
+            prefix['Prefix'].strip('/').split('/')[-1]
+            for prefix in response.get('CommonPrefixes', [])
+        ]
+        files = [
+            {
+                'name': obj['Key'].split('/')[-1],
+                'size': obj['Size'],
+                'last_modified': obj['LastModified']
+            }
+            for obj in response.get('Contents', [])
+            if not obj['Key'].endswith('/')
+        ]
 
         return {"directories": directories, "files": files}
     except Exception as e:
         logging.error(f"Error listing directory: {e}")
         raise
+
 
 
