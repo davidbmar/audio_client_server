@@ -96,40 +96,53 @@ def list_s3_objects(user_id: str, path: str):
         logging.error(f"Error listing S3 objects: {e}")
         raise
 
-
-# Function to delete a file in the user's folder
 def delete_file(user_id: str, file_path: str):
     try:
         s3_client = create_s3_client()
-        user_file_path = f"{user_id}/{file_path.strip('/')}"
-        s3_client.delete_object(Bucket=INPUT_AUDIO_BUCKET, Key=user_file_path)
+        user_id_encoded = quote(user_id, safe='')
+        normalized_path = file_path.strip('/')
+        key = f"{user_id_encoded}/{normalized_path}"
+        
+        s3_client.delete_object(Bucket=INPUT_AUDIO_BUCKET, Key=key)
         return {"message": "File deleted successfully"}
     except Exception as e:
         logging.error(f"Error deleting file: {e}")
         raise
 
-# Function to rename a file in the user's folder
 def rename_file(user_id: str, old_path: str, new_path: str):
     try:
         s3_client = create_s3_client()
-        user_old_path = f"{user_id}/{old_path.strip('/')}"
-        user_new_path = f"{user_id}/{new_path.strip('/')}"
+        user_id_encoded = quote(user_id, safe='')
 
-        # Copy the old file to the new location and delete the old file
-        s3_client.copy_object(Bucket=INPUT_AUDIO_BUCKET, CopySource={'Bucket': INPUT_AUDIO_BUCKET, 'Key': user_old_path}, Key=user_new_path)
-        s3_client.delete_object(Bucket=INPUT_AUDIO_BUCKET, Key=user_old_path)
+        old_path_normalized = old_path.strip('/')
+        new_path_normalized = new_path.strip('/')
+
+        old_key = f"{user_id_encoded}/{old_path_normalized}"
+        new_key = f"{user_id_encoded}/{new_path_normalized}"
+
+        # Copy the object
+        s3_client.copy_object(
+            Bucket=INPUT_AUDIO_BUCKET,
+            CopySource={'Bucket': INPUT_AUDIO_BUCKET, 'Key': old_key},
+            Key=new_key
+        )
+
+        # Delete the old object
+        s3_client.delete_object(Bucket=INPUT_AUDIO_BUCKET, Key=old_key)
 
         return {"message": "File renamed successfully"}
     except Exception as e:
         logging.error(f"Error renaming file: {e}")
         raise
 
-# Function to create a new directory in the user's folder
 def create_directory(user_id: str, directory_path: str):
     try:
         s3_client = create_s3_client()
-        user_directory_path = f"{user_id}/{directory_path.strip('/')}/"
-        s3_client.put_object(Bucket=INPUT_AUDIO_BUCKET, Key=user_directory_path)
+        user_id_encoded = quote(user_id, safe='')
+        normalized_path = directory_path.strip('/')
+        key = f"{user_id_encoded}/{normalized_path}/"
+
+        s3_client.put_object(Bucket=INPUT_AUDIO_BUCKET, Key=key)
         return {"message": "Directory created successfully"}
     except Exception as e:
         logging.error(f"Error creating directory: {e}")
