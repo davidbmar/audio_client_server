@@ -138,12 +138,21 @@ def create_directory(user_id: str, directory_path: str):
 def get_file(user_id: str, file_path: str, bucket_name: str = INPUT_AUDIO_BUCKET, prepend_user_id: bool = True):
     try:
         s3_client = create_s3_client()
+        
+        # URL encode the user_id, encoding everything including the | character
+        user_id_encoded = quote(user_id, safe='')
+        
+        # Normalize the file path
+        normalized_path = file_path.strip('/')
+        
         if prepend_user_id:
-            key = f"{user_id}/{file_path.strip('/')}"
+            key = f"{user_id_encoded}/{normalized_path}"
         else:
-            key = file_path.strip('/')
+            key = normalized_path
+
         # Log the key for debugging
         logging.debug(f"Attempting to retrieve file from bucket '{bucket_name}' with key '{key}'")
+        
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         return response
     except Exception as e:
@@ -153,7 +162,7 @@ def get_file(user_id: str, file_path: str, bucket_name: str = INPUT_AUDIO_BUCKET
 def list_directory(user_id: str, path: str):
     try:
         s3_client = create_s3_client()
-        user_id_encoded = quote(user_id, safe='|')
+        user_id_encoded = quote(user_id, safe='')
         user_path = f"{user_id_encoded}/{path.strip('/')}/"  # Ensure the path ends with a slash
         if path == '/':
             user_path = f"{user_id_encoded}/"  # Special case for root path
