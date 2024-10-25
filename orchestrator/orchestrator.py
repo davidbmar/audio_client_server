@@ -41,8 +41,9 @@ def get_config():
             'db_password': secret['db_password'],
             'task_queue_url': secret['task_queue_url'],
             'status_update_queue_url': secret['status_update_queue_url'],
-            'input_bucket': secret['input_bucket'],        # Added input bucket
-            'output_bucket': secret['output_bucket'],      # Added output bucket
+            'input_bucket': secret['input_bucket'],
+            'output_bucket': secret['output_bucket'],
+            'api_token': secret['api_token'],  # Add this line
         }
 
         return config
@@ -81,6 +82,8 @@ def mark_task_as_failed(task_id, failure_reason, retry_interval_minutes=30):
 
 # Fetch configuration from Secrets Manager
 config = get_config()
+
+API_TOKEN = config['api_token']  # Store token for use in decorator
 
 # AWS SQS Queue URLs
 TASK_QUEUE_URL = config['task_queue_url']
@@ -203,13 +206,23 @@ status_update_thread.start()
 # Set up the Flask app
 app = Flask(__name__)
 
-# Simple authentication decorator
 def authenticate(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization')
-        if not token or token != f"Bearer {API_TOKEN}":
-            return jsonify({'error': 'Unauthorized'}), 401
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'error': 'No authorization header'}), 401
+        
+        try:
+            # Expected format: "Bearer <token>"
+            scheme, token = auth_header.split()
+            if scheme.lower() != 'bearer':
+                return jsonify({'error': 'Invalid authentication scheme'}), 401
+            if token != API_TOKEN:
+                return jsonify({'error': 'Invalid token'}), 401
+        except ValueError:
+            return jsonify({'error': 'Invalid authorization header format'}), 401
+            
         return f(*args, **kwargs)
     return decorated
 
@@ -268,6 +281,53 @@ def get_task():
         logging.error(f"Error fetching task: {e}")
     finally:
         conn.close()
+
+# Add a new endpoint to verify token (useful for testing)
+@app.route('/verify-token', methods=['POST'])
+@authenticate
+def verify_token():
+    return jsonify({'message': 'Token is valid'}), 200
+
+@app.route('/update-task-status', methods=['POST'])
+@authenticate
+def update_task_status():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        task_id = data.get('task_id')
+        status = data.get('status')
+        failure_reason = data.get('failure_reason')
+        
+        if not task_id or not status:
+            return jsonify({'error': 'Missing required fields'}), 400
+            
+        conn = get_db_connection()
+        try:
+            with conn.cursor() as cursor:
+                if failure_reason:
+                    cursor.execute("""
+                        UPDATE tasks 
+                        SET status = %s, failure_reason = %s, updated_at = NOW() 
+                        WHERE task_id = %s
+                    """, (status, failure_reason, task_id))
+                else:
+                    cursor.execute("""
+                        UPDATE tasks 
+                        SET status = %s, updated_at = NOW() 
+                        WHERE task_id = %s
+                    """, (status, task_id))
+                conn.commit()
+            return jsonify({'message': 'Status updated successfully'}), 200
+        finally:
+            conn.close()
+            
+    except Exception as e:
+        logging.error(f"Error updating task status: {e}")
+        return jsonify({'error': 'Internal server error'}), 500
+
+
 
 if __name__ == '__main__':
     try:
