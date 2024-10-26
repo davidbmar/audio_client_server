@@ -17,7 +17,17 @@ REGION_NAME = 'us-east-2'
 POLL_INTERVAL = 5  # Seconds
 PRESIGNED_URL_EXPIRATION = 3600  # Seconds
 
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
+# Enhanced logging configuration
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('orchestrator.log'),  # Make sure this directory is writable
+        logging.StreamHandler()  # Also output to console
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # AWS Clients
 sqs = boto3.client('sqs', region_name=REGION_NAME)
@@ -50,6 +60,18 @@ def get_config():
     except ClientError as e:
         logging.error(f"Error retrieving configuration from Secrets Manager: {e}")
         raise
+
+def double_decode_key(key: str) -> str:
+    """Handle double URL encoded keys from S3 events."""
+    try:
+        # First decode: %257C -> %7C
+        once_decoded = requests.utils.unquote(key)
+        # Second decode: %7C -> |
+        twice_decoded = requests.utils.unquote(once_decoded)
+        return twice_decoded
+    except Exception as e:
+        logger.error(f"Error decoding key {key}: {e}")
+        return key
 
 def mark_task_as_completed(task_id):
     conn = get_db_connection()
@@ -99,13 +121,17 @@ DB_PASSWORD = config['db_password']
 INPUT_BUCKET = config['input_bucket']      # Using the input bucket from secrets
 OUTPUT_BUCKET = config['output_bucket']    # Using the output bucket from secrets
 
-
-# # Connect to PostgreSQL database
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
     try:
+        # Split host and port
+        host_port = DB_HOST.split(':')
+        host = host_port[0]
+        port = int(host_port[1]) if len(host_port) > 1 else 5432
+        
         connection = psycopg2.connect(
-            host=DB_HOST,
+            host=host,
+            port=port,
             database=DB_NAME,
             user=DB_USER,
             password=DB_PASSWORD
@@ -115,42 +141,167 @@ def get_db_connection():
         logging.error(f"Error connecting to the database: {e}")
         raise
 
-# # Create tasks table if it doesn't exist
 def init_db():
+    """Initialize database with encoded keys."""
     conn = get_db_connection()
     with conn.cursor() as cursor:
-         cursor.execute("""
-             CREATE TABLE IF NOT EXISTS tasks (
-                 task_id UUID PRIMARY KEY,
-                 object_key TEXT NOT NULL,
-                 worker_id TEXT,
-                 status TEXT NOT NULL,
-                 created_at TIMESTAMP DEFAULT NOW(),
-                 updated_at TIMESTAMP DEFAULT NOW(),
-                 failure_reason TEXT,
-                 retries INTEGER DEFAULT 0,
-                 presigned_get_url TEXT,
-                 presigned_put_url TEXT,
-                 retry_at TIMESTAMP
-             );
-         """)
-         conn.commit()
+        # Create tasks table with URL encoded object_key
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS tasks (
+                task_id UUID PRIMARY KEY,
+                object_key TEXT NOT NULL,  -- This will store URL encoded keys
+                worker_id TEXT,
+                status TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT NOW(),
+                updated_at TIMESTAMP DEFAULT NOW(),
+                failure_reason TEXT,
+                retries INTEGER DEFAULT 0,
+                retry_at TIMESTAMP
+            );
+        """)
+        conn.commit()
     conn.close()
 
-def send_task_to_queue(object_key, task_id):
+def send_task_to_queue(task_id, object_key, config):
     """Send task details to the SQS Task Queue."""
     try:
+        sqs = boto3.client('sqs', region_name=REGION_NAME)
+        
+        # Create a fully encoded version of the key
+        encoded_key = requests.utils.quote(object_key, safe='')
+        
+        # Generate pre-signed URLs
+        s3 = boto3.client('s3', region_name=REGION_NAME)
+        presigned_get_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': config['input_bucket'], 'Key': encoded_key},
+            ExpiresIn=PRESIGNED_URL_EXPIRATION
+        )
+        
+        presigned_put_url = s3.generate_presigned_url(
+            'put_object',
+            Params={'Bucket': config['output_bucket'], 'Key': f"transcriptions/{encoded_key}.txt"},
+            ExpiresIn=PRESIGNED_URL_EXPIRATION
+        )
+
+        # Prepare the message
         message_body = {
             "task_id": str(task_id),
-            "object_key": object_key
+            "object_key": encoded_key,
+            "presigned_get_url": presigned_get_url,
+            "presigned_put_url": presigned_put_url
         }
+
+        # Send to SQS
+        logging.info(f"Sending task {task_id} to queue: {config['task_queue_url']}")
         response = sqs.send_message(
-            QueueUrl=TASK_QUEUE_URL,
+            QueueUrl=config['task_queue_url'],
             MessageBody=json.dumps(message_body)
         )
-        logging.info(f"Task sent to queue with message ID: {response['MessageId']}")
-    except ClientError as e:
-        logging.error(f"Failed to send task to SQS queue: {e}")
+        
+        logging.info(f"Successfully queued task {task_id}, MessageId: {response['MessageId']}")
+        return True
+    except Exception as e:
+        logging.error(f"Failed to send task to queue: {str(e)}")
+        return False
+
+def process_pending_tasks():
+    """Process pending tasks and queue them for workers."""
+    config = get_config()
+    conn = get_db_connection()
+    
+    try:
+        with conn.cursor() as cursor:
+            # Get pending tasks that aren't already queued
+            cursor.execute("""
+                SELECT task_id, object_key 
+                FROM tasks 
+                WHERE status = 'Pending'
+                AND retry_at IS NULL OR retry_at <= NOW()
+                LIMIT 10
+            """)
+            
+            pending_tasks = cursor.fetchall()
+            
+            for task_id, object_key in pending_tasks:
+                if send_task_to_queue(task_id, object_key, config):
+                    # Update task status to 'Queued'
+                    cursor.execute("""
+                        UPDATE tasks 
+                        SET status = 'Queued', updated_at = NOW()
+                        WHERE task_id = %s
+                    """, (task_id,))
+                    conn.commit()
+                    logging.info(f"Task {task_id} marked as queued")
+                else:
+                    logging.error(f"Failed to queue task {task_id}")
+                    
+    except Exception as e:
+        logging.error(f"Error processing pending tasks: {str(e)}")
+    finally:
+        conn.close()
+
+def poll_s3_events():
+    """Poll for S3 upload events and create transcription tasks."""
+    sqs = boto3.client('sqs', region_name=REGION_NAME)
+    queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue"
+    
+    while True:
+        try:
+            logger.debug("Polling SQS queue for messages...")
+            response = sqs.receive_message(
+                QueueUrl=queue_url,
+                MaxNumberOfMessages=10,
+                WaitTimeSeconds=20
+            )
+            
+            if 'Messages' in response:
+                logger.info(f"Received {len(response['Messages'])} messages")
+                
+                for message in response['Messages']:
+                    try:
+                        event = json.loads(message['Body'])
+                        
+                        for record in event.get('Records', []):
+                            if record.get('eventName', '').startswith('ObjectCreated:'):
+                                bucket = record['s3']['bucket']['name']
+                                encoded_key = record['s3']['object']['key']
+                                
+                                # Fix double encoding
+                                key = double_decode_key(encoded_key)
+                                logger.info(f"Processing S3 event - Bucket: {bucket}, Key: {key}")
+                                
+                                # Create task with decoded key
+                                task_id = str(uuid.uuid4())
+                                conn = get_db_connection()
+                                try:
+                                    with conn.cursor() as cursor:
+                                        cursor.execute("""
+                                            INSERT INTO tasks (task_id, object_key, status)
+                                            VALUES (%s, %s, 'Pending')
+                                        """, (task_id, key))
+                                        conn.commit()
+                                        logger.info(f"Created task {task_id} for file {key}")
+                                finally:
+                                    conn.close()
+                        
+                        # Delete the processed message
+                        sqs.delete_message(
+                            QueueUrl=queue_url,
+                            ReceiptHandle=message['ReceiptHandle']
+                        )
+                        logger.info(f"Deleted message {message['MessageId']}")
+                        
+                    except Exception as e:
+                        logger.error(f"Error processing message: {e}", exc_info=True)
+            else:
+                logger.debug("No messages received")
+                
+        except Exception as e:
+            logger.error(f"Error polling queue: {e}", exc_info=True)
+        
+        time.sleep(1)
+
 
 def poll_status_update_queue():
     """Poll the SQS Status Update Queue for status updates."""
@@ -232,40 +383,48 @@ def get_task():
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            # Fetch the first pending task from the database
+            # Get a pending task
             cursor.execute("""
                 SELECT task_id, object_key FROM tasks WHERE status = %s LIMIT 1
             """, ('Pending',))
             task = cursor.fetchone()
 
             if not task:
-                return jsonify({'message': 'No tasks available'}), 204  # No Content
+                return jsonify({'message': 'No tasks available'}), 204
 
             task_id, object_key = task
-            decoded_object_key = unquote(object_key)
+
+            # Always fully URL encode the object key
+            # DO NOT preserve slashes or any other characters
+            fully_encoded_key = requests.utils.quote(object_key, safe='')
+            logging.info(f"Original key: {object_key}")
+            logging.info(f"Fully encoded key: {fully_encoded_key}")
 
             try:
-                # Generate pre-signed URLs using the input and output buckets
+                # Generate pre-signed URLs using the fully encoded key
                 presigned_get_url = s3.generate_presigned_url(
                     'get_object',
-                    Params={'Bucket': INPUT_BUCKET, 'Key': decoded_object_key},
-                    ExpiresIn=PRESIGNED_URL_EXPIRATION
-                )
-                presigned_put_url = s3.generate_presigned_url(
-                    'put_object',
-                    Params={'Bucket': OUTPUT_BUCKET, 'Key': f"transcriptions/{decoded_object_key}.txt"},
+                    Params={'Bucket': INPUT_BUCKET, 'Key': fully_encoded_key},
                     ExpiresIn=PRESIGNED_URL_EXPIRATION
                 )
 
-                # Include the task_id in the task response
+                # Use the same encoding for output path
+                output_key = f"transcriptions/{fully_encoded_key}.txt"
+                presigned_put_url = s3.generate_presigned_url(
+                    'put_object',
+                    Params={'Bucket': OUTPUT_BUCKET, 'Key': output_key},
+                    ExpiresIn=PRESIGNED_URL_EXPIRATION
+                )
+
+                # Send the fully encoded values to the worker
                 task_response = {
-                    'task_id': str(task_id),  # Include the task_id
-                    'object_key': object_key,
+                    'task_id': str(task_id),
+                    'object_key': fully_encoded_key,  # Send encoded version
                     'presigned_get_url': presigned_get_url,
                     'presigned_put_url': presigned_put_url
                 }
 
-                # Update the task status to 'In-progress'
+                # Update task status
                 cursor.execute("""
                     UPDATE tasks SET status = %s, updated_at = NOW() WHERE task_id = %s
                 """, ('In-progress', task_id))
@@ -275,10 +434,11 @@ def get_task():
 
             except ClientError as e:
                 logging.error(f"Error generating pre-signed URLs: {e}")
-                return jsonify({'error': 'Server error generating pre-signed URLs'}), 500
+                return jsonify({'error': f'AWS error: {str(e)}'}), 500
 
     except Exception as e:
-        logging.error(f"Error fetching task: {e}")
+        logging.error(f"Error in get-task: {str(e)}")
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
     finally:
         conn.close()
 
@@ -328,12 +488,24 @@ def update_task_status():
         return jsonify({'error': 'Internal server error'}), 500
 
 
-
 if __name__ == '__main__':
     try:
-        # Initialize the database and run the Flask app
+        # Initialize the database
         init_db()
+        logger.info("Database initialized successfully")
+
+        # Start the S3 event polling in a background thread
+        logger.info("Starting S3 event polling thread")
+        s3_event_thread = threading.Thread(target=poll_s3_events, daemon=True)
+        s3_event_thread.start()
+
+        # Start the Flask app
+        logger.info("Starting Flask application")
+        app.run(host='0.0.0.0', port=5000, threaded=True)
+
     except Exception as e:
-        logging.error(f"Database initialization failed: {e}", exc_info=True)
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+        logger.critical("Application failed to start: %s", str(e), exc_info=True)
+        raise
+
+
 

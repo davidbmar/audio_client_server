@@ -1,0 +1,1102 @@
+2024-10-26 23:37:25,980 - botocore.hooks - DEBUG - Changing event name from creating-client-class.iot-data to creating-client-class.iot-data-plane
+2024-10-26 23:37:25,982 - botocore.hooks - DEBUG - Changing event name from before-call.apigateway to before-call.api-gateway
+2024-10-26 23:37:25,983 - botocore.hooks - DEBUG - Changing event name from request-created.machinelearning.Predict to request-created.machine-learning.Predict
+2024-10-26 23:37:25,984 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.autoscaling.CreateLaunchConfiguration to before-parameter-build.auto-scaling.CreateLaunchConfiguration
+2024-10-26 23:37:25,984 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.route53 to before-parameter-build.route-53
+2024-10-26 23:37:25,985 - botocore.hooks - DEBUG - Changing event name from request-created.cloudsearchdomain.Search to request-created.cloudsearch-domain.Search
+2024-10-26 23:37:25,985 - botocore.hooks - DEBUG - Changing event name from docs.*.autoscaling.CreateLaunchConfiguration.complete-section to docs.*.auto-scaling.CreateLaunchConfiguration.complete-section
+2024-10-26 23:37:25,987 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.logs.CreateExportTask to before-parameter-build.cloudwatch-logs.CreateExportTask
+2024-10-26 23:37:25,988 - botocore.hooks - DEBUG - Changing event name from docs.*.logs.CreateExportTask.complete-section to docs.*.cloudwatch-logs.CreateExportTask.complete-section
+2024-10-26 23:37:25,988 - botocore.hooks - DEBUG - Changing event name from before-parameter-build.cloudsearchdomain.Search to before-parameter-build.cloudsearch-domain.Search
+2024-10-26 23:37:25,988 - botocore.hooks - DEBUG - Changing event name from docs.*.cloudsearchdomain.Search.complete-section to docs.*.cloudsearch-domain.Search.complete-section
+2024-10-26 23:37:25,991 - botocore.utils - DEBUG - IMDS ENDPOINT: http://169.254.169.254/
+2024-10-26 23:37:25,993 - botocore.credentials - DEBUG - Looking for credentials via: env
+2024-10-26 23:37:25,993 - botocore.credentials - DEBUG - Looking for credentials via: assume-role
+2024-10-26 23:37:25,993 - botocore.credentials - DEBUG - Looking for credentials via: assume-role-with-web-identity
+2024-10-26 23:37:25,993 - botocore.credentials - DEBUG - Looking for credentials via: sso
+2024-10-26 23:37:25,993 - botocore.credentials - DEBUG - Looking for credentials via: shared-credentials-file
+2024-10-26 23:37:25,993 - botocore.credentials - INFO - Found credentials in shared credentials file: ~/.aws/credentials
+2024-10-26 23:37:25,995 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/endpoints.json
+2024-10-26 23:37:26,034 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/sdk-default-configuration.json
+2024-10-26 23:37:26,034 - botocore.hooks - DEBUG - Event choose-service-name: calling handler <function handle_service_name_alias at 0xff855c9367a0>
+2024-10-26 23:37:26,046 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/sqs/2012-11-05/service-2.json.gz
+2024-10-26 23:37:26,058 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/sqs/2012-11-05/endpoint-rule-set-1.json.gz
+2024-10-26 23:37:26,059 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/partitions.json
+2024-10-26 23:37:26,060 - botocore.hooks - DEBUG - Event creating-client-class.sqs: calling handler <function add_generate_presigned_url at 0xff855b141510>
+2024-10-26 23:37:26,060 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: environment_service
+2024-10-26 23:37:26,060 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: environment_global
+2024-10-26 23:37:26,060 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: config_service
+2024-10-26 23:37:26,060 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: config_global
+2024-10-26 23:37:26,060 - botocore.configprovider - DEBUG - No configured endpoint found.
+2024-10-26 23:37:26,064 - botocore.endpoint - DEBUG - Setting sqs timeout as (60, 60)
+2024-10-26 23:37:26,065 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/_retry.json
+2024-10-26 23:37:26,065 - botocore.client - DEBUG - Registering retry handlers for service: sqs
+2024-10-26 23:37:26,066 - botocore.hooks - DEBUG - Event choose-service-name: calling handler <function handle_service_name_alias at 0xff855c9367a0>
+2024-10-26 23:37:26,072 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/s3/2006-03-01/service-2.json.gz
+2024-10-26 23:37:26,082 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/s3/2006-03-01/endpoint-rule-set-1.json.gz
+2024-10-26 23:37:26,090 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function add_generate_presigned_post at 0xff855b141750>
+2024-10-26 23:37:26,090 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function lazy_call.<locals>._handler at 0xff855cba7eb0>
+2024-10-26 23:37:26,104 - botocore.hooks - DEBUG - Event creating-client-class.s3: calling handler <function add_generate_presigned_url at 0xff855b141510>
+2024-10-26 23:37:26,104 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: environment_service
+2024-10-26 23:37:26,104 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: environment_global
+2024-10-26 23:37:26,104 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: config_service
+2024-10-26 23:37:26,104 - botocore.configprovider - DEBUG - Looking for endpoint for s3 via: config_global
+2024-10-26 23:37:26,104 - botocore.configprovider - DEBUG - No configured endpoint found.
+2024-10-26 23:37:26,106 - botocore.endpoint - DEBUG - Setting s3 timeout as (60, 60)
+2024-10-26 23:37:26,108 - botocore.client - DEBUG - Registering retry handlers for service: s3
+2024-10-26 23:37:26,108 - botocore.utils - DEBUG - Registering S3 region redirector handler
+2024-10-26 23:37:26,109 - botocore.utils - DEBUG - Registering S3Express Identity Resolver
+2024-10-26 23:37:26,109 - botocore.hooks - DEBUG - Event choose-service-name: calling handler <function handle_service_name_alias at 0xff855c9367a0>
+2024-10-26 23:37:26,110 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/secretsmanager/2017-10-17/service-2.json.gz
+2024-10-26 23:37:26,112 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/secretsmanager/2017-10-17/service-2.sdk-extras.json
+2024-10-26 23:37:26,112 - botocore.loaders - DEBUG - Loading JSON file: /home/ubuntu/.local/lib/python3.10/site-packages/botocore/data/secretsmanager/2017-10-17/endpoint-rule-set-1.json.gz
+2024-10-26 23:37:26,113 - botocore.hooks - DEBUG - Event creating-client-class.secrets-manager: calling handler <function add_generate_presigned_url at 0xff855b141510>
+2024-10-26 23:37:26,113 - botocore.configprovider - DEBUG - Looking for endpoint for secretsmanager via: environment_service
+2024-10-26 23:37:26,113 - botocore.configprovider - DEBUG - Looking for endpoint for secretsmanager via: environment_global
+2024-10-26 23:37:26,113 - botocore.configprovider - DEBUG - Looking for endpoint for secretsmanager via: config_service
+2024-10-26 23:37:26,113 - botocore.configprovider - DEBUG - Looking for endpoint for secretsmanager via: config_global
+2024-10-26 23:37:26,113 - botocore.configprovider - DEBUG - No configured endpoint found.
+2024-10-26 23:37:26,116 - botocore.endpoint - DEBUG - Setting secretsmanager timeout as (60, 60)
+2024-10-26 23:37:26,117 - botocore.client - DEBUG - Registering retry handlers for service: secretsmanager
+2024-10-26 23:37:26,117 - botocore.hooks - DEBUG - Event before-parameter-build.secrets-manager.GetSecretValue: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:26,118 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:26,118 - botocore.regions - DEBUG - Endpoint provider result: https://secretsmanager.us-east-2.amazonaws.com
+2024-10-26 23:37:26,119 - botocore.hooks - DEBUG - Event before-call.secrets-manager.GetSecretValue: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:26,119 - botocore.hooks - DEBUG - Event before-call.secrets-manager.GetSecretValue: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:26,119 - botocore.endpoint - DEBUG - Making request for OperationModel(name=GetSecretValue) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'secretsmanager.GetSecretValue', 'Content-Type': 'application/x-amz-json-1.1', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"SecretId": "/DEV/audioClientServer/Orchestrator/v2"}', 'url': 'https://secretsmanager.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff855934a4d0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:26,119 - botocore.hooks - DEBUG - Event request-created.secrets-manager.GetSecretValue: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff855934a440>>
+2024-10-26 23:37:26,119 - botocore.hooks - DEBUG - Event choose-signer.secrets-manager.GetSecretValue: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:26,120 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:26,120 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.1
+host:secretsmanager.us-east-2.amazonaws.com
+x-amz-date:20241026T233726Z
+x-amz-target:secretsmanager.GetSecretValue
+
+content-type;host;x-amz-date;x-amz-target
+8c10e5abcb1d29ed0be4c807594b9f046653e1ec556910cc5c7cb382638dce43
+2024-10-26 23:37:26,120 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233726Z
+20241026/us-east-2/secretsmanager/aws4_request
+d3eeddffab3bce7bdb0057cc7f3bcabe022433676d62fb1af739f5dd73fe8466
+2024-10-26 23:37:26,120 - botocore.auth - DEBUG - Signature:
+6d7eeea2c79e81c63eb4a8cec904220e133c4d8016918017a5cbda5f34faab51
+2024-10-26 23:37:26,120 - botocore.hooks - DEBUG - Event request-created.secrets-manager.GetSecretValue: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:26,120 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://secretsmanager.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'secretsmanager.GetSecretValue', 'Content-Type': b'application/x-amz-json-1.1', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233726Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/secretsmanager/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=6d7eeea2c79e81c63eb4a8cec904220e133c4d8016918017a5cbda5f34faab51', 'amz-sdk-invocation-id': b'05908691-ec82-4b1f-9c22-ad93fa5f1403', 'amz-sdk-request': b'attempt=1', 'Content-Length': '54'}>
+2024-10-26 23:37:26,121 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:26,121 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): secretsmanager.us-east-2.amazonaws.com:443
+2024-10-26 23:37:26,243 - urllib3.connectionpool - DEBUG - https://secretsmanager.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 969
+2024-10-26 23:37:26,244 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '8a182c16-3dce-48c5-a253-585fa2010974', 'Content-Type': 'application/x-amz-json-1.1', 'Content-Length': '969', 'Date': 'Sat, 26 Oct 2024 23:37:25 GMT'}
+2024-10-26 23:37:26,244 - botocore.parsers - DEBUG - Response body:
+b'{"ARN":"arn:aws:secretsmanager:us-east-2:635071011057:secret:/DEV/audioClientServer/Orchestrator/v2-nGVVAz","CreatedDate":1.729984926217E9,"Name":"/DEV/audioClientServer/Orchestrator/v2","SecretString":"{\\"db_host\\": \\"terraform-20241016044926222400000001.cny2uiqswlls.us-east-2.rds.amazonaws.com:5432\\", \\"db_name\\": \\"my_rds_db\\", \\"db_password\\": \\"mysecurepassword\\", \\"db_username\\": \\"dbm_db_admin\\", \\"input_bucket\\": \\"2024-09-23-audiotranscribe-input-bucket\\", \\"output_bucket\\": \\"2024-09-23-audiotranscribe-my-output-bucket\\", \\"status_update_queue_url\\": \\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-10-19-DEV-audioClientServer-orchestrator-statusQueue\\", \\"task_queue_url\\": \\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\", \\"api_token\\": \\"274c639a03f020b62d6376754772a42c9f5b5b772e5fbec1e93be09914c1f26b\\"}","VersionId":"af06b663-c0c5-4416-83a3-bdfd87f46e14","VersionStages":["AWSCURRENT"]}'
+2024-10-26 23:37:26,244 - botocore.hooks - DEBUG - Event needs-retry.secrets-manager.GetSecretValue: calling handler <botocore.retryhandler.RetryHandler object at 0xff855934b9a0>
+2024-10-26 23:37:26,244 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:26,245 - root - INFO - Polling SQS Status Update Queue for messages...
+2024-10-26 23:37:26,248 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:26,249 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:26,249 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:26,249 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:26,249 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:26,250 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-10-19-DEV-audioClientServer-orchestrator-statusQueue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff855a069900>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:26,250 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff855a0697b0>>
+2024-10-26 23:37:26,250 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:26,251 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:26,251 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233726Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+56fe67b5c883b69f3a915dead6b4fa91ac07074042bdee4a6c20744655daa1e6
+2024-10-26 23:37:26,251 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233726Z
+20241026/us-east-2/sqs/aws4_request
+cf244e474bc78cb0486e4765c53c5fe1e61d4ed9291ab45330b307588e8ab84c
+2024-10-26 23:37:26,251 - botocore.auth - DEBUG - Signature:
+6f50c82470f7c0b649b4e018aa126554d1bcc807ba16c627f78992c5d4604c1b
+2024-10-26 23:37:26,251 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:26,251 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233726Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=6f50c82470f7c0b649b4e018aa126554d1bcc807ba16c627f78992c5d4604c1b', 'amz-sdk-invocation-id': b'cceea95d-cace-4d85-b07e-48d1b1ca68f6', 'amz-sdk-request': b'attempt=1', 'Content-Length': '172'}>
+2024-10-26 23:37:26,252 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:26,252 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): sqs.us-east-2.amazonaws.com:443
+2024-10-26 23:37:26,275 - __main__ - INFO - Database initialized successfully
+2024-10-26 23:37:26,275 - __main__ - INFO - Starting S3 event polling thread
+2024-10-26 23:37:26,276 - botocore.hooks - DEBUG - Event choose-service-name: calling handler <function handle_service_name_alias at 0xff855c9367a0>
+2024-10-26 23:37:26,276 - botocore.hooks - DEBUG - Event creating-client-class.sqs: calling handler <function add_generate_presigned_url at 0xff855b141510>
+2024-10-26 23:37:26,277 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: environment_service
+2024-10-26 23:37:26,277 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: environment_global
+2024-10-26 23:37:26,277 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: config_service
+2024-10-26 23:37:26,277 - botocore.configprovider - DEBUG - Looking for endpoint for sqs via: config_global
+2024-10-26 23:37:26,277 - botocore.configprovider - DEBUG - No configured endpoint found.
+2024-10-26 23:37:26,278 - botocore.endpoint - DEBUG - Setting sqs timeout as (60, 60)
+2024-10-26 23:37:26,278 - __main__ - INFO - Starting Flask application
+2024-10-26 23:37:26,279 - werkzeug - WARNING -  * Running on all addresses.
+   WARNING: This is a development server. Do not use it in a production deployment.
+2024-10-26 23:37:26,279 - werkzeug - INFO -  * Running on http://172.31.8.203:5000/ (Press CTRL+C to quit)
+2024-10-26 23:37:26,281 - botocore.client - DEBUG - Registering retry handlers for service: sqs
+2024-10-26 23:37:26,281 - __main__ - INFO - Starting S3 event polling with queue URL: https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue
+2024-10-26 23:37:26,281 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:26,281 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:26,282 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:26,282 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:26,282 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:26,282 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:26,282 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:26,283 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:26,283 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:26,283 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:26,283 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233726Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:26,284 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233726Z
+20241026/us-east-2/sqs/aws4_request
+27f348dfacb82f5245c8348239b375c91e812709d73171bfa1704635fe99ebdc
+2024-10-26 23:37:26,284 - botocore.auth - DEBUG - Signature:
+90b6ee435d34a7605485965efe64ff22b7c22bb413e1864bc2d07931a9388338
+2024-10-26 23:37:26,284 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:26,284 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233726Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=90b6ee435d34a7605485965efe64ff22b7c22bb413e1864bc2d07931a9388338', 'amz-sdk-invocation-id': b'c96c9e1c-3b42-4827-9ea4-928e7f3c218a', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:26,285 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:26,285 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): sqs.us-east-2.amazonaws.com:443
+2024-10-26 23:37:26,407 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 3242
+2024-10-26 23:37:26,407 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '468abda5-4b9a-5256-89c9-e23234ec4bee', 'Date': 'Sat, 26 Oct 2024 23:37:26 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '3242', 'connection': 'keep-alive'}
+2024-10-26 23:37:26,407 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:52:38.070Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"RZAYDH7E18SEJMY5\\",\\"x-amz-id-2\\":\\"NWvOIZUFSNe9q0YMVYCAxqqxt44iMHApujnOdepo6vk+uN1mp63dgesx6r4BKhAdVNF7HMjx2UaO0diRzGEQDvTKwnxWmUkGpbUkYrE+PVk=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-52-37-908366.mp3\\",\\"size\\":78226,\\"eTag\\":\\"3b6f1c1c33fe7bbaab8a96aeb8b9adeb\\",\\"sequencer\\":\\"00671D72B60E4FE666\\"}}}]}","MD5OfBody":"06286513a06e3a293f843cde81550113","MessageId":"5f53c6c1-5d2f-4adb-a528-d97f43dbb24a","ReceiptHandle":"AQEBfQY8U82YtFFPuL9uC0CZLw5FvLsSqX1kMjhozB2oiyWrTmW+a0Ru/CYoswov6v1sIx7fD0ERAol2it7m1su7tnQJW/GdMVSvElqXZxVNsphobsa6wZmgjmfdMvPF36mLKF239zi/yZBPs42kRjI3NaNxapU2056yif/WmHO+GxaenQSE9LdMFnvxqaRhTXKTQnQ1KzjfLAPz6VLmYY3LrDtWw5jSQ4+cw3suFAGCcGVHlHl9QpzX49flQaikPjLBu0vf6N5Bos1D2ArtE19rRr1cik7G7LH99ZvI1ZZHEpZ03X0DdymJH6bSFTvn4mTMvO0M1csoR8t7Rt8MVpN3IjyhiJmNrqF3a1F7bGpU+sllB9BRC4RZS0XBLaG2SiX48fZi1x7AjAvWfEXyVuRyO2saFUUGYxfpbnqGJkVU1hQdK45oaG5IomqxWjKajHMx"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:52:40.436Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"E11PZCH61XV6BPYM\\",\\"x-amz-id-2\\":\\"1SG7+4UbPjAR/Oa2dNw2tarjI8nJ6Yc+XhmJ0G8B4Ku4VqucOdI4MONGbqzrK6MMfgT1H6QNu2QqUNVc8OA/4TDGzMsSluF9/E2NSS3rG5c=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-52-40-316762.mp3\\",\\"size\\":36134,\\"eTag\\":\\"fa4fe0066b541e1aaa6c5823ab26a072\\",\\"sequencer\\":\\"00671D72B86A7DE42A\\"}}}]}","MD5OfBody":"63393492f5215d8681f4121e9a8f06cb","MessageId":"88c43932-f1b0-4582-b89d-aa870f64f6d0","ReceiptHandle":"AQEBsnaiby1gtFsxW4UxFvB6aLhHkX45dWI6LAyOsvol+XFw19ZrdxTI5T4wCwyKIJgOF1HL7TeF7leVNyYpL/3KYzJczewG6tAvqpdYhq0fcrd21bcQM1Ka3s0rdtgiAhFUy6Eh+3ZlzWxZ8lb/m9ZjTMAflme67H1PSS/0NoJKHf7G0XV6rrqppS3O4wuDwsqf2tsa6OEBEV4MiQ/fL6nXhQtis8K0EuAARxu9yqviRY8Pw6pdi0vliCkoC/p+uqOr84QyKD+xYI/gGL2+3oXZbNC5u85K3M3tnwchtfXIw9nqpygwIdeukzu8T4sAMGTx9UNcNVq0DM/QwttuctP1uhhKBBQe2Wfuber84MlOYJo2a0n4kv7s8LKB34A6VRQigyTRSyIwpbsv6OlygKuKWxtO1mSWgPnNu++T2/cwVNAAo3pJIFJuLlbkX7kTIpY9"}]}'
+2024-10-26 23:37:26,408 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:26,408 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:26,408 - __main__ - INFO - Received 2 messages
+2024-10-26 23:37:26,408 - __main__ - INFO - Processing message: 5f53c6c1-5d2f-4adb-a528-d97f43dbb24a
+2024-10-26 23:37:26,408 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:52:38.070Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"RZAYDH7E18SEJMY5","x-amz-id-2":"NWvOIZUFSNe9q0YMVYCAxqqxt44iMHApujnOdepo6vk+uN1mp63dgesx6r4BKhAdVNF7HMjx2UaO0diRzGEQDvTKwnxWmUkGpbUkYrE+PVk="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-52-37-908366.mp3","size":78226,"eTag":"3b6f1c1c33fe7bbaab8a96aeb8b9adeb","sequencer":"00671D72B60E4FE666"}}}]}
+2024-10-26 23:37:26,408 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-52-37-908366.mp3
+2024-10-26 23:37:26,424 - __main__ - INFO - Created task 302835bf-405b-4860-beb4-a276bcdfe9a4 for file google-oauth2%257C102874856824150216748/2024-10-26-17-52-37-908366.mp3
+2024-10-26 23:37:26,425 - __main__ - INFO - Deleting message 5f53c6c1-5d2f-4adb-a528-d97f43dbb24a
+2024-10-26 23:37:26,425 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:26,425 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:26,425 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:26,426 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:26,426 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:26,426 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBfQY8U82YtFFPuL9uC0CZLw5FvLsSqX1kMjhozB2oiyWrTmW+a0Ru/CYoswov6v1sIx7fD0ERAol2it7m1su7tnQJW/GdMVSvElqXZxVNsphobsa6wZmgjmfdMvPF36mLKF239zi/yZBPs42kRjI3NaNxapU2056yif/WmHO+GxaenQSE9LdMFnvxqaRhTXKTQnQ1KzjfLAPz6VLmYY3LrDtWw5jSQ4+cw3suFAGCcGVHlHl9QpzX49flQaikPjLBu0vf6N5Bos1D2ArtE19rRr1cik7G7LH99ZvI1ZZHEpZ03X0DdymJH6bSFTvn4mTMvO0M1csoR8t7Rt8MVpN3IjyhiJmNrqF3a1F7bGpU+sllB9BRC4RZS0XBLaG2SiX48fZi1x7AjAvWfEXyVuRyO2saFUUGYxfpbnqGJkVU1hQdK45oaG5IomqxWjKajHMx"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:26,426 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:26,426 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:26,427 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:26,427 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233726Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+4d2f9371c0533420c54781c04a65f2d81be82b64467955ce8b1778e5e719e321
+2024-10-26 23:37:26,427 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233726Z
+20241026/us-east-2/sqs/aws4_request
+ae28a0fa5ad2966990f116bb4951238472abf41f1028f5071d88063caa118038
+2024-10-26 23:37:26,427 - botocore.auth - DEBUG - Signature:
+fcca2b8a8d352be5beac7174efcd0afcf448e4c632a3dbc8a8eaa986a3b2734d
+2024-10-26 23:37:26,427 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:26,427 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233726Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=fcca2b8a8d352be5beac7174efcd0afcf448e4c632a3dbc8a8eaa986a3b2734d', 'amz-sdk-invocation-id': b'405acf76-adfc-4eab-8ad0-e067be1a9b71', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:26,427 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:26,434 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:26,434 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '99345e2a-8ff1-5710-9b5f-01bdf087cea8', 'Date': 'Sat, 26 Oct 2024 23:37:26 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:26,434 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:26,434 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:26,434 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:26,435 - __main__ - INFO - Processing message: 88c43932-f1b0-4582-b89d-aa870f64f6d0
+2024-10-26 23:37:26,435 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:52:40.436Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"E11PZCH61XV6BPYM","x-amz-id-2":"1SG7+4UbPjAR/Oa2dNw2tarjI8nJ6Yc+XhmJ0G8B4Ku4VqucOdI4MONGbqzrK6MMfgT1H6QNu2QqUNVc8OA/4TDGzMsSluF9/E2NSS3rG5c="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-52-40-316762.mp3","size":36134,"eTag":"fa4fe0066b541e1aaa6c5823ab26a072","sequencer":"00671D72B86A7DE42A"}}}]}
+2024-10-26 23:37:26,435 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-52-40-316762.mp3
+2024-10-26 23:37:26,448 - __main__ - INFO - Created task f566f82a-8642-4b55-9e0e-e19355d1a7f1 for file google-oauth2%257C102874856824150216748/2024-10-26-17-52-40-316762.mp3
+2024-10-26 23:37:26,448 - __main__ - INFO - Deleting message 88c43932-f1b0-4582-b89d-aa870f64f6d0
+2024-10-26 23:37:26,448 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:26,448 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:26,448 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:26,449 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:26,449 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:26,449 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBsnaiby1gtFsxW4UxFvB6aLhHkX45dWI6LAyOsvol+XFw19ZrdxTI5T4wCwyKIJgOF1HL7TeF7leVNyYpL/3KYzJczewG6tAvqpdYhq0fcrd21bcQM1Ka3s0rdtgiAhFUy6Eh+3ZlzWxZ8lb/m9ZjTMAflme67H1PSS/0NoJKHf7G0XV6rrqppS3O4wuDwsqf2tsa6OEBEV4MiQ/fL6nXhQtis8K0EuAARxu9yqviRY8Pw6pdi0vliCkoC/p+uqOr84QyKD+xYI/gGL2+3oXZbNC5u85K3M3tnwchtfXIw9nqpygwIdeukzu8T4sAMGTx9UNcNVq0DM/QwttuctP1uhhKBBQe2Wfuber84MlOYJo2a0n4kv7s8LKB34A6VRQigyTRSyIwpbsv6OlygKuKWxtO1mSWgPnNu++T2/cwVNAAo3pJIFJuLlbkX7kTIpY9"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:26,449 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:26,449 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:26,449 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:26,449 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233726Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+709f8cd4966e095a3da9377f7c3050563e8d728f50463912e2e2d8709e1ec4f8
+2024-10-26 23:37:26,450 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233726Z
+20241026/us-east-2/sqs/aws4_request
+2cb3dd8b7f90103b437ccda879df80acedd17d6110a9803cd666b1334773be83
+2024-10-26 23:37:26,450 - botocore.auth - DEBUG - Signature:
+5fc7e9b7754cafba25b51201ebe18a8e71dd061cc45f67b87d229eb344fc149c
+2024-10-26 23:37:26,450 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:26,450 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233726Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=5fc7e9b7754cafba25b51201ebe18a8e71dd061cc45f67b87d229eb344fc149c', 'amz-sdk-invocation-id': b'42c510bf-3055-4ad7-8c93-f86697fe3361', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:26,450 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:26,458 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:26,458 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'bee14d4e-8f79-56ef-8707-12d9f00f4f57', 'Date': 'Sat, 26 Oct 2024 23:37:26 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:26,458 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:26,458 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:26,458 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:27,460 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:27,460 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:27,460 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:27,460 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:27,460 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:27,460 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:27,460 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:27,461 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:27,461 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:27,461 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:27,461 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233727Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:27,461 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233727Z
+20241026/us-east-2/sqs/aws4_request
+eeb46f43451c27e9af665018d465f86e729521921c86787a845a81801aeacb22
+2024-10-26 23:37:27,461 - botocore.auth - DEBUG - Signature:
+33e280d31e4b548edc5e31e931f297cc2a0e06176721915505e1a3240537f9a9
+2024-10-26 23:37:27,461 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:27,461 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233727Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=33e280d31e4b548edc5e31e931f297cc2a0e06176721915505e1a3240537f9a9', 'amz-sdk-invocation-id': b'cf3e5461-6050-4bba-b2f3-6b4bcd447920', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:27,462 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:27,492 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 1620
+2024-10-26 23:37:27,492 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '776ac298-b6b8-55c7-b7c9-9d0fc9cf6c7f', 'Date': 'Sat, 26 Oct 2024 23:37:27 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '1620', 'connection': 'keep-alive'}
+2024-10-26 23:37:27,493 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:28:35.947Z\\",\\"eventName\\":\\"ObjectCreated:Copy\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"3.137.2.81\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"Z8TD2V98B33DXYHQ\\",\\"x-amz-id-2\\":\\"y0EWT1VbKLag8fWgeDA739rWzmzA8yF+MOO23EqJV4m6pytXQEoGcYTzEyV/5AbYSdVnmSbHpPZnKldBUJFSy0ZcOptT3nQI\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-59-192720.mp3\\",\\"size\\":77945,\\"eTag\\":\\"c14a69895b0f1fa4c6a17ecf4fe42190\\",\\"sequencer\\":\\"00671D6D13DBA2972C\\"}}}]}","MD5OfBody":"9b560b9f9939aae37ddec3cb6cdb4773","MessageId":"b9b7cec6-b520-424f-887a-c2c5fa6b0fd8","ReceiptHandle":"AQEB0zVU9AEIZFr0hoFmTu9cpS7FFyOrgQd91iL34PfD82U5df5jYXn6I9HDn4+LITW/BsSlkSEULE+nRz4etd+csEtEfD7+GUidLPv/LL+1bMSS86Y9qtdUFHntVOD00I7tmBCOpq32LVX5eAcBYgnOciMsZJtnizGaK7ebLyQPDtv670V9p3O4MtGNQR9hSYql8QxhOs1kG9lKEEbarpM/G9EpirgPFb4i/p9tTeNCRMcQESpMyusOhb6BhFi6BAwbn4kcQeb5bza2fkwBP04xiPnIHxiTkOdUD3u5m8te6iY7OCuhRTNDZMenyUVRYjohrB+RffFghGc2QejLizGt3x86IliSqI6ND6AgNpLwDbmQFRDvw9m794IbpAe5gNHbtsyVu4QCMgiywzHkR8bKyu8oE7ATR8zyDqNtD5b7JzQ5C/eO02Bb06I3odT4aHcL"}]}'
+2024-10-26 23:37:27,493 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:27,493 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:27,493 - __main__ - INFO - Received 1 messages
+2024-10-26 23:37:27,493 - __main__ - INFO - Processing message: b9b7cec6-b520-424f-887a-c2c5fa6b0fd8
+2024-10-26 23:37:27,493 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:28:35.947Z","eventName":"ObjectCreated:Copy","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"3.137.2.81"},"responseElements":{"x-amz-request-id":"Z8TD2V98B33DXYHQ","x-amz-id-2":"y0EWT1VbKLag8fWgeDA739rWzmzA8yF+MOO23EqJV4m6pytXQEoGcYTzEyV/5AbYSdVnmSbHpPZnKldBUJFSy0ZcOptT3nQI"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-59-192720.mp3","size":77945,"eTag":"c14a69895b0f1fa4c6a17ecf4fe42190","sequencer":"00671D6D13DBA2972C"}}}]}
+2024-10-26 23:37:27,493 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-59-192720.mp3
+2024-10-26 23:37:27,508 - __main__ - INFO - Created task 8704da5d-6533-4e2f-a7bb-90d9a79e92f7 for file google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-59-192720.mp3
+2024-10-26 23:37:27,508 - __main__ - INFO - Deleting message b9b7cec6-b520-424f-887a-c2c5fa6b0fd8
+2024-10-26 23:37:27,508 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:27,509 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:27,509 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:27,509 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:27,509 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:27,509 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEB0zVU9AEIZFr0hoFmTu9cpS7FFyOrgQd91iL34PfD82U5df5jYXn6I9HDn4+LITW/BsSlkSEULE+nRz4etd+csEtEfD7+GUidLPv/LL+1bMSS86Y9qtdUFHntVOD00I7tmBCOpq32LVX5eAcBYgnOciMsZJtnizGaK7ebLyQPDtv670V9p3O4MtGNQR9hSYql8QxhOs1kG9lKEEbarpM/G9EpirgPFb4i/p9tTeNCRMcQESpMyusOhb6BhFi6BAwbn4kcQeb5bza2fkwBP04xiPnIHxiTkOdUD3u5m8te6iY7OCuhRTNDZMenyUVRYjohrB+RffFghGc2QejLizGt3x86IliSqI6ND6AgNpLwDbmQFRDvw9m794IbpAe5gNHbtsyVu4QCMgiywzHkR8bKyu8oE7ATR8zyDqNtD5b7JzQ5C/eO02Bb06I3odT4aHcL"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:27,509 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:27,509 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:27,510 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:27,510 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233727Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+ce507aaa0894aaa0e293d75052ab2de822ec12ecd5d6dc28a239d73eb0dc936f
+2024-10-26 23:37:27,510 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233727Z
+20241026/us-east-2/sqs/aws4_request
+bb0b240975eebebc615b3e2df4ecd3494a6bd3e126560edf4b2b25039cfc1fe1
+2024-10-26 23:37:27,510 - botocore.auth - DEBUG - Signature:
+ff4022e2fab69c9ce52d600622e4ff9c023e901f9030bcd089437ab0c1ed2173
+2024-10-26 23:37:27,510 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:27,510 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233727Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=ff4022e2fab69c9ce52d600622e4ff9c023e901f9030bcd089437ab0c1ed2173', 'amz-sdk-invocation-id': b'1e6a027c-cc48-43f0-a52e-57d714f12dcf', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:27,510 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:27,514 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:27,514 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'bfb9e436-7819-527e-a1dd-bba1076ecbc6', 'Date': 'Sat, 26 Oct 2024 23:37:27 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:27,515 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:27,515 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:27,515 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:28,516 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:28,516 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:28,516 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:28,516 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:28,517 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:28,517 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:28,517 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:28,517 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:28,517 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:28,518 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:28,518 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233728Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:28,518 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233728Z
+20241026/us-east-2/sqs/aws4_request
+a2e329c572ab8775bd549909d221277dfa3705bc5e88061723a441f517e81f11
+2024-10-26 23:37:28,518 - botocore.auth - DEBUG - Signature:
+f7a74d491c77c4ad14ab18b7d7eff50fd9636ebdbffc6c68958749408181209f
+2024-10-26 23:37:28,518 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:28,518 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233728Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=f7a74d491c77c4ad14ab18b7d7eff50fd9636ebdbffc6c68958749408181209f', 'amz-sdk-invocation-id': b'24a3fde2-08d1-41cc-8280-cfa6ed2c8cc9', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:28,518 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:28,550 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 6422
+2024-10-26 23:37:28,550 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '89778eec-e615-5a64-8d46-d17b996d63dc', 'Date': 'Sat, 26 Oct 2024 23:37:28 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '6422', 'connection': 'keep-alive'}
+2024-10-26 23:37:28,550 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-24T04:55:55.982Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"XYD6KBJR8KP566FS\\",\\"x-amz-id-2\\":\\"bPwJIsF/iigFthwDvqSmfMPSWEy1iwb/iApgrM9tvAslkHkJ77kttsv0xMdGa9FrKooriahwM0jCyO/oiytebN0jAXt41t/7\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-23-23-55-55-586329.mp3\\",\\"size\\":77977,\\"eTag\\":\\"85ed9c04b1624128d64872cb998fa7ec\\",\\"sequencer\\":\\"006719D35BE6B4EE09\\"}}}]}","MD5OfBody":"ba503cfa40b67d7787925289d78ffa64","MessageId":"ae352c78-f377-4bac-9294-03851610ef63","ReceiptHandle":"AQEBrKukGcRHY2CI6vKm4XuMzcxhFaQWF/K8aoazhejr3oVAslT3fblaht2goJQWbhXlnBAaFqB7TSyNGER5DBcpGcFal8TbFDb4+S/9S+IkwASnqPdcrh8R3ZXkwn0vqNl88kelJyzb3lSsgroR0pjsqykosGQ7+V0LJFG+HftCtGuIMJpXvIYlVVdZmabVPJk+N3zteX8YU7/ZNI99bBt7sB27K/VeDQUpmfvXyTkdE9ujY6Qja6jKMWfIsokBzfdND2TDOOpala4yHm6tUq2HvqeyYFR4vZ06J+43wCpAlE/yiQm2rxDVeYAqgU0wl1Vh4m6oLWRkIEb9XvGMMJ4MWxW9O+89F1OfsOjh3gIo5HiXtfUlJR6JjytJI26BBSW5wjSz02ezs0HLPKbonnkyInZv+QAQFCJawcNCzIaeWzxzIuuJge3zVDhQAAc9hAmc"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-24T04:55:58.784Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"S09S7AA62PSR43M7\\",\\"x-amz-id-2\\":\\"TMecV2qDbp6nQJxU4rhSJPiXpWXckUtyXxnB3+IEv+ky446GuwhdONHn0YEgay5MrAolWTlr4NPYW9ROakWoNALtQcze19lT\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-23-23-55-58-654418.mp3\\",\\"size\\":42901,\\"eTag\\":\\"5748cce0260a0466a1f7d8721a0e99a4\\",\\"sequencer\\":\\"006719D35EBC5A9619\\"}}}]}","MD5OfBody":"e895bf0ccce158cb3f2f80d37819abef","MessageId":"ea21b57f-903d-444c-a703-d0ed030eb985","ReceiptHandle":"AQEBsFoN8VW2KH+EBCD6ssrt/0DurtlZpQ65rp6YpdjqP+lzhH1eRCUgKZmm4GV1g2SocE731FGJsGA16x062pY3CiWxBY2ao7W9KfeNTEIkx0ZnjR6bZYUPrO2lqDpQm0dySdc+eoxcpALB2S4RSVqi3xCRCLuazC6OuqVj5m2E0vfk6yWRNOPns+DoRiRVRtlo99S+4iHr5jdAtdJk5FqA80CM9HUuPbjPD6I7JO+bTA0Grbmj1j49KJjxb0YUOFK+UXZC6fF2Cdi1mF09jhUt9XquWel+G1TzN3eg3zr6wN8ws3zv0vVv2JQduw7OSRDJpIzjuV29oEUCdyaIbY+w8Ii+o9LognFV9R3JtKsWbLzW7apUljLVqEH4Wa7Trp3Hko9Gu6qCylGF/Ua+I0gFltFbDcz/ORIpf0e7DpU40QqHyF91o90ZToHtMH4W8Ujh"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:32:24.567Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"1Q859WFS4G7ZAEHG\\",\\"x-amz-id-2\\":\\"qgMaLDL265kvu9lUidDYt1MFQTGNuhc+RCV8iywts9J2hZy0k8jNlafDnVdLbqci9lwVBNK3+braxd79V1dJMGGm6rG78vFT\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-32-24-148321.mp3\\",\\"size\\":77143,\\"eTag\\":\\"3e0a3cec795f7507d9b16ab584e41c75\\",\\"sequencer\\":\\"00671D6DF886D47851\\"}}}]}","MD5OfBody":"eadb561ed47504b9544e2bb8edeaac44","MessageId":"8e175155-1693-4d39-9e1f-cc991d88ac94","ReceiptHandle":"AQEB6BOvElZgzOomzk+a3tRHu9L79nqfWj+/yLjkXKWL6NJRROocIR/7ER75JH6ntXvtNFybWZMS7K52tBk1FOcuZ/5t+D8Yaeq0/d+maT+OujhEm/yCiQBCbVAZM0vidNfHxL0ei1NrLBZ4pJPb/bylpM346PfStCQahbYgW7lGO1hxzS1MYA9je208DbGgA6IJVqjLFsYdTCrDdT7dnIs3NoAZtY86xQ6AyNOIdvoWFuj3JqBWKLKzOpgGRB+G/iscFUa+SIBfRL/1CTAKipgsjDT4DaNAPXdeVrTjx63LXV0DOhSkXJEuOU28AfMBwtdGVsAMHo+iXrq5caf6I6otagP4quhflhewWluF4GACxocOwDMfm5bQ8nnOhF2AnVW5Rkv/3egkedGOpbfqFf22sAkHgy7V3tW756Ej5e70HWYWqhzimbcGmtHqk5uUYTl0"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:32:30.826Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"BZDYTBG28A9K5GVA\\",\\"x-amz-id-2\\":\\"bk08iWu/CI32QpAT2NXMv/gvzuTrT+BUEM55BHsXP+oJsDIBCO2dYPwbFL2lyNmIHJsxOG5n2Szw7O3mDHhHIJ1POY40mSXv\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-32-30-626867.mp3\\",\\"size\\":17655,\\"eTag\\":\\"c3c35d5df8efbfa471b37a38445371fb\\",\\"sequencer\\":\\"00671D6DFECB4BD54D\\"}}}]}","MD5OfBody":"35ba3271236c2e00b9199fe24db2734a","MessageId":"26db0530-0b00-4384-b6ab-9681f8f22ece","ReceiptHandle":"AQEBsex6l3/REyXqn0w+/RhPLFTD70fNlAinK57s1x8yX/GEJlVJkzGO5Yr92+N/opiZcfvwXlUdU588bjyTNQxiCfor68nIblsmfQORJIy8Q+9imPEtZTEDpWtsWIUW5DlVj1CAlPDfSqBbYB7DOFQ0wTY7FxhyKVfPOzsrV1f8Pnx2iHd5XSrB8TSnIDM8aF9FPoIdN+pGLddqyZAAZXD7DJu8Fq6IH3cDWI3i1yrTA6AQKc4K5QjqDDb2URdVteZP59vmXzra6LrsRegmOiGJyFQnFdKHHj5Vmk9aqsSoBAitCebkoYSUrFrIoEAJDfGLFDrdXs63tQiHscskOEs3tXiIhhApm9aTPa01OsViQ3dmC/fhslbaRBXHB/ch3LVE9PL5PlcG8Zsw/+0IuxIrwh6DKnZYxnbaNb1pUaqoJmIzJ0/Tm+J7Iaas/UAmzyVg"}]}'
+2024-10-26 23:37:28,550 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:28,551 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:28,551 - __main__ - INFO - Received 4 messages
+2024-10-26 23:37:28,551 - __main__ - INFO - Processing message: ae352c78-f377-4bac-9294-03851610ef63
+2024-10-26 23:37:28,551 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-24T04:55:55.982Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"XYD6KBJR8KP566FS","x-amz-id-2":"bPwJIsF/iigFthwDvqSmfMPSWEy1iwb/iApgrM9tvAslkHkJ77kttsv0xMdGa9FrKooriahwM0jCyO/oiytebN0jAXt41t/7"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-23-23-55-55-586329.mp3","size":77977,"eTag":"85ed9c04b1624128d64872cb998fa7ec","sequencer":"006719D35BE6B4EE09"}}}]}
+2024-10-26 23:37:28,551 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-23-23-55-55-586329.mp3
+2024-10-26 23:37:28,564 - __main__ - INFO - Created task 8e769ab7-bed0-4f5f-8a40-d8c60ba3cdd3 for file google-oauth2%257C102874856824150216748/2024-10-23-23-55-55-586329.mp3
+2024-10-26 23:37:28,565 - __main__ - INFO - Deleting message ae352c78-f377-4bac-9294-03851610ef63
+2024-10-26 23:37:28,565 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:28,565 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:28,565 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:28,565 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:28,565 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:28,565 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBrKukGcRHY2CI6vKm4XuMzcxhFaQWF/K8aoazhejr3oVAslT3fblaht2goJQWbhXlnBAaFqB7TSyNGER5DBcpGcFal8TbFDb4+S/9S+IkwASnqPdcrh8R3ZXkwn0vqNl88kelJyzb3lSsgroR0pjsqykosGQ7+V0LJFG+HftCtGuIMJpXvIYlVVdZmabVPJk+N3zteX8YU7/ZNI99bBt7sB27K/VeDQUpmfvXyTkdE9ujY6Qja6jKMWfIsokBzfdND2TDOOpala4yHm6tUq2HvqeyYFR4vZ06J+43wCpAlE/yiQm2rxDVeYAqgU0wl1Vh4m6oLWRkIEb9XvGMMJ4MWxW9O+89F1OfsOjh3gIo5HiXtfUlJR6JjytJI26BBSW5wjSz02ezs0HLPKbonnkyInZv+QAQFCJawcNCzIaeWzxzIuuJge3zVDhQAAc9hAmc"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:28,565 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:28,566 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:28,566 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:28,566 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233728Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+ac84973b6d2244795b15789dbf3b1150c8bc8b6be1f74fb92842e24cb6435aa4
+2024-10-26 23:37:28,566 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233728Z
+20241026/us-east-2/sqs/aws4_request
+0fba1f3c88f50a8696938e643206b267cc7a87e453bf8b60a5ac48cf961ccfa6
+2024-10-26 23:37:28,566 - botocore.auth - DEBUG - Signature:
+7b8535f847e4015a2b8c7b80a5969cc755ff19989cfc2ff287bf6530b0eab9b4
+2024-10-26 23:37:28,566 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:28,566 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233728Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=7b8535f847e4015a2b8c7b80a5969cc755ff19989cfc2ff287bf6530b0eab9b4', 'amz-sdk-invocation-id': b'492e3537-2aec-4913-afaf-c5139a66b416', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:28,567 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:28,571 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:28,571 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '54e80aad-bb08-5f86-bcc7-553ac470863e', 'Date': 'Sat, 26 Oct 2024 23:37:28 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:28,571 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:28,571 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:28,571 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:28,571 - __main__ - INFO - Processing message: ea21b57f-903d-444c-a703-d0ed030eb985
+2024-10-26 23:37:28,571 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-24T04:55:58.784Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"S09S7AA62PSR43M7","x-amz-id-2":"TMecV2qDbp6nQJxU4rhSJPiXpWXckUtyXxnB3+IEv+ky446GuwhdONHn0YEgay5MrAolWTlr4NPYW9ROakWoNALtQcze19lT"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-23-23-55-58-654418.mp3","size":42901,"eTag":"5748cce0260a0466a1f7d8721a0e99a4","sequencer":"006719D35EBC5A9619"}}}]}
+2024-10-26 23:37:28,571 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-23-23-55-58-654418.mp3
+2024-10-26 23:37:28,584 - __main__ - INFO - Created task dc8a8a9b-a5f4-4c25-8b64-78b8d1a66207 for file google-oauth2%257C102874856824150216748/2024-10-23-23-55-58-654418.mp3
+2024-10-26 23:37:28,585 - __main__ - INFO - Deleting message ea21b57f-903d-444c-a703-d0ed030eb985
+2024-10-26 23:37:28,585 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:28,585 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:28,585 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:28,585 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:28,585 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:28,585 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBsFoN8VW2KH+EBCD6ssrt/0DurtlZpQ65rp6YpdjqP+lzhH1eRCUgKZmm4GV1g2SocE731FGJsGA16x062pY3CiWxBY2ao7W9KfeNTEIkx0ZnjR6bZYUPrO2lqDpQm0dySdc+eoxcpALB2S4RSVqi3xCRCLuazC6OuqVj5m2E0vfk6yWRNOPns+DoRiRVRtlo99S+4iHr5jdAtdJk5FqA80CM9HUuPbjPD6I7JO+bTA0Grbmj1j49KJjxb0YUOFK+UXZC6fF2Cdi1mF09jhUt9XquWel+G1TzN3eg3zr6wN8ws3zv0vVv2JQduw7OSRDJpIzjuV29oEUCdyaIbY+w8Ii+o9LognFV9R3JtKsWbLzW7apUljLVqEH4Wa7Trp3Hko9Gu6qCylGF/Ua+I0gFltFbDcz/ORIpf0e7DpU40QqHyF91o90ZToHtMH4W8Ujh"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:28,586 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:28,586 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:28,586 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:28,586 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233728Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+9c1a213402e4e4e941ba9cff4506fc6bb95233d68084c999c583ba739f89c2d6
+2024-10-26 23:37:28,586 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233728Z
+20241026/us-east-2/sqs/aws4_request
+b4efc4cdbb7a3733df5d6699885480329c67418fd217b0e25bbdfa00ed26ce29
+2024-10-26 23:37:28,586 - botocore.auth - DEBUG - Signature:
+039bf8e44467b8f724502f77d76d5321f9db0d76282d513561255a03dbd20d42
+2024-10-26 23:37:28,586 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:28,586 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233728Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=039bf8e44467b8f724502f77d76d5321f9db0d76282d513561255a03dbd20d42', 'amz-sdk-invocation-id': b'24c7843e-ec8b-450e-8380-d242260a258b', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:28,587 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:28,590 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:28,591 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '61af7a35-7138-5c89-bd9c-25a20e40f531', 'Date': 'Sat, 26 Oct 2024 23:37:28 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:28,591 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:28,591 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:28,591 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:28,591 - __main__ - INFO - Processing message: 8e175155-1693-4d39-9e1f-cc991d88ac94
+2024-10-26 23:37:28,591 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:32:24.567Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"1Q859WFS4G7ZAEHG","x-amz-id-2":"qgMaLDL265kvu9lUidDYt1MFQTGNuhc+RCV8iywts9J2hZy0k8jNlafDnVdLbqci9lwVBNK3+braxd79V1dJMGGm6rG78vFT"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-32-24-148321.mp3","size":77143,"eTag":"3e0a3cec795f7507d9b16ab584e41c75","sequencer":"00671D6DF886D47851"}}}]}
+2024-10-26 23:37:28,591 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-32-24-148321.mp3
+2024-10-26 23:37:28,604 - __main__ - INFO - Created task 897bfe63-b339-40dd-85e6-42421350e567 for file google-oauth2%257C102874856824150216748/2024-10-26-17-32-24-148321.mp3
+2024-10-26 23:37:28,604 - __main__ - INFO - Deleting message 8e175155-1693-4d39-9e1f-cc991d88ac94
+2024-10-26 23:37:28,605 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:28,605 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:28,605 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:28,605 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:28,605 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:28,605 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEB6BOvElZgzOomzk+a3tRHu9L79nqfWj+/yLjkXKWL6NJRROocIR/7ER75JH6ntXvtNFybWZMS7K52tBk1FOcuZ/5t+D8Yaeq0/d+maT+OujhEm/yCiQBCbVAZM0vidNfHxL0ei1NrLBZ4pJPb/bylpM346PfStCQahbYgW7lGO1hxzS1MYA9je208DbGgA6IJVqjLFsYdTCrDdT7dnIs3NoAZtY86xQ6AyNOIdvoWFuj3JqBWKLKzOpgGRB+G/iscFUa+SIBfRL/1CTAKipgsjDT4DaNAPXdeVrTjx63LXV0DOhSkXJEuOU28AfMBwtdGVsAMHo+iXrq5caf6I6otagP4quhflhewWluF4GACxocOwDMfm5bQ8nnOhF2AnVW5Rkv/3egkedGOpbfqFf22sAkHgy7V3tW756Ej5e70HWYWqhzimbcGmtHqk5uUYTl0"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:28,605 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:28,605 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:28,606 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:28,606 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233728Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+9597ba6f55d6af92812f427964548332acf0cd0768a78c2d87da58b4f4080357
+2024-10-26 23:37:28,606 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233728Z
+20241026/us-east-2/sqs/aws4_request
+51ce77c9b908f93507f86622c78d66749d12400d419a38dadc1d9a922dcc88a3
+2024-10-26 23:37:28,606 - botocore.auth - DEBUG - Signature:
+7d884c30f0e9d3a520920fa91862cb7ea77a1d80a9022ff90631dbc35bdb5481
+2024-10-26 23:37:28,606 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:28,606 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233728Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=7d884c30f0e9d3a520920fa91862cb7ea77a1d80a9022ff90631dbc35bdb5481', 'amz-sdk-invocation-id': b'4520a688-fd23-4c6d-ae9f-8974fee12721', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:28,606 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:28,610 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:28,610 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '43944428-5baa-57e8-857b-1bbf24d2de50', 'Date': 'Sat, 26 Oct 2024 23:37:28 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:28,611 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:28,611 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:28,611 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:28,611 - __main__ - INFO - Processing message: 26db0530-0b00-4384-b6ab-9681f8f22ece
+2024-10-26 23:37:28,611 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:32:30.826Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"BZDYTBG28A9K5GVA","x-amz-id-2":"bk08iWu/CI32QpAT2NXMv/gvzuTrT+BUEM55BHsXP+oJsDIBCO2dYPwbFL2lyNmIHJsxOG5n2Szw7O3mDHhHIJ1POY40mSXv"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-32-30-626867.mp3","size":17655,"eTag":"c3c35d5df8efbfa471b37a38445371fb","sequencer":"00671D6DFECB4BD54D"}}}]}
+2024-10-26 23:37:28,611 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-32-30-626867.mp3
+2024-10-26 23:37:28,624 - __main__ - INFO - Created task 0411db28-cdac-464d-b702-b34a8bd09c19 for file google-oauth2%257C102874856824150216748/2024-10-26-17-32-30-626867.mp3
+2024-10-26 23:37:28,624 - __main__ - INFO - Deleting message 26db0530-0b00-4384-b6ab-9681f8f22ece
+2024-10-26 23:37:28,624 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:28,624 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:28,625 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:28,625 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:28,625 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:28,625 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBsex6l3/REyXqn0w+/RhPLFTD70fNlAinK57s1x8yX/GEJlVJkzGO5Yr92+N/opiZcfvwXlUdU588bjyTNQxiCfor68nIblsmfQORJIy8Q+9imPEtZTEDpWtsWIUW5DlVj1CAlPDfSqBbYB7DOFQ0wTY7FxhyKVfPOzsrV1f8Pnx2iHd5XSrB8TSnIDM8aF9FPoIdN+pGLddqyZAAZXD7DJu8Fq6IH3cDWI3i1yrTA6AQKc4K5QjqDDb2URdVteZP59vmXzra6LrsRegmOiGJyFQnFdKHHj5Vmk9aqsSoBAitCebkoYSUrFrIoEAJDfGLFDrdXs63tQiHscskOEs3tXiIhhApm9aTPa01OsViQ3dmC/fhslbaRBXHB/ch3LVE9PL5PlcG8Zsw/+0IuxIrwh6DKnZYxnbaNb1pUaqoJmIzJ0/Tm+J7Iaas/UAmzyVg"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:28,625 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:28,625 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:28,626 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:28,626 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233728Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+ebdfb13cda52d973c692ae0461f114b70957d088504981af86eee2e4279eba87
+2024-10-26 23:37:28,626 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233728Z
+20241026/us-east-2/sqs/aws4_request
+0c8cd2e2df8adc0501aeedd0221863bdac6fc9198a79e2df35bfa4a8e8bf8dc2
+2024-10-26 23:37:28,626 - botocore.auth - DEBUG - Signature:
+c7d71cede507595418ae8ebe89feb3bc0d96319ee50b1d2ff3b025c426ccaaa6
+2024-10-26 23:37:28,626 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:28,626 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233728Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=c7d71cede507595418ae8ebe89feb3bc0d96319ee50b1d2ff3b025c426ccaaa6', 'amz-sdk-invocation-id': b'cc552536-63ea-4811-b98c-cd23436b419c', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:28,626 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:28,630 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:28,631 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'c8904e79-04fe-5663-ad36-11ee7b864fdb', 'Date': 'Sat, 26 Oct 2024 23:37:28 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:28,631 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:28,631 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:28,631 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:29,632 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:29,632 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:29,632 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:29,632 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:29,633 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:29,633 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:29,633 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:29,633 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:29,633 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:29,633 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:29,634 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233729Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:29,634 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233729Z
+20241026/us-east-2/sqs/aws4_request
+78b98cc8f4ab7f5145a64bca57088aae58ca8f33e99b7af712a146919fdb105d
+2024-10-26 23:37:29,634 - botocore.auth - DEBUG - Signature:
+1b8b18776a430b327e7a188bb0ccf19f911caf156faeb8a4f02c7ae98339df32
+2024-10-26 23:37:29,634 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:29,634 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233729Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=1b8b18776a430b327e7a188bb0ccf19f911caf156faeb8a4f02c7ae98339df32', 'amz-sdk-invocation-id': b'ab8fd43e-011b-46c1-9902-0868c382d376', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:29,634 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:29,672 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 6450
+2024-10-26 23:37:29,672 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '6f63ee51-98c4-595e-a51e-b1c6e7bdf0e6', 'Date': 'Sat, 26 Oct 2024 23:37:29 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '6450', 'connection': 'keep-alive'}
+2024-10-26 23:37:29,672 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-24T04:59:00.543Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"7RBK8EPKB5YR36S2\\",\\"x-amz-id-2\\":\\"hhZ9gQ2bZWEqA1tDHejT1TM+aGBGXav5dCwz4Ar7nla6frvztYgskGndMHOXDoHqkA7Kv3er3C+HpWVPNnIhckBqvZdwSsXN\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-23-23-59-00-433396.mp3\\",\\"size\\":18895,\\"eTag\\":\\"aa24ea6954947bd6f9208d5f8c818501\\",\\"sequencer\\":\\"006719D41483E66A89\\"}}}]}","MD5OfBody":"a37392c2a6af1b5b5d1e16e2bd995214","MessageId":"c429f157-ec8e-4e3e-9381-a66ee8713719","ReceiptHandle":"AQEBo3Rc//VPBeW+chXCBibK6m4FXx95pdfeukBZSP4tPLG6mp7OG4Uq0QY49uoUUX49IN51lPXJUUeB5k0o22D/po6qzLVjFH9Wl4alQ14TImO5KkGPTxyOtvDMWVWpdAtfdzKDvuamNaMHc5iSUbBkB3YOT/iYSOyeC5QPodSYgdvBMMHgciCysV8LDdrnBYtwuMs8xfwyFYIP75UkCyHH8sLEB4hvupPjPRB55idOlKpJ3NbtBM+dyJvYujCeyhNZGV0GE6K30voMQdVEX1X8EXhqCBz2TMbBRUCDbClWvbvY9Dr6vZBdKKyZf7kyNTpRmqDRz5NlvBvsWDm6ZdhMkmgGA5pA9gR2bEqBbeW34a6ANZoHx7msj+flUBnKdzLT8JT3LYDRV5+zHUYyauaXEK9lfhdjiB0Sr/a6jKIGeSa8VrgVCgN6wCyW7D7RsfZR"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:28:35.830Z\\",\\"eventName\\":\\"ObjectCreated:Copy\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"3.137.2.81\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"Z8T8HHP8V764RQW5\\",\\"x-amz-id-2\\":\\"W3VPRB/w5Cd31uEVKpQunP8XJWWlLWvQMw031PT7og2eXE3FMD8GMbs2wDahTTV6raR3SYDipBd0P4TBWf8UsDMj8mIYl50W\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-53-862472.mp3\\",\\"size\\":78231,\\"eTag\\":\\"50eeb927dfb1fcebd3e93d3525c52e45\\",\\"sequencer\\":\\"00671D6D13BF19F97A\\"}}}]}","MD5OfBody":"fde2243f2e042e7a044dba148e04efc8","MessageId":"fa9ff41b-5b0f-415c-9082-5f8c15c5ab88","ReceiptHandle":"AQEBZUXQhkE0h3fiBYdkcexn+P3JiQtSeQ7rpS7e7a17Xh5SYIkUpUZ1Ui2qPrU7H/fDq8GZNoVyjS/Ex8uST95ZAxXMlgl+NUa7jefueBn6zmD03g5rIZlybohDJEKlHJYvio0/hYXUJ80rv6oMtlrLEHtBzOCcA3uUdGA8s08dkH3/m0nm+QTMVTRfYKkqAXMAdnJpnOnw9VCvgJV6tpZhrFAWBxa0Y6M7CwpIz7rOqR8exIdiMPo4MoNh1pvtnNlk0skdno+bu37uPLePggqY8oLXeAx5onHf1ST3L0awVdoAMlLpEz4qXnh+7N62lnbdN1tE50uqhaukeWGN4fEWK3knzRYmqkfPUtdStYJkjI100bFoBlbOLA/8udhlkHXlY1wZ4y9Zfswq/3dfZFpZd3N+tg17BSbkgPL31qgrxjaX3rVpYqONGjQj+qAUo6f/"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:52:28.153Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"JSYNEP69ZH6A5TB8\\",\\"x-amz-id-2\\":\\"DsYSQ8xydkc5ZqjMqEhkgPCc5eSv+fQyGNw1VdZ4cCXANdNt76jxeRN73ASOlH1KNuwP9fRoGJCUUznMo/z8NFCNWMzI9tNuGutAwkFJ+6Y=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-52-27-827897.mp3\\",\\"size\\":77960,\\"eTag\\":\\"c6b36fd85dcb1a87830862cbb240327c\\",\\"sequencer\\":\\"00671D72AC1EDC736F\\"}}}]}","MD5OfBody":"0aa2b920ec4b1f3672a2f8a5bfca3b24","MessageId":"9f64d4b5-92a4-48d9-981a-7fbb44ab725a","ReceiptHandle":"AQEBd6UkxTpme9LimtyLijlJBNGNt8u0NwjJrhXmrY3is4NbIIbONEFDkBUevC9x/bTLKoGzxAEVVDGWO2xTKN/48uD25lXzMc6DzIiT2pgvekkSdoc3tM9By/kCDOmOxp9uJUzGaqwqqVEPuEZHxFhoU+ZZmaz494cCU4qKicosaxksl+uxR5Xo1B+pJBIspdi+zPOCR+O5SE8laSJBsSBzB2GTdCwu5XBAaKdlY40WD5zBdd9iqhJ+GO/Cg9SoNxThShIaKOrv3xrQ4bfS8ceU8zN++4806hInVauobxTpS+Pn//DzuEInuwqGrPclbmDIRi7hfyg6U8O1cjZ7tS9h3igL4d3a0jdZFMkeZUsbkcKOosB+VHhmzccP98HgUmounmPYQtS1kQYC0+aiRoH7SxQe3LxnA4gJph6ZNJo8lzKVh+9WVgFd7ATlVSBQ9AWO"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:52:32.907Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"S6P2Z3Z6Q03W27H3\\",\\"x-amz-id-2\\":\\"3AqP3ofrbNDE2gynBJVVRfz/XpPGE84Z9HHciEABu2aKALEhdBRQsElfF3pEL2cFhYg/Tmp141p34wF+Wh+W252hTC1EfHV2f2Oey5OPmsQ=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-52-32-669339.mp3\\",\\"size\\":77953,\\"eTag\\":\\"911f7a692af17f8522ded2b42b12b90d\\",\\"sequencer\\":\\"00671D72B0E01CF5E9\\"}}}]}","MD5OfBody":"419a6f7444279d5068d7f2968c7d9275","MessageId":"ec0bf81c-8fe4-432f-b7fc-833d15e6ca3b","ReceiptHandle":"AQEBJG1WOJnmuEFnO8CIffrFyEVPJ6O4M8RQnLbPbH6upct9CB3rrGmlyvbu6ooPNmmpYz5pMlbTJiNY83S7CYoCvvP09Qi9Gf4w4me0uZ2LOp/HRsdntGt6iDCOtNru1E0I5IVW5qrhu/QvrSlNp/2XEZvbwMexYFU637NWacLCLOyoWpXuxj6IoR6zg8TjIhiD3/iyxQoJ9DhB7BF191CM9kkLGBPXJsGvIz+VsL2rqQy3ZohYl7OX1dLix3mE+IOFrCqASUa51ZXwrVwfI+y5vzX2lDRJEFq/fXBl4Us0Sr5E4WXbatqlb3MwhNesldcflRqZopTlu2AAzfviMbNfLfiJsj79taCY1J7w2gomiX/cN6305fVT9MxGwPtAxaTr346A7exuQWiVzz+R9oFOpMKSpoMeYkdGHUPYM2xhCSPnsWV7KHHSaKZwEWbTF4Y+"}]}'
+2024-10-26 23:37:29,673 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:29,673 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:29,673 - __main__ - INFO - Received 4 messages
+2024-10-26 23:37:29,673 - __main__ - INFO - Processing message: c429f157-ec8e-4e3e-9381-a66ee8713719
+2024-10-26 23:37:29,673 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-24T04:59:00.543Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"7RBK8EPKB5YR36S2","x-amz-id-2":"hhZ9gQ2bZWEqA1tDHejT1TM+aGBGXav5dCwz4Ar7nla6frvztYgskGndMHOXDoHqkA7Kv3er3C+HpWVPNnIhckBqvZdwSsXN"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-23-23-59-00-433396.mp3","size":18895,"eTag":"aa24ea6954947bd6f9208d5f8c818501","sequencer":"006719D41483E66A89"}}}]}
+2024-10-26 23:37:29,673 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-23-23-59-00-433396.mp3
+2024-10-26 23:37:29,686 - __main__ - INFO - Created task d71fe7b5-e88e-404d-b66a-ab6d1410caba for file google-oauth2%257C102874856824150216748/2024-10-23-23-59-00-433396.mp3
+2024-10-26 23:37:29,686 - __main__ - INFO - Deleting message c429f157-ec8e-4e3e-9381-a66ee8713719
+2024-10-26 23:37:29,687 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:29,687 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:29,687 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:29,687 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:29,687 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:29,687 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBo3Rc//VPBeW+chXCBibK6m4FXx95pdfeukBZSP4tPLG6mp7OG4Uq0QY49uoUUX49IN51lPXJUUeB5k0o22D/po6qzLVjFH9Wl4alQ14TImO5KkGPTxyOtvDMWVWpdAtfdzKDvuamNaMHc5iSUbBkB3YOT/iYSOyeC5QPodSYgdvBMMHgciCysV8LDdrnBYtwuMs8xfwyFYIP75UkCyHH8sLEB4hvupPjPRB55idOlKpJ3NbtBM+dyJvYujCeyhNZGV0GE6K30voMQdVEX1X8EXhqCBz2TMbBRUCDbClWvbvY9Dr6vZBdKKyZf7kyNTpRmqDRz5NlvBvsWDm6ZdhMkmgGA5pA9gR2bEqBbeW34a6ANZoHx7msj+flUBnKdzLT8JT3LYDRV5+zHUYyauaXEK9lfhdjiB0Sr/a6jKIGeSa8VrgVCgN6wCyW7D7RsfZR"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:29,687 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:29,688 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:29,688 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:29,688 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233729Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+d47c0bf85a8030efc9f0db6da6ae418ef59bcd86e04989b91846abd2333230c6
+2024-10-26 23:37:29,688 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233729Z
+20241026/us-east-2/sqs/aws4_request
+f81fef3ba57db85672ec805411feaa2835d972222833a06d15643ac4c0461af3
+2024-10-26 23:37:29,688 - botocore.auth - DEBUG - Signature:
+75a8fc9848e2212b0a5d1832d16c1ead0cb92b5b140f56900afbd75ff9a0e31a
+2024-10-26 23:37:29,688 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:29,688 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233729Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=75a8fc9848e2212b0a5d1832d16c1ead0cb92b5b140f56900afbd75ff9a0e31a', 'amz-sdk-invocation-id': b'012d15e5-ec5a-4ae5-a2b7-b0a38b8ac2c2', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:29,689 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:29,693 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:29,693 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '6ca072dd-25ef-58e3-97b8-2d4a5a96015b', 'Date': 'Sat, 26 Oct 2024 23:37:29 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:29,693 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:29,693 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:29,693 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:29,693 - __main__ - INFO - Processing message: fa9ff41b-5b0f-415c-9082-5f8c15c5ab88
+2024-10-26 23:37:29,693 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:28:35.830Z","eventName":"ObjectCreated:Copy","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"3.137.2.81"},"responseElements":{"x-amz-request-id":"Z8T8HHP8V764RQW5","x-amz-id-2":"W3VPRB/w5Cd31uEVKpQunP8XJWWlLWvQMw031PT7og2eXE3FMD8GMbs2wDahTTV6raR3SYDipBd0P4TBWf8UsDMj8mIYl50W"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-53-862472.mp3","size":78231,"eTag":"50eeb927dfb1fcebd3e93d3525c52e45","sequencer":"00671D6D13BF19F97A"}}}]}
+2024-10-26 23:37:29,694 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-53-862472.mp3
+2024-10-26 23:37:29,707 - __main__ - INFO - Created task 8ecc925b-5d37-4340-af96-f386601717a2 for file google-oauth2%25257C102874856824150216748%252F2024-10-23-23-58-53-862472.mp3
+2024-10-26 23:37:29,707 - __main__ - INFO - Deleting message fa9ff41b-5b0f-415c-9082-5f8c15c5ab88
+2024-10-26 23:37:29,707 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:29,707 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:29,707 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:29,708 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:29,708 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:29,708 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBZUXQhkE0h3fiBYdkcexn+P3JiQtSeQ7rpS7e7a17Xh5SYIkUpUZ1Ui2qPrU7H/fDq8GZNoVyjS/Ex8uST95ZAxXMlgl+NUa7jefueBn6zmD03g5rIZlybohDJEKlHJYvio0/hYXUJ80rv6oMtlrLEHtBzOCcA3uUdGA8s08dkH3/m0nm+QTMVTRfYKkqAXMAdnJpnOnw9VCvgJV6tpZhrFAWBxa0Y6M7CwpIz7rOqR8exIdiMPo4MoNh1pvtnNlk0skdno+bu37uPLePggqY8oLXeAx5onHf1ST3L0awVdoAMlLpEz4qXnh+7N62lnbdN1tE50uqhaukeWGN4fEWK3knzRYmqkfPUtdStYJkjI100bFoBlbOLA/8udhlkHXlY1wZ4y9Zfswq/3dfZFpZd3N+tg17BSbkgPL31qgrxjaX3rVpYqONGjQj+qAUo6f/"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:29,708 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:29,708 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:29,708 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:29,708 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233729Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+f5aeb2b18f44cfaf0169e2527b0d47b304e5037c8e78da7043ce7cdd85cf609c
+2024-10-26 23:37:29,709 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233729Z
+20241026/us-east-2/sqs/aws4_request
+c7517b0c86057d659109f063aad489bad1ea8845ea34a7e7a75bdf8990d29ddf
+2024-10-26 23:37:29,709 - botocore.auth - DEBUG - Signature:
+07cbedb60ced16c947304543961418e8617de7908f0f2e78b20c8661e17e4576
+2024-10-26 23:37:29,709 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:29,709 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233729Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=07cbedb60ced16c947304543961418e8617de7908f0f2e78b20c8661e17e4576', 'amz-sdk-invocation-id': b'22015d9b-8156-40fe-98a0-f527c8503f2f', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:29,709 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:29,714 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:29,714 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'c2a9fb4d-32c8-5db2-bf23-a4da4db1e40a', 'Date': 'Sat, 26 Oct 2024 23:37:29 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:29,715 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:29,715 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:29,715 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:29,715 - __main__ - INFO - Processing message: 9f64d4b5-92a4-48d9-981a-7fbb44ab725a
+2024-10-26 23:37:29,715 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:52:28.153Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"JSYNEP69ZH6A5TB8","x-amz-id-2":"DsYSQ8xydkc5ZqjMqEhkgPCc5eSv+fQyGNw1VdZ4cCXANdNt76jxeRN73ASOlH1KNuwP9fRoGJCUUznMo/z8NFCNWMzI9tNuGutAwkFJ+6Y="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-52-27-827897.mp3","size":77960,"eTag":"c6b36fd85dcb1a87830862cbb240327c","sequencer":"00671D72AC1EDC736F"}}}]}
+2024-10-26 23:37:29,715 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-52-27-827897.mp3
+2024-10-26 23:37:29,728 - __main__ - INFO - Created task 08de3f29-0713-4b3d-bddb-1e49193ab124 for file google-oauth2%257C102874856824150216748/2024-10-26-17-52-27-827897.mp3
+2024-10-26 23:37:29,729 - __main__ - INFO - Deleting message 9f64d4b5-92a4-48d9-981a-7fbb44ab725a
+2024-10-26 23:37:29,729 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:29,729 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:29,729 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:29,729 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:29,729 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:29,729 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBd6UkxTpme9LimtyLijlJBNGNt8u0NwjJrhXmrY3is4NbIIbONEFDkBUevC9x/bTLKoGzxAEVVDGWO2xTKN/48uD25lXzMc6DzIiT2pgvekkSdoc3tM9By/kCDOmOxp9uJUzGaqwqqVEPuEZHxFhoU+ZZmaz494cCU4qKicosaxksl+uxR5Xo1B+pJBIspdi+zPOCR+O5SE8laSJBsSBzB2GTdCwu5XBAaKdlY40WD5zBdd9iqhJ+GO/Cg9SoNxThShIaKOrv3xrQ4bfS8ceU8zN++4806hInVauobxTpS+Pn//DzuEInuwqGrPclbmDIRi7hfyg6U8O1cjZ7tS9h3igL4d3a0jdZFMkeZUsbkcKOosB+VHhmzccP98HgUmounmPYQtS1kQYC0+aiRoH7SxQe3LxnA4gJph6ZNJo8lzKVh+9WVgFd7ATlVSBQ9AWO"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:29,729 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:29,730 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:29,730 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:29,730 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233729Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+74243a55874915ad81519bc6cc03f4eb7e148592add09d41802b9b1c19925942
+2024-10-26 23:37:29,730 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233729Z
+20241026/us-east-2/sqs/aws4_request
+26f8b2531de1c3d76ece9da2100449b56bfbd5f1920266643d62044451983648
+2024-10-26 23:37:29,730 - botocore.auth - DEBUG - Signature:
+ecc69602a8ed6c0036e77dc62b2a7abc33e1faa4751c7b4095a74ca5f86afa23
+2024-10-26 23:37:29,730 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:29,730 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233729Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=ecc69602a8ed6c0036e77dc62b2a7abc33e1faa4751c7b4095a74ca5f86afa23', 'amz-sdk-invocation-id': b'063566d4-9263-47b3-8da6-9d5a1c0aa9d0', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:29,731 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:29,735 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:29,735 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '01f37b4d-5395-5e69-a243-24da2cecd7d1', 'Date': 'Sat, 26 Oct 2024 23:37:29 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:29,735 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:29,735 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:29,736 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:29,736 - __main__ - INFO - Processing message: ec0bf81c-8fe4-432f-b7fc-833d15e6ca3b
+2024-10-26 23:37:29,736 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:52:32.907Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"S6P2Z3Z6Q03W27H3","x-amz-id-2":"3AqP3ofrbNDE2gynBJVVRfz/XpPGE84Z9HHciEABu2aKALEhdBRQsElfF3pEL2cFhYg/Tmp141p34wF+Wh+W252hTC1EfHV2f2Oey5OPmsQ="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-52-32-669339.mp3","size":77953,"eTag":"911f7a692af17f8522ded2b42b12b90d","sequencer":"00671D72B0E01CF5E9"}}}]}
+2024-10-26 23:37:29,736 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-52-32-669339.mp3
+2024-10-26 23:37:29,748 - __main__ - INFO - Created task db805a94-cd32-4927-a072-e96ff6a06b47 for file google-oauth2%257C102874856824150216748/2024-10-26-17-52-32-669339.mp3
+2024-10-26 23:37:29,749 - __main__ - INFO - Deleting message ec0bf81c-8fe4-432f-b7fc-833d15e6ca3b
+2024-10-26 23:37:29,749 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:29,749 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:29,749 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:29,749 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:29,749 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:29,750 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBJG1WOJnmuEFnO8CIffrFyEVPJ6O4M8RQnLbPbH6upct9CB3rrGmlyvbu6ooPNmmpYz5pMlbTJiNY83S7CYoCvvP09Qi9Gf4w4me0uZ2LOp/HRsdntGt6iDCOtNru1E0I5IVW5qrhu/QvrSlNp/2XEZvbwMexYFU637NWacLCLOyoWpXuxj6IoR6zg8TjIhiD3/iyxQoJ9DhB7BF191CM9kkLGBPXJsGvIz+VsL2rqQy3ZohYl7OX1dLix3mE+IOFrCqASUa51ZXwrVwfI+y5vzX2lDRJEFq/fXBl4Us0Sr5E4WXbatqlb3MwhNesldcflRqZopTlu2AAzfviMbNfLfiJsj79taCY1J7w2gomiX/cN6305fVT9MxGwPtAxaTr346A7exuQWiVzz+R9oFOpMKSpoMeYkdGHUPYM2xhCSPnsWV7KHHSaKZwEWbTF4Y+"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:29,750 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:29,750 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:29,750 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:29,750 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233729Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+9ee07c55b448639619fef2fe1bb73eba1d3d31991f4d8a6e6e547cd02e390ffd
+2024-10-26 23:37:29,750 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233729Z
+20241026/us-east-2/sqs/aws4_request
+df001a51696ab4f5aee7b1b908b32e90cbb0ec21cee172d7922a02cda4e3d2e2
+2024-10-26 23:37:29,750 - botocore.auth - DEBUG - Signature:
+0dcabbae8f052b77f2e7b53c8be5b505998c64e3cd71a7f20349c85e2d7a166b
+2024-10-26 23:37:29,750 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:29,751 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233729Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=0dcabbae8f052b77f2e7b53c8be5b505998c64e3cd71a7f20349c85e2d7a166b', 'amz-sdk-invocation-id': b'a0a038e8-aff3-419b-81bc-4717becab431', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:29,751 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:29,755 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:29,755 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '3465196b-d972-5322-895d-46fca60b6a9a', 'Date': 'Sat, 26 Oct 2024 23:37:29 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:29,755 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:29,755 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:29,756 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:30,757 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:30,757 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:30,757 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:30,757 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:30,757 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:30,758 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:30,758 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:30,758 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:30,758 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:30,758 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:30,758 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233730Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:30,759 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233730Z
+20241026/us-east-2/sqs/aws4_request
+61ee1b37217482c5cd040fd6590cb124b38f8ccb37933d4a909d53cb6af54016
+2024-10-26 23:37:30,759 - botocore.auth - DEBUG - Signature:
+a52d7a1c8c12eab7c391fc315a82d36bf41f40afdca64041b5d4bcfb2ed9a80e
+2024-10-26 23:37:30,759 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:30,759 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233730Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=a52d7a1c8c12eab7c391fc315a82d36bf41f40afdca64041b5d4bcfb2ed9a80e', 'amz-sdk-invocation-id': b'130885ba-9da3-4f18-8073-4d90ba08a556', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:30,759 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:30,790 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 4824
+2024-10-26 23:37:30,791 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '8e62ca09-7fe8-55bd-a737-959e00923c05', 'Date': 'Sat, 26 Oct 2024 23:37:30 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '4824', 'connection': 'keep-alive'}
+2024-10-26 23:37:30,791 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-24T04:58:54.282Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"W8X7NT3C3BN8W9PA\\",\\"x-amz-id-2\\":\\"GBASuX6NINO8s8D5V4pvjHZAXlRw0diuyS7um3yRiPcy71Pbs3xvubWe5utcnUmoxVcFM3IrlSEUWD6gJ/Gu05ubyYXSkoN4\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-23-23-58-53-862472.mp3\\",\\"size\\":78231,\\"eTag\\":\\"50eeb927dfb1fcebd3e93d3525c52e45\\",\\"sequencer\\":\\"006719D40E3FA1A684\\"}}}]}","MD5OfBody":"2e216364843dc8a46ccc8e3628d66b97","MessageId":"115dc5ad-aab2-4438-ad20-692d39aae652","ReceiptHandle":"AQEBUEGfPWlxstqHGXhjuAnAFx3exaE37Szy+FQi+H4CbT8s3FgW2pYfvlRrhRAcCDdOTEl7YiYJ2YsnDQskR0ok34EGwOtrA7k+y+HpmHAbRDmOimJZxxd2rrkrq4qthEJo/iDL5HTN+js8zFfmQZq0N8uziUSAMEE47jSNLW/TkuLvwJh3P80KQB75/sthL0h99cKTQvxwV2ON7wW2cgpQIVhja4IF6cO+Tcig7pyGd/zgVrujgHkeAbn2kyJ06mTvSP/XPirjXWOyL8YbLniMUgLDovc0uEow1tuYpfpGJBO9K6PG5mUSCT58O3pIwOtWjfSKeboMo+cPq89dj/ZZZ2ejmIsaZ9o2GFbmRJV/Zd8FeZ1WJMJIJGAqA8NAH832yZcOtvxZ9ZX6KU6L1j5ltHTFdB1WFGz0hFUS5ISHlIYcFATI5Mn7r6khdWClT8pg"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-24T04:58:59.353Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"AHNMAKTDAZ5DEVCH\\",\\"x-amz-id-2\\":\\"T/sKqNtNR/ynCO6wN84HEFPNpZFC4WHbXRbiyznj0AOYSkTsJPVZ9v/HthqBJZbg+BrY3wM3XX9TucIjA9Jy3eRDA2Q4tjkC\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-23-23-58-59-192720.mp3\\",\\"size\\":77945,\\"eTag\\":\\"c14a69895b0f1fa4c6a17ecf4fe42190\\",\\"sequencer\\":\\"006719D41354A679A6\\"}}}]}","MD5OfBody":"f4adabd36ece8d255ef1996dfdff4f1e","MessageId":"cdabf3ba-c88c-41eb-b57b-216ca8d6ecb4","ReceiptHandle":"AQEBPBMUyDJtDnE2fdD4LShyz6SONm3PeV5afytX3tIzjaoOpL1KhQY/9ToF/kRe883AxLb/Bkh2/WcBCCaSYpW0X8THOSeTpjoqT9ZLMLQUviZIUBkmmliox/62S0++PrH/2woFxPNXHmMApcKOCeSFBoJ/A6krXIbW9Rd83XntVYZwhDD3+M72HGKbAeo++zav1Px1ls3OieyLxHksTIFHQr13p9hfCFAMuQ1EeX5zKYou5qCW2rTy02lOUM6Zh1go8XrhEM6oJHlCVECv03DOYA9Bc6+uWKWS9pexcZ1epvOohoiZc+NHmxHyTqDxir3NJelki92LbRg6XigMW4dCQ8On+aP9TeY/J372PciGF4/uv6oW4PO4bj7Gg7XGgLB5cmoVVQsk4AlHkRRnL3upDo1ptin7VOU1p+lOoa0ySPi+4vlhvnNqHiFCpp0omVSc"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:28:36.041Z\\",\\"eventName\\":\\"ObjectCreated:Copy\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"3.137.2.81\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"Z8TEGPDM1VA80F25\\",\\"x-amz-id-2\\":\\"odqvtAjpbOTtLke9jV4tkRV+VjWKKlmA3nDBqjrtCJJSw6txEoBj7NsY4iT7SSiIxz9D8UTqqcbnvgby8U5oB33QEmvOGLuN\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-59-00-433396.mp3\\",\\"size\\":18895,\\"eTag\\":\\"aa24ea6954947bd6f9208d5f8c818501\\",\\"sequencer\\":\\"00671D6D13F95BBB4B\\"}}}]}","MD5OfBody":"0c8a52908f63d865e9e659ddcc9b1f5f","MessageId":"40c40f83-5d0a-4d08-b132-4d577dd1d878","ReceiptHandle":"AQEBSVQk6of+PNaKXAxMIrPFzjB0FWre17syMPm/OpEPnCKikMOWtLm9MqOvi6aZ5Q1avu0uu077AqR8uH1YXotV9hkZP7+bqE8oEb1KrqXU4x7vbxm5ZLQIeCHdkObg2+tn57GGtBJq/oB1ky0eb6raqpYxXfXuFg+Yul1w9mSOC2Ly/2SPyuPapWPkYbH594ITiMgp4ynSiovAkFww3XIx4BlcbI4xHLQnL+L6toLw5WLMaS4JiJMZqtoHWuJDjOhfJudy/GVTq7hEnaspvA/9yuhhi3f0dWqC76+6sX68Kh81o1ybEX/i8oiLE0s48oPqKOMgPX8JJKmifsIVOpaKC1jIvMbsXgtQ8YcWp/f/+yAxmgvkxhUALPSxWLqJPV23piaHsoiJcnBffmKbYbpch7rP6D5uM++yqII7604OTNWpCorb5/hA0Q9PDX4eXsUk"}]}'
+2024-10-26 23:37:30,791 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:30,791 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:30,792 - __main__ - INFO - Received 3 messages
+2024-10-26 23:37:30,792 - __main__ - INFO - Processing message: 115dc5ad-aab2-4438-ad20-692d39aae652
+2024-10-26 23:37:30,792 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-24T04:58:54.282Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"W8X7NT3C3BN8W9PA","x-amz-id-2":"GBASuX6NINO8s8D5V4pvjHZAXlRw0diuyS7um3yRiPcy71Pbs3xvubWe5utcnUmoxVcFM3IrlSEUWD6gJ/Gu05ubyYXSkoN4"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-23-23-58-53-862472.mp3","size":78231,"eTag":"50eeb927dfb1fcebd3e93d3525c52e45","sequencer":"006719D40E3FA1A684"}}}]}
+2024-10-26 23:37:30,792 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-23-23-58-53-862472.mp3
+2024-10-26 23:37:30,805 - __main__ - INFO - Created task bece3813-f2a2-41a7-8ce2-9b9db044e881 for file google-oauth2%257C102874856824150216748/2024-10-23-23-58-53-862472.mp3
+2024-10-26 23:37:30,805 - __main__ - INFO - Deleting message 115dc5ad-aab2-4438-ad20-692d39aae652
+2024-10-26 23:37:30,805 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:30,805 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:30,805 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:30,806 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:30,806 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:30,806 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBUEGfPWlxstqHGXhjuAnAFx3exaE37Szy+FQi+H4CbT8s3FgW2pYfvlRrhRAcCDdOTEl7YiYJ2YsnDQskR0ok34EGwOtrA7k+y+HpmHAbRDmOimJZxxd2rrkrq4qthEJo/iDL5HTN+js8zFfmQZq0N8uziUSAMEE47jSNLW/TkuLvwJh3P80KQB75/sthL0h99cKTQvxwV2ON7wW2cgpQIVhja4IF6cO+Tcig7pyGd/zgVrujgHkeAbn2kyJ06mTvSP/XPirjXWOyL8YbLniMUgLDovc0uEow1tuYpfpGJBO9K6PG5mUSCT58O3pIwOtWjfSKeboMo+cPq89dj/ZZZ2ejmIsaZ9o2GFbmRJV/Zd8FeZ1WJMJIJGAqA8NAH832yZcOtvxZ9ZX6KU6L1j5ltHTFdB1WFGz0hFUS5ISHlIYcFATI5Mn7r6khdWClT8pg"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:30,806 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:30,806 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:30,806 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:30,806 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233730Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+44e987327da9b0733d3ed1a7a74448c5156c3fc28028ec5a78cf34cb412f230a
+2024-10-26 23:37:30,807 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233730Z
+20241026/us-east-2/sqs/aws4_request
+bca2f6ebb6d60fdf8e49820b447a16c8c45940d8a8a6d6b81ef2db9c2bb0ebae
+2024-10-26 23:37:30,807 - botocore.auth - DEBUG - Signature:
+db767f6e091e4c6f90be631bb9a9645a304688f796f2c3558754cab49b16504f
+2024-10-26 23:37:30,807 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:30,807 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233730Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=db767f6e091e4c6f90be631bb9a9645a304688f796f2c3558754cab49b16504f', 'amz-sdk-invocation-id': b'4e8860f5-ea84-4f94-ba4a-ecc02163e427', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:30,807 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:30,811 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:30,811 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '76d6f572-cab0-5701-8e51-aae5b5cadeb9', 'Date': 'Sat, 26 Oct 2024 23:37:30 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:30,812 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:30,812 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:30,812 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:30,812 - __main__ - INFO - Processing message: cdabf3ba-c88c-41eb-b57b-216ca8d6ecb4
+2024-10-26 23:37:30,812 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-24T04:58:59.353Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"AHNMAKTDAZ5DEVCH","x-amz-id-2":"T/sKqNtNR/ynCO6wN84HEFPNpZFC4WHbXRbiyznj0AOYSkTsJPVZ9v/HthqBJZbg+BrY3wM3XX9TucIjA9Jy3eRDA2Q4tjkC"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-23-23-58-59-192720.mp3","size":77945,"eTag":"c14a69895b0f1fa4c6a17ecf4fe42190","sequencer":"006719D41354A679A6"}}}]}
+2024-10-26 23:37:30,812 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-23-23-58-59-192720.mp3
+2024-10-26 23:37:30,825 - __main__ - INFO - Created task 4e646b6c-d0e0-476f-8462-29b05cf81792 for file google-oauth2%257C102874856824150216748/2024-10-23-23-58-59-192720.mp3
+2024-10-26 23:37:30,826 - __main__ - INFO - Deleting message cdabf3ba-c88c-41eb-b57b-216ca8d6ecb4
+2024-10-26 23:37:30,826 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:30,826 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:30,826 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:30,826 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:30,826 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:30,827 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBPBMUyDJtDnE2fdD4LShyz6SONm3PeV5afytX3tIzjaoOpL1KhQY/9ToF/kRe883AxLb/Bkh2/WcBCCaSYpW0X8THOSeTpjoqT9ZLMLQUviZIUBkmmliox/62S0++PrH/2woFxPNXHmMApcKOCeSFBoJ/A6krXIbW9Rd83XntVYZwhDD3+M72HGKbAeo++zav1Px1ls3OieyLxHksTIFHQr13p9hfCFAMuQ1EeX5zKYou5qCW2rTy02lOUM6Zh1go8XrhEM6oJHlCVECv03DOYA9Bc6+uWKWS9pexcZ1epvOohoiZc+NHmxHyTqDxir3NJelki92LbRg6XigMW4dCQ8On+aP9TeY/J372PciGF4/uv6oW4PO4bj7Gg7XGgLB5cmoVVQsk4AlHkRRnL3upDo1ptin7VOU1p+lOoa0ySPi+4vlhvnNqHiFCpp0omVSc"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:30,827 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:30,827 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:30,827 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:30,827 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233730Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+e7a2ea9d228676934d65cc3545b5fae7465fde47b3ded05581bbae3b5f6fb7b8
+2024-10-26 23:37:30,827 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233730Z
+20241026/us-east-2/sqs/aws4_request
+f07edc8525fee5c7775ad344ab8b192aefd331c87128f41e4e0c7ac5f15cc459
+2024-10-26 23:37:30,827 - botocore.auth - DEBUG - Signature:
+ae80436b3f3bd14a50e426aabdade1b805b2402798665e59fd16d1949974cdba
+2024-10-26 23:37:30,827 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:30,827 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233730Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=ae80436b3f3bd14a50e426aabdade1b805b2402798665e59fd16d1949974cdba', 'amz-sdk-invocation-id': b'a96ef9e8-265e-440f-814f-324ecc37bcfd', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:30,828 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:30,831 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:30,832 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '77a01f9d-62d7-5275-9c91-400a1dad7bcd', 'Date': 'Sat, 26 Oct 2024 23:37:30 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:30,832 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:30,832 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:30,832 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:30,832 - __main__ - INFO - Processing message: 40c40f83-5d0a-4d08-b132-4d577dd1d878
+2024-10-26 23:37:30,832 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:28:36.041Z","eventName":"ObjectCreated:Copy","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"3.137.2.81"},"responseElements":{"x-amz-request-id":"Z8TEGPDM1VA80F25","x-amz-id-2":"odqvtAjpbOTtLke9jV4tkRV+VjWKKlmA3nDBqjrtCJJSw6txEoBj7NsY4iT7SSiIxz9D8UTqqcbnvgby8U5oB33QEmvOGLuN"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%25257C102874856824150216748%252F2024-10-23-23-59-00-433396.mp3","size":18895,"eTag":"aa24ea6954947bd6f9208d5f8c818501","sequencer":"00671D6D13F95BBB4B"}}}]}
+2024-10-26 23:37:30,832 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%25257C102874856824150216748%252F2024-10-23-23-59-00-433396.mp3
+2024-10-26 23:37:30,845 - __main__ - INFO - Created task 37befdb8-a6fe-4e9d-a307-d1d07899c6e3 for file google-oauth2%25257C102874856824150216748%252F2024-10-23-23-59-00-433396.mp3
+2024-10-26 23:37:30,845 - __main__ - INFO - Deleting message 40c40f83-5d0a-4d08-b132-4d577dd1d878
+2024-10-26 23:37:30,845 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:30,845 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:30,846 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:30,846 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:30,846 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:30,846 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBSVQk6of+PNaKXAxMIrPFzjB0FWre17syMPm/OpEPnCKikMOWtLm9MqOvi6aZ5Q1avu0uu077AqR8uH1YXotV9hkZP7+bqE8oEb1KrqXU4x7vbxm5ZLQIeCHdkObg2+tn57GGtBJq/oB1ky0eb6raqpYxXfXuFg+Yul1w9mSOC2Ly/2SPyuPapWPkYbH594ITiMgp4ynSiovAkFww3XIx4BlcbI4xHLQnL+L6toLw5WLMaS4JiJMZqtoHWuJDjOhfJudy/GVTq7hEnaspvA/9yuhhi3f0dWqC76+6sX68Kh81o1ybEX/i8oiLE0s48oPqKOMgPX8JJKmifsIVOpaKC1jIvMbsXgtQ8YcWp/f/+yAxmgvkxhUALPSxWLqJPV23piaHsoiJcnBffmKbYbpch7rP6D5uM++yqII7604OTNWpCorb5/hA0Q9PDX4eXsUk"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:30,846 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:30,846 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:30,847 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:30,847 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233730Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+9209b95d94c690819f6b2b85ea5277a8656b1a22753a36d85500b6fb9551d33f
+2024-10-26 23:37:30,847 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233730Z
+20241026/us-east-2/sqs/aws4_request
+e42636cf583bcba20d151f1ca9a5d822624f6f6f2d2d7818fe4ec4b32c1fe8a1
+2024-10-26 23:37:30,847 - botocore.auth - DEBUG - Signature:
+413f508c1382afe925757353e34df1c98c6955be44bd595e494ef3d74e6f2b9b
+2024-10-26 23:37:30,847 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:30,847 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233730Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=413f508c1382afe925757353e34df1c98c6955be44bd595e494ef3d74e6f2b9b', 'amz-sdk-invocation-id': b'3faf8d52-294f-4955-9e96-699e7b65ba43', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:30,847 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:30,851 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:30,851 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '8ebde6ce-e6a6-5684-aec8-b95999dccf3c', 'Date': 'Sat, 26 Oct 2024 23:37:30 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:30,851 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:30,851 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:30,851 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:31,853 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:31,853 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:31,853 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:31,853 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:31,853 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:31,853 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:31,853 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:31,854 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:31,854 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:31,854 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:31,854 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233731Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:31,854 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233731Z
+20241026/us-east-2/sqs/aws4_request
+1ff29ecdf2d4935342fe4c43cd4ea8632815d428650db974e906608be4f3cc66
+2024-10-26 23:37:31,854 - botocore.auth - DEBUG - Signature:
+b7cce7112b33963ae0cc53a9e1d2e986f9bc82764c4715a105ea3c9c8a639c79
+2024-10-26 23:37:31,854 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:31,854 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233731Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=b7cce7112b33963ae0cc53a9e1d2e986f9bc82764c4715a105ea3c9c8a639c79', 'amz-sdk-invocation-id': b'fe2ff6dc-6eb5-4a67-b635-8843fb5a0624', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:31,855 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:31,906 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 4844
+2024-10-26 23:37:31,906 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '81290be4-6ff5-5e06-9e75-5473108e97be', 'Date': 'Sat, 26 Oct 2024 23:37:31 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '4844', 'connection': 'keep-alive'}
+2024-10-26 23:37:31,906 - botocore.parsers - DEBUG - Response body:
+b'{"Messages":[{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:32:29.876Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"8Y2V6PXP6CG2WFAQ\\",\\"x-amz-id-2\\":\\"n0dCWxedSBTxhxt0XpqUTrxIRT1KcQNXSl/67GbW8M50PLQdo0IfjuIG2AocUev+Y/klDIXKIolseIq0G05r9QJqR/+A+NTX\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-32-29-672297.mp3\\",\\"size\\":77996,\\"eTag\\":\\"7ecad55471d4fc998d81d68b2537b687\\",\\"sequencer\\":\\"00671D6DFDD754BF1E\\"}}}]}","MD5OfBody":"3dc4d062b75a7ad568bf08d695a51ee4","MessageId":"70c7ed2c-390f-4afc-80d7-6b3660062438","ReceiptHandle":"AQEBooeWXd4MhFARhKOEEA45WYpwduA2AnTdinZmO9JlyIB8IACca9edpTUfxyEZEik9ca4B9p31Pr7LYzJ2lm5R3Pp575GS/BoJKjexjCyTRy3qbri80YID6afmp5147vesFxn3d2bFU8jHv4E2cbK7+QBT33imLSq0huKIWJFfSqOaJVRcuvKZ9yzBwTV2NWHaR6TGssCdi0dMVOJ/ONtUEk+cQ9yEP4664a+UmX540BXulRGOZKd2zIblrYzNG8HZn1k8MetnCXKSV9riTQmLz3J6vyt9m5UhZUS/ftQhVHnBDFugVu6MMV2LfBOlihPaxP5W20FalDQi8CaTjC0DLu9IT21nMdWxQy4HqKXxOMOHXz6KHG/wZBnfwesg8d++zQn+1ujrazeWUFTVyt3Fz/SXdn5z+d/Kl8eB3WP3VHg/70GF05VU9Q+UbsNI0hKo"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:51:40.928Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"7SJ8816DTJEF8N6F\\",\\"x-amz-id-2\\":\\"N7x5N3rN5hTR9LmXar8nrLT7HSZNhpXfGhQk+VVLpm2MMahzkFS5SmDPseL6gbNFeW3aMAPmaAKCXRsgwlA/3fCmtibltnYILVDIvCtfU1w=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-51-40-321713.mp3\\",\\"size\\":77985,\\"eTag\\":\\"87ed56ed105eb1f03bdde421bf22db0c\\",\\"sequencer\\":\\"00671D727CE0844001\\"}}}]}","MD5OfBody":"0b555f29c4bbc91b992a3bf629feaa46","MessageId":"e7c6c29f-868b-4529-8dd3-a3b7835144f9","ReceiptHandle":"AQEBAwBNPaXeREWoq2lv+A8pp8wtQzAIpclN6wvnk5cMK7QhYL8c7qfJuKu1PpOAqUBtRQEiZLy3GlRdcvNLYCDObcItFdb1a7v+E51Egh9ELm4qxxLnRlEF6F/Kt82LHduHX34gHT3HwhCEVhofQk/9HTZMAS0YNRTksT9+jMcBRO/Qyb3wMlnN1Fxkm1DGrAs59ShXs7TN3RAXBLIeM6tjhUfnSQp7yYfiaZSbN+QJ5BqbZay+Os169pVBNijKhYkdE730BJ45hIVea2/8t7O9k5i8oMnNcpapFrbdzB89vleDcvQi4w0YedTDinis30c21TrzDh7RRPlBydXf0M/4Vuo0ICMRBoNg2PYRn8jo5SbmuXSOz6kKAZB/DxjBkkbwb4gvPvbwdfOWSvbXstr4kqSUQF6UvsgQQIGBwKhKb54gfcCZ03p9qCdXaG+Fb7FV"},{"Body":"{\\"Records\\":[{\\"eventVersion\\":\\"2.1\\",\\"eventSource\\":\\"aws:s3\\",\\"awsRegion\\":\\"us-east-2\\",\\"eventTime\\":\\"2024-10-26T22:51:42.324Z\\",\\"eventName\\":\\"ObjectCreated:Put\\",\\"userIdentity\\":{\\"principalId\\":\\"AWS:AIDAZHXJOTDYREFEO3NOD\\"},\\"requestParameters\\":{\\"sourceIPAddress\\":\\"136.62.92.204\\"},\\"responseElements\\":{\\"x-amz-request-id\\":\\"YYXHFQ6PH5NN1TF3\\",\\"x-amz-id-2\\":\\"XMPyO+P45TyVRTzxrBFWodYukXHu0GowThukhbdPCHIe6gOCfzaHEFp7WLzaxrCQZwkHpWq2urp7RxDi6m41kJachxuXXo4ElUoF8rD/V2Y=\\"},\\"s3\\":{\\"s3SchemaVersion\\":\\"1.0\\",\\"configurationId\\":\\"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue\\",\\"bucket\\":{\\"name\\":\\"2024-09-23-audiotranscribe-input-bucket\\",\\"ownerIdentity\\":{\\"principalId\\":\\"AIJX460D6NHZF\\"},\\"arn\\":\\"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket\\"},\\"object\\":{\\"key\\":\\"google-oauth2%257C102874856824150216748/2024-10-26-17-51-42-092841.mp3\\",\\"size\\":30310,\\"eTag\\":\\"7907d47dc14e3bc7cdcbb601f95b6540\\",\\"sequencer\\":\\"00671D727E3AF0D51C\\"}}}]}","MD5OfBody":"79b3926ede00c7a1c7a6bf9a58605cec","MessageId":"d0588f21-20c4-4416-846c-fea3f6c23dff","ReceiptHandle":"AQEBVYislGZHo2JCm9hcQaQRwmXO8a4RBNpqjqs0r7ETXh4uB/YEgJACFQ1ymOQMliFEAaR+r2bW0z7FpkqtumTU0zrW2p4WVplkGoh1NQeWxBwrodMVLBlsvc9MRZq555v3jxfa3nQYAOcTXCXSSlK4FrGKkjiXMYV9hq5DRpTG4Rurl2rbJP5lLjK0zaT/azdx32C7rAz8CUxMmoLx0o95adXvfFV9YvVMJFoIkI5gNGd/4jcsaC3/5/TNOM5H2qhOF1k2lep2/QPibz8Dehp8B1CjY/2XJgIGTU0cEno9lDh4oYuuUtYBnQ1QfZS5cjlnGMEtU/T5DF+kQB7BNSsXg63zxgh6aLzlKXKaUjJOjr3ZG1i9EfAAm0zdyr7+484b5Gq8fE+H+AgljBi74NkFkllevmHXYaeq4YH1OlLzCCmzbqJEGv4yln1dVwccvV17"}]}'
+2024-10-26 23:37:31,907 - botocore.hooks - DEBUG - Event needs-retry.sqs.ReceiveMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:31,907 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:31,907 - __main__ - INFO - Received 3 messages
+2024-10-26 23:37:31,907 - __main__ - INFO - Processing message: 70c7ed2c-390f-4afc-80d7-6b3660062438
+2024-10-26 23:37:31,907 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:32:29.876Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"8Y2V6PXP6CG2WFAQ","x-amz-id-2":"n0dCWxedSBTxhxt0XpqUTrxIRT1KcQNXSl/67GbW8M50PLQdo0IfjuIG2AocUev+Y/klDIXKIolseIq0G05r9QJqR/+A+NTX"},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-32-29-672297.mp3","size":77996,"eTag":"7ecad55471d4fc998d81d68b2537b687","sequencer":"00671D6DFDD754BF1E"}}}]}
+2024-10-26 23:37:31,907 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-32-29-672297.mp3
+2024-10-26 23:37:31,921 - __main__ - INFO - Created task fe1bdc0b-e43f-459c-884e-3e75afd344c5 for file google-oauth2%257C102874856824150216748/2024-10-26-17-32-29-672297.mp3
+2024-10-26 23:37:31,922 - __main__ - INFO - Deleting message 70c7ed2c-390f-4afc-80d7-6b3660062438
+2024-10-26 23:37:31,922 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:31,922 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:31,922 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:31,922 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:31,922 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:31,922 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBooeWXd4MhFARhKOEEA45WYpwduA2AnTdinZmO9JlyIB8IACca9edpTUfxyEZEik9ca4B9p31Pr7LYzJ2lm5R3Pp575GS/BoJKjexjCyTRy3qbri80YID6afmp5147vesFxn3d2bFU8jHv4E2cbK7+QBT33imLSq0huKIWJFfSqOaJVRcuvKZ9yzBwTV2NWHaR6TGssCdi0dMVOJ/ONtUEk+cQ9yEP4664a+UmX540BXulRGOZKd2zIblrYzNG8HZn1k8MetnCXKSV9riTQmLz3J6vyt9m5UhZUS/ftQhVHnBDFugVu6MMV2LfBOlihPaxP5W20FalDQi8CaTjC0DLu9IT21nMdWxQy4HqKXxOMOHXz6KHG/wZBnfwesg8d++zQn+1ujrazeWUFTVyt3Fz/SXdn5z+d/Kl8eB3WP3VHg/70GF05VU9Q+UbsNI0hKo"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:31,923 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:31,923 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:31,923 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:31,923 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233731Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+4fe952da4f59f2fe5ac6d4ccc170144230458015ab55b5ac91741a554824f181
+2024-10-26 23:37:31,923 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233731Z
+20241026/us-east-2/sqs/aws4_request
+aeb59da091275955bdc3b4be076446e2a214adc3512058300d6e5c459cc8809f
+2024-10-26 23:37:31,923 - botocore.auth - DEBUG - Signature:
+625e2b81db234008e738700e49f75dabc8cc698b158d431bed90a9bc0c59fa11
+2024-10-26 23:37:31,923 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:31,923 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233731Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=625e2b81db234008e738700e49f75dabc8cc698b158d431bed90a9bc0c59fa11', 'amz-sdk-invocation-id': b'931c1357-97ef-41c8-a750-3145cc4c132f', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:31,924 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:31,929 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:31,929 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'f0d86958-c378-535a-bb0f-36cfbc03aae2', 'Date': 'Sat, 26 Oct 2024 23:37:31 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:31,929 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:31,929 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:31,930 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:31,930 - __main__ - INFO - Processing message: e7c6c29f-868b-4529-8dd3-a3b7835144f9
+2024-10-26 23:37:31,930 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:51:40.928Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"7SJ8816DTJEF8N6F","x-amz-id-2":"N7x5N3rN5hTR9LmXar8nrLT7HSZNhpXfGhQk+VVLpm2MMahzkFS5SmDPseL6gbNFeW3aMAPmaAKCXRsgwlA/3fCmtibltnYILVDIvCtfU1w="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-51-40-321713.mp3","size":77985,"eTag":"87ed56ed105eb1f03bdde421bf22db0c","sequencer":"00671D727CE0844001"}}}]}
+2024-10-26 23:37:31,930 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-51-40-321713.mp3
+2024-10-26 23:37:31,943 - __main__ - INFO - Created task 2f732ae8-4abc-45d5-bec6-a07cf727483e for file google-oauth2%257C102874856824150216748/2024-10-26-17-51-40-321713.mp3
+2024-10-26 23:37:31,943 - __main__ - INFO - Deleting message e7c6c29f-868b-4529-8dd3-a3b7835144f9
+2024-10-26 23:37:31,943 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:31,944 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:31,944 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:31,944 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:31,944 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:31,944 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBAwBNPaXeREWoq2lv+A8pp8wtQzAIpclN6wvnk5cMK7QhYL8c7qfJuKu1PpOAqUBtRQEiZLy3GlRdcvNLYCDObcItFdb1a7v+E51Egh9ELm4qxxLnRlEF6F/Kt82LHduHX34gHT3HwhCEVhofQk/9HTZMAS0YNRTksT9+jMcBRO/Qyb3wMlnN1Fxkm1DGrAs59ShXs7TN3RAXBLIeM6tjhUfnSQp7yYfiaZSbN+QJ5BqbZay+Os169pVBNijKhYkdE730BJ45hIVea2/8t7O9k5i8oMnNcpapFrbdzB89vleDcvQi4w0YedTDinis30c21TrzDh7RRPlBydXf0M/4Vuo0ICMRBoNg2PYRn8jo5SbmuXSOz6kKAZB/DxjBkkbwb4gvPvbwdfOWSvbXstr4kqSUQF6UvsgQQIGBwKhKb54gfcCZ03p9qCdXaG+Fb7FV"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:31,944 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:31,944 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:31,945 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:31,945 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233731Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+2bdc5cfe2944624263888c365ab514bfb90ac388b77c0377cf8ba06d384e8da6
+2024-10-26 23:37:31,945 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233731Z
+20241026/us-east-2/sqs/aws4_request
+4c7df54b109d8069e58160b748fc75156484d91e882a3857df50eb05c288c286
+2024-10-26 23:37:31,945 - botocore.auth - DEBUG - Signature:
+14d49138b9a4a8da66db517a01c278bcf4e94702c024e59ff19e02c161c18620
+2024-10-26 23:37:31,945 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:31,945 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233731Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=14d49138b9a4a8da66db517a01c278bcf4e94702c024e59ff19e02c161c18620', 'amz-sdk-invocation-id': b'8392bce3-b666-4d0a-9b90-4de589d62556', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:31,945 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:31,949 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:31,949 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': '4a2fe1a2-2a47-5d5b-8b43-be35553c34e3', 'Date': 'Sat, 26 Oct 2024 23:37:31 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:31,949 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:31,949 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:31,950 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:31,950 - __main__ - INFO - Processing message: d0588f21-20c4-4416-846c-fea3f6c23dff
+2024-10-26 23:37:31,950 - __main__ - DEBUG - Raw message body: {"Records":[{"eventVersion":"2.1","eventSource":"aws:s3","awsRegion":"us-east-2","eventTime":"2024-10-26T22:51:42.324Z","eventName":"ObjectCreated:Put","userIdentity":{"principalId":"AWS:AIDAZHXJOTDYREFEO3NOD"},"requestParameters":{"sourceIPAddress":"136.62.92.204"},"responseElements":{"x-amz-request-id":"YYXHFQ6PH5NN1TF3","x-amz-id-2":"XMPyO+P45TyVRTzxrBFWodYukXHu0GowThukhbdPCHIe6gOCfzaHEFp7WLzaxrCQZwkHpWq2urp7RxDi6m41kJachxuXXo4ElUoF8rD/V2Y="},"s3":{"s3SchemaVersion":"1.0","configurationId":"https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue","bucket":{"name":"2024-09-23-audiotranscribe-input-bucket","ownerIdentity":{"principalId":"AIJX460D6NHZF"},"arn":"arn:aws:s3:::2024-09-23-audiotranscribe-input-bucket"},"object":{"key":"google-oauth2%257C102874856824150216748/2024-10-26-17-51-42-092841.mp3","size":30310,"eTag":"7907d47dc14e3bc7cdcbb601f95b6540","sequencer":"00671D727E3AF0D51C"}}}]}
+2024-10-26 23:37:31,950 - __main__ - INFO - Processing S3 event - Bucket: 2024-09-23-audiotranscribe-input-bucket, Key: google-oauth2%257C102874856824150216748/2024-10-26-17-51-42-092841.mp3
+2024-10-26 23:37:31,962 - __main__ - INFO - Created task fe48954f-7007-42e1-9efc-3927fe24a614 for file google-oauth2%257C102874856824150216748/2024-10-26-17-51-42-092841.mp3
+2024-10-26 23:37:31,963 - __main__ - INFO - Deleting message d0588f21-20c4-4416-846c-fea3f6c23dff
+2024-10-26 23:37:31,963 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.DeleteMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:31,963 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:31,963 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:31,963 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:31,963 - botocore.hooks - DEBUG - Event before-call.sqs.DeleteMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:31,964 - botocore.endpoint - DEBUG - Making request for OperationModel(name=DeleteMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.DeleteMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "ReceiptHandle": "AQEBVYislGZHo2JCm9hcQaQRwmXO8a4RBNpqjqs0r7ETXh4uB/YEgJACFQ1ymOQMliFEAaR+r2bW0z7FpkqtumTU0zrW2p4WVplkGoh1NQeWxBwrodMVLBlsvc9MRZq555v3jxfa3nQYAOcTXCXSSlK4FrGKkjiXMYV9hq5DRpTG4Rurl2rbJP5lLjK0zaT/azdx32C7rAz8CUxMmoLx0o95adXvfFV9YvVMJFoIkI5gNGd/4jcsaC3/5/TNOM5H2qhOF1k2lep2/QPibz8Dehp8B1CjY/2XJgIGTU0cEno9lDh4oYuuUtYBnQ1QfZS5cjlnGMEtU/T5DF+kQB7BNSsXg63zxgh6aLzlKXKaUjJOjr3ZG1i9EfAAm0zdyr7+484b5Gq8fE+H+AgljBi74NkFkllevmHXYaeq4YH1OlLzCCmzbqJEGv4yln1dVwccvV17"}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:31,964 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:31,964 - botocore.hooks - DEBUG - Event choose-signer.sqs.DeleteMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:31,964 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:31,964 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233731Z
+x-amz-target:AmazonSQS.DeleteMessage
+
+content-type;host;x-amz-date;x-amz-target
+19da3f9573d328c2bea9909be744732308a41bcef49f9685c3124daef07146f2
+2024-10-26 23:37:31,964 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233731Z
+20241026/us-east-2/sqs/aws4_request
+1e9e512d768f081ab6e1d3210ac59aeee3862c310e04d603219fa4f055aec5a4
+2024-10-26 23:37:31,964 - botocore.auth - DEBUG - Signature:
+1c704d6cfbd6def20dd80a410b94c02db91bd83d7bea63fe079aebd396387945
+2024-10-26 23:37:31,964 - botocore.hooks - DEBUG - Event request-created.sqs.DeleteMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:31,965 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.DeleteMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233731Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=1c704d6cfbd6def20dd80a410b94c02db91bd83d7bea63fe079aebd396387945', 'amz-sdk-invocation-id': b'e82aa42b-a86b-479f-bc87-0882846b5cfb', 'amz-sdk-request': b'attempt=1', 'Content-Length': '585'}>
+2024-10-26 23:37:31,965 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
+2024-10-26 23:37:31,968 - urllib3.connectionpool - DEBUG - https://sqs.us-east-2.amazonaws.com:443 "POST / HTTP/11" 200 0
+2024-10-26 23:37:31,969 - botocore.parsers - DEBUG - Response headers: {'x-amzn-RequestId': 'cb04e170-f6fa-5d5b-88a1-bee78981a4e3', 'Date': 'Sat, 26 Oct 2024 23:37:31 GMT', 'Content-Type': 'application/x-amz-json-1.0', 'Content-Length': '0', 'connection': 'keep-alive'}
+2024-10-26 23:37:31,969 - botocore.parsers - DEBUG - Response body:
+b''
+2024-10-26 23:37:31,969 - botocore.hooks - DEBUG - Event needs-retry.sqs.DeleteMessage: calling handler <botocore.retryhandler.RetryHandler object at 0xff8559260d90>
+2024-10-26 23:37:31,969 - botocore.retryhandler - DEBUG - No retry needed.
+2024-10-26 23:37:32,970 - __main__ - DEBUG - Polling SQS queue for messages...
+2024-10-26 23:37:32,970 - botocore.hooks - DEBUG - Event before-parameter-build.sqs.ReceiveMessage: calling handler <function generate_idempotent_uuid at 0xff855b010550>
+2024-10-26 23:37:32,971 - botocore.regions - DEBUG - Calling endpoint provider with parameters: {'Region': 'us-east-2', 'UseDualStack': False, 'UseFIPS': False}
+2024-10-26 23:37:32,971 - botocore.regions - DEBUG - Endpoint provider result: https://sqs.us-east-2.amazonaws.com
+2024-10-26 23:37:32,971 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function add_recursion_detection_header at 0xff855b0101f0>
+2024-10-26 23:37:32,971 - botocore.hooks - DEBUG - Event before-call.sqs.ReceiveMessage: calling handler <function inject_api_version_header_if_needed at 0xff855b011d80>
+2024-10-26 23:37:32,971 - botocore.endpoint - DEBUG - Making request for OperationModel(name=ReceiveMessage) with params: {'url_path': '/', 'query_string': '', 'method': 'POST', 'headers': {'X-Amz-Target': 'AmazonSQS.ReceiveMessage', 'Content-Type': 'application/x-amz-json-1.0', 'User-Agent': 'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116'}, 'body': b'{"QueueUrl": "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue", "MaxNumberOfMessages": 10, "WaitTimeSeconds": 20}', 'url': 'https://sqs.us-east-2.amazonaws.com/', 'context': {'client_region': 'us-east-2', 'client_config': <botocore.config.Config object at 0xff85591f75b0>, 'has_streaming_input': False, 'auth_type': None}}
+2024-10-26 23:37:32,971 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <bound method RequestSigner.handler of <botocore.signers.RequestSigner object at 0xff85591f7520>>
+2024-10-26 23:37:32,972 - botocore.hooks - DEBUG - Event choose-signer.sqs.ReceiveMessage: calling handler <function set_operation_specific_signer at 0xff855b010430>
+2024-10-26 23:37:32,972 - botocore.auth - DEBUG - Calculating signature using v4 auth.
+2024-10-26 23:37:32,972 - botocore.auth - DEBUG - CanonicalRequest:
+POST
+/
+
+content-type:application/x-amz-json-1.0
+host:sqs.us-east-2.amazonaws.com
+x-amz-date:20241026T233732Z
+x-amz-target:AmazonSQS.ReceiveMessage
+
+content-type;host;x-amz-date;x-amz-target
+bfcd71833a3f9be6150653694459b0a84ab2733144b97db1297302dc734e1e4c
+2024-10-26 23:37:32,972 - botocore.auth - DEBUG - StringToSign:
+AWS4-HMAC-SHA256
+20241026T233732Z
+20241026/us-east-2/sqs/aws4_request
+94c4738fd7bd01f372af89ca53fe9b9f82458f1fc5de00263c5cba6fb6594171
+2024-10-26 23:37:32,972 - botocore.auth - DEBUG - Signature:
+af9f790727a562acfbfdc437b403ae331b4e7b8a17b27251d58dd540f8e7c6ea
+2024-10-26 23:37:32,972 - botocore.hooks - DEBUG - Event request-created.sqs.ReceiveMessage: calling handler <function add_retry_headers at 0xff855b0124d0>
+2024-10-26 23:37:32,972 - botocore.endpoint - DEBUG - Sending http request: <AWSPreparedRequest stream_output=False, method=POST, url=https://sqs.us-east-2.amazonaws.com/, headers={'X-Amz-Target': b'AmazonSQS.ReceiveMessage', 'Content-Type': b'application/x-amz-json-1.0', 'User-Agent': b'Boto3/1.34.116 md/Botocore#1.34.116 ua/2.0 os/linux#6.8.0-1016-aws md/arch#aarch64 lang/python#3.10.12 md/pyimpl#CPython cfg/retry-mode#legacy Botocore/1.34.116', 'X-Amz-Date': b'20241026T233732Z', 'Authorization': b'AWS4-HMAC-SHA256 Credential=AKIAZHXJOTDYVYVUM7X5/20241026/us-east-2/sqs/aws4_request, SignedHeaders=content-type;host;x-amz-date;x-amz-target, Signature=af9f790727a562acfbfdc437b403ae331b4e7b8a17b27251d58dd540f8e7c6ea', 'amz-sdk-invocation-id': b'd523f9c8-5301-4ebf-b060-0845ef046967', 'amz-sdk-request': b'attempt=1', 'Content-Length': '162'}>
+2024-10-26 23:37:32,973 - botocore.httpsession - DEBUG - Certificate path: /etc/ssl/certs/ca-certificates.crt
