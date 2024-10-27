@@ -488,8 +488,83 @@ def update_task_status():
         return jsonify({'error': 'Internal server error'}), 500
 
 
+def normalize_key(key: str) -> str:
+    """Normalize a key by fully decoding and then properly encoding it once."""
+    try:
+        # First decode completely (handles multiple encodings)
+        decoded = key
+        while '%' in decoded:
+            prev = decoded
+            decoded = requests.utils.unquote(decoded)
+            if prev == decoded:  # Stop if no more decoding possible
+                break
+                
+        # Now encode once properly, preserving slashes
+        encoded = requests.utils.quote(decoded, safe='/')
+        
+        return encoded
+    except Exception as e:
+        logger.error(f"Error normalizing key {key}: {e}")
+        return key
+
+def cleanup_database():
+    """Fix existing database entries with incorrect encoding."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Get all tasks
+            cursor.execute("SELECT task_id, object_key FROM tasks")
+            tasks = cursor.fetchall()
+            
+            # Update each task with normalized key
+            for task_id, object_key in tasks:
+                normalized_key = normalize_key(object_key)
+                if normalized_key != object_key:
+                    cursor.execute("""
+                        UPDATE tasks 
+                        SET object_key = %s 
+                        WHERE task_id = %s
+                    """, (normalized_key, task_id))
+            
+            conn.commit()
+            logger.info("Database keys normalized")
+            
+    finally:
+        conn.close()
+
+def reset_stuck_tasks():
+    """Reset tasks that are stuck in in-progress state."""
+    conn = get_db_connection()
+    try:
+        with conn.cursor() as cursor:
+            # Reset tasks that have been in-progress for more than 10 minutes
+            cursor.execute("""
+                UPDATE tasks 
+                SET status = 'Pending',
+                    retries = COALESCE(retries, 0),
+                    updated_at = NOW()
+                WHERE status = 'In-progress'
+                AND updated_at < NOW() - INTERVAL '10 minutes'
+            """)
+            
+            updated = cursor.rowcount
+            conn.commit()
+            logger.info(f"Reset {updated} stuck tasks to Pending")
+            
+    finally:
+        conn.close()
+
+
+
 if __name__ == '__main__':
     try:
+
+        # Clean up database first
+        cleanup_database()
+        
+        # Reset any stuck tasks
+        reset_stuck_tasks()
+
         # Initialize the database
         init_db()
         logger.info("Database initialized successfully")
