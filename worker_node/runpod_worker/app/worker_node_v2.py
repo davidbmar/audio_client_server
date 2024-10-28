@@ -120,25 +120,44 @@ def update_task_status(config: Dict[str, Any], task_id: str, status: str, failur
 def step1_download_from_presigned_url(presigned_url: str, local_audio_path: str) -> bool:
     """Download audio file using a pre-signed URL."""
     try:
-        response = requests.get(presigned_url, stream=True, timeout=30)
+        logger.info("Starting download with presigned URL")
+        response = requests.get(presigned_url, stream=True)
+
+        if response.status_code == 404:
+            error_content = response.text
+            logger.error(f"Download failed with status 404")
+            logger.error(f"Error response: {error_content}")
+            return False
+
         if response.status_code == 200:
             with open(local_audio_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     if chunk:
                         f.write(chunk)
 
-            if os.path.exists(local_audio_path) and os.path.getsize(local_audio_path) > 0:
-                logger.info(f"Downloaded audio file to {local_audio_path}")
-                return True
+            # Verify download
+            if os.path.exists(local_audio_path):
+                file_size = os.path.getsize(local_audio_path)
+                logger.info(f"Downloaded file size: {file_size} bytes")
+                if file_size > 0:
+                    logger.info(f"Successfully downloaded audio file to {local_audio_path}")
+                    return True
+                else:
+                    logger.error("Downloaded file is empty")
+                    return False
             else:
-                logger.error("Downloaded file is empty or does not exist")
+                logger.error("File not created after download")
                 return False
         else:
-            logger.error(f"Failed to download file: {response.status_code} {response.text}")
+            logger.error(f"Download failed with status {response.status_code}")
+            logger.error(f"Error response: {response.text}")
             return False
     except Exception as e:
         logger.error(f"Error downloading file: {str(e)}")
+        logger.error(f"Full error: {traceback.format_exc()}")
         return False
+
+
 
 def step2_transcribe_audio(local_audio_path: str) -> Optional[str]:
     """Transcribe the audio file."""
@@ -205,26 +224,26 @@ def step3_upload_to_presigned_url(presigned_url: str, local_file_path: str) -> b
 def main():
     """Main entry point of the application."""
     try:
-        # Load configuration
         config = load_config('config.yaml')
 
         while keep_running:
             try:
-                # Request a task from the orchestrator
                 task = get_task(config)
                 if not task:
                     time.sleep(10)
                     continue
 
-                # Extract task details
+                # Extract task details - everything is already URL encoded
                 task_id = task['task_id']
+                object_key = task['object_key']  # This is URL encoded
                 presigned_get_url = task['presigned_get_url']
                 presigned_put_url = task['presigned_put_url']
-                object_key = task['object_key']
+
+                # Use the encoded name for the local file
                 filename = os.path.basename(object_key)
                 local_audio_path = os.path.join(config['download_folder'], filename)
 
-                logger.info(f"Starting processing for file: {filename}")
+                logger.info(f"Processing file: {filename}")
 
                 # Download from Pre-Signed URL
                 if not step1_download_from_presigned_url(presigned_get_url, local_audio_path):
@@ -307,4 +326,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-~                           
