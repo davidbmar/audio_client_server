@@ -2,12 +2,14 @@
 #audio_client_server/orchestrator/orchestrator.py
 import boto3
 import json
+import requests
 import uuid
 import time
 import logging
 import threading
-from urllib.parse import unquote
+from urllib.parse import quote, unquote
 import psycopg2  
+from url_utils import PathHandler  # Add this import
 from flask import Flask, request, jsonify
 from functools import wraps
 from botocore.exceptions import ClientError
@@ -205,8 +207,12 @@ def send_task_to_queue(task_id, object_key, config):
         logging.error(f"Failed to send task to queue: {str(e)}")
         return False
 
+
+
+
 def process_pending_tasks():
     """Process pending tasks and queue them for workers."""
+    logging.info("Starting to process pending tasks")
     config = get_config()
     conn = get_db_connection()
     
@@ -217,29 +223,66 @@ def process_pending_tasks():
                 SELECT task_id, object_key 
                 FROM tasks 
                 WHERE status = 'Pending'
-                AND retry_at IS NULL OR retry_at <= NOW()
+                AND (retry_at IS NULL OR retry_at <= NOW())
+                FOR UPDATE SKIP LOCKED
                 LIMIT 10
             """)
             
             pending_tasks = cursor.fetchall()
             
+            if pending_tasks:
+                logging.info(f"Found {len(pending_tasks)} pending tasks to process")
+            
             for task_id, object_key in pending_tasks:
-                if send_task_to_queue(task_id, object_key, config):
-                    # Update task status to 'Queued'
+                # Decode the double-encoded key
+                decoded_key = unquote(unquote(object_key))
+                logging.info(f"Processing task {task_id} with key: {decoded_key}")
+                
+                try:
+                    if send_task_to_queue(task_id, decoded_key, config):
+                        # Update task status to 'Queued'
+                        cursor.execute("""
+                            UPDATE tasks 
+                            SET status = 'Queued', 
+                                updated_at = NOW()
+                            WHERE task_id = %s
+                        """, (task_id,))
+                        conn.commit()
+                        logging.info(f"Task {task_id} successfully queued")
+                    else:
+                        logging.error(f"Failed to queue task {task_id}")
+                        cursor.execute("""
+                            UPDATE tasks 
+                            SET status = 'Failed',
+                                failure_reason = 'Failed to queue task',
+                                updated_at = NOW()
+                            WHERE task_id = %s
+                        """, (task_id,))
+                        conn.commit()
+                except Exception as e:
+                    logging.error(f"Error processing task {task_id}: {str(e)}")
                     cursor.execute("""
                         UPDATE tasks 
-                        SET status = 'Queued', updated_at = NOW()
+                        SET status = 'Failed',
+                            failure_reason = %s,
+                            updated_at = NOW()
                         WHERE task_id = %s
-                    """, (task_id,))
+                    """, (str(e), task_id))
                     conn.commit()
-                    logging.info(f"Task {task_id} marked as queued")
-                else:
-                    logging.error(f"Failed to queue task {task_id}")
                     
     except Exception as e:
-        logging.error(f"Error processing pending tasks: {str(e)}")
+        logging.error(f"Error in process_pending_tasks: {str(e)}")
     finally:
         conn.close()
+
+# add to main function to run periodic processing
+def periodic_task_processor():
+    while True:
+        try:
+            process_pending_tasks()
+        except Exception as e:
+            logging.error(f"Error in periodic task processor: {e}")
+        time.sleep(5)  # Process every 5 seconds
 
 def poll_s3_events():
     """Poll for S3 upload events and create transcription tasks."""
@@ -248,7 +291,6 @@ def poll_s3_events():
     
     while True:
         try:
-            logger.debug("Polling SQS queue for messages...")
             response = sqs.receive_message(
                 QueueUrl=queue_url,
                 MaxNumberOfMessages=10,
@@ -256,8 +298,6 @@ def poll_s3_events():
             )
             
             if 'Messages' in response:
-                logger.info(f"Received {len(response['Messages'])} messages")
-                
                 for message in response['Messages']:
                     try:
                         event = json.loads(message['Body'])
@@ -265,13 +305,11 @@ def poll_s3_events():
                         for record in event.get('Records', []):
                             if record.get('eventName', '').startswith('ObjectCreated:'):
                                 bucket = record['s3']['bucket']['name']
+                                # S3 provides encoded key - store as-is
                                 encoded_key = record['s3']['object']['key']
                                 
-                                # Fix double encoding
-                                key = double_decode_key(encoded_key)
-                                logger.info(f"Processing S3 event - Bucket: {bucket}, Key: {key}")
+                                logger.info(f"Processing S3 event - Bucket: {bucket}, Key: {encoded_key}")
                                 
-                                # Create task with decoded key
                                 task_id = str(uuid.uuid4())
                                 conn = get_db_connection()
                                 try:
@@ -279,29 +317,22 @@ def poll_s3_events():
                                         cursor.execute("""
                                             INSERT INTO tasks (task_id, object_key, status)
                                             VALUES (%s, %s, 'Pending')
-                                        """, (task_id, key))
+                                        """, (task_id, encoded_key))
                                         conn.commit()
-                                        logger.info(f"Created task {task_id} for file {key}")
                                 finally:
                                     conn.close()
-                        
-                        # Delete the processed message
+                                    
                         sqs.delete_message(
                             QueueUrl=queue_url,
                             ReceiptHandle=message['ReceiptHandle']
                         )
-                        logger.info(f"Deleted message {message['MessageId']}")
-                        
                     except Exception as e:
-                        logger.error(f"Error processing message: {e}", exc_info=True)
-            else:
-                logger.debug("No messages received")
-                
+                        logger.error(f"Error processing message: {e}")
+                        
         except Exception as e:
-            logger.error(f"Error polling queue: {e}", exc_info=True)
+            logger.error(f"Error polling queue: {e}")
         
         time.sleep(1)
-
 
 def poll_status_update_queue():
     """Poll the SQS Status Update Queue for status updates."""
@@ -383,62 +414,69 @@ def get_task():
     conn = get_db_connection()
     try:
         with conn.cursor() as cursor:
-            # Get a pending task
             cursor.execute("""
-                SELECT task_id, object_key FROM tasks WHERE status = %s LIMIT 1
-            """, ('Pending',))
+                SELECT task_id, object_key 
+                FROM tasks 
+                WHERE status = 'Queued'
+                LIMIT 1
+                FOR UPDATE SKIP LOCKED
+            """)
+            
             task = cursor.fetchone()
-
             if not task:
                 return jsonify({'message': 'No tasks available'}), 204
 
-            task_id, object_key = task
-
-            # Always fully URL encode the object key
-            # DO NOT preserve slashes or any other characters
-            fully_encoded_key = requests.utils.quote(object_key, safe='')
-            logging.info(f"Original key: {object_key}")
-            logging.info(f"Fully encoded key: {fully_encoded_key}")
+            task_id, encoded_key = task
+            
+            # Decode for AWS operations
+            decoded_key = PathHandler.decode_for_use(encoded_key)
+            logger.info(f"Task {task_id} - Encoded key: {encoded_key}")
+            logger.info(f"Task {task_id} - Decoded key: {decoded_key}")
 
             try:
-                # Generate pre-signed URLs using the fully encoded key
-                presigned_get_url = s3.generate_presigned_url(
+                # Use decoded key for S3 operations
+                get_url = s3.generate_presigned_url(
                     'get_object',
-                    Params={'Bucket': INPUT_BUCKET, 'Key': fully_encoded_key},
-                    ExpiresIn=PRESIGNED_URL_EXPIRATION
+                    Params={
+                        'Bucket': INPUT_BUCKET,
+                        'Key': decoded_key
+                    },
+                    ExpiresIn=3600
                 )
 
-                # Use the same encoding for output path
-                output_key = f"transcriptions/{fully_encoded_key}.txt"
-                presigned_put_url = s3.generate_presigned_url(
+                output_key = f"transcriptions/{decoded_key}.txt"
+                put_url = s3.generate_presigned_url(
                     'put_object',
-                    Params={'Bucket': OUTPUT_BUCKET, 'Key': output_key},
-                    ExpiresIn=PRESIGNED_URL_EXPIRATION
+                    Params={
+                        'Bucket': OUTPUT_BUCKET,
+                        'Key': output_key,
+                        'ContentType': 'text/plain'
+                    },
+                    ExpiresIn=3600
                 )
 
-                # Send the fully encoded values to the worker
-                task_response = {
-                    'task_id': str(task_id),
-                    'object_key': fully_encoded_key,  # Send encoded version
-                    'presigned_get_url': presigned_get_url,
-                    'presigned_put_url': presigned_put_url
-                }
-
-                # Update task status
                 cursor.execute("""
-                    UPDATE tasks SET status = %s, updated_at = NOW() WHERE task_id = %s
-                """, ('In-progress', task_id))
+                    UPDATE tasks 
+                    SET status = 'In-Progress',
+                        updated_at = NOW()
+                    WHERE task_id = %s
+                """, (task_id,))
                 conn.commit()
 
-                return jsonify(task_response), 200
+                return jsonify({
+                    'task_id': str(task_id),
+                    'object_key': encoded_key,
+                    'presigned_get_url': get_url,
+                    'presigned_put_url': put_url
+                }), 200
 
             except ClientError as e:
-                logging.error(f"Error generating pre-signed URLs: {e}")
-                return jsonify({'error': f'AWS error: {str(e)}'}), 500
+                logger.error(f"Error generating pre-signed URLs: {e}")
+                return jsonify({'error': str(e)}), 500
 
     except Exception as e:
-        logging.error(f"Error in get-task: {str(e)}")
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        logger.error(f"Error in get-task: {e}")
+        return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
 
@@ -487,8 +525,49 @@ def update_task_status():
         logging.error(f"Error updating task status: {e}")
         return jsonify({'error': 'Internal server error'}), 500
 
+def normalize_s3_key(key: str) -> str:
+    """Normalize an S3 key to match what's actually in the bucket."""
+    try:
+        # First check if key exists as-is
+        s3 = boto3.client('s3')
+        try:
+            s3.head_object(
+                Bucket=config['input_bucket'],
+                Key=key
+            )
+            return key  # Key exists as-is, use it
+        except s3.exceptions.ClientError:
+            pass  # Key doesn't exist, try other formats
 
-def normalize_key(key: str) -> str:
+        # Try different encoding formats
+        variants = [
+            key,  # Original
+            requests.utils.quote(requests.utils.unquote(key)),  # Single encoded
+            requests.utils.quote(requests.utils.unquote(key), safe=''),  # Single encoded, no safe chars
+            requests.utils.quote(requests.utils.unquote(requests.utils.unquote(key))),  # Double decoded, then encoded
+            key.replace('%7C', '%257C').replace('/', '%2F'),  # Double encoded with encoded slashes
+            key.replace('%7C', '%257C')  # Double encoded with preserved slashes
+        ]
+
+        # Try each variant
+        for variant in variants:
+            try:
+                s3.head_object(
+                    Bucket=config['input_bucket'],
+                    Key=variant
+                )
+                logger.info(f"Found matching key format: {variant}")
+                return variant
+            except s3.exceptions.ClientError:
+                continue
+
+        logger.error(f"Could not find matching key format for: {key}")
+        return key
+    except Exception as e:
+        logger.error(f"Error normalizing key {key}: {e}")
+        return key
+
+def normalize_s3_key(key: str) -> str:
     """Normalize a key by fully decoding and then properly encoding it once."""
     try:
         # First decode completely (handles multiple encodings)
@@ -518,13 +597,13 @@ def cleanup_database():
             
             # Update each task with normalized key
             for task_id, object_key in tasks:
-                normalized_key = normalize_key(object_key)
-                if normalized_key != object_key:
+                normalized_s3_key = normalize_s3_key(object_key)
+                if normalized_s3_key != object_key:
                     cursor.execute("""
                         UPDATE tasks 
                         SET object_key = %s 
                         WHERE task_id = %s
-                    """, (normalized_key, task_id))
+                    """, (normalized_s3_key, task_id))
             
             conn.commit()
             logger.info("Database keys normalized")
@@ -569,10 +648,15 @@ if __name__ == '__main__':
         init_db()
         logger.info("Database initialized successfully")
 
+
         # Start the S3 event polling in a background thread
         logger.info("Starting S3 event polling thread")
         s3_event_thread = threading.Thread(target=poll_s3_events, daemon=True)
         s3_event_thread.start()
+
+        # After S3 objects have been uploaded to S3, and the event is there, then start the processing.
+        task_processor_thread = threading.Thread(target=periodic_task_processor, daemon=True)
+        task_processor_thread.start()
 
         # Start the Flask app
         logger.info("Starting Flask application")
