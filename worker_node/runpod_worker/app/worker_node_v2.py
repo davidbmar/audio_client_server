@@ -1,310 +1,371 @@
-#!/home/ubuntu/faster-whisper-env/bin/python3
-
+#!/usr/bin/python3
+#audio_client_server/worker_node/runpod_worker/app/worker_node_v2.py
 import json
 import logging
 import os
 import yaml
+import sys
 import signal
 import time
 import requests
 import traceback
 from datetime import datetime
 from typing import Dict, Any, Optional
+from urllib.parse import unquote
 
-# Enhanced logging configuration
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('worker.log'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger(__name__)
 
-# Global flag for graceful shutdown
-keep_running = True
+class AudioTranscriptionWorker:
+    def __init__(self, config_path: str):
+        self.logger = logging.getLogger(__name__)
 
-def signal_handler(signum, frame):
-    global keep_running
-    logger.info(f"Received shutdown signal {signum}. Finishing current task and exiting...")
-    keep_running = False
+        # First check dependencies
+        if not self.check_dependencies():
+            raise SystemExit("Required dependencies not met. Please install required packages.")
 
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGTERM, signal_handler)
+        self.config = self.load_config(config_path)
+        self.keep_running = True
+        self.setup_signal_handlers()
 
-def load_config(config_path: str) -> Dict[str, Any]:
-    """Load configuration from YAML file."""
-    try:
-        logger.debug(f"Attempting to load config from {config_path}")
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"Config file not found at {config_path}")
+    def check_dependencies(self) -> bool:
+        """Check all required dependencies before starting."""
+        try:
+            self.logger.info("Checking dependencies...")
 
-        with open(config_path, 'r') as file:
-            config = yaml.safe_load(file)
+            # Check for faster-whisper
+            try:
+                import faster_whisper
+                self.logger.info("✓ faster-whisper found")
+            except ImportError:
+                self.logger.error("✗ faster-whisper not found. Please run: pip install faster-whisper")
+                return False
 
-        # Validate required configuration items
-        required_keys = [
-            'orchestrator_url',
-            'download_folder',
-            'api_token'
-        ]
+            # Check for torch
+            try:
+                import torch
+                self.logger.info(f"✓ torch found (Version: {torch.__version__})")
 
-        missing_keys = [key for key in required_keys if key not in config]
-        if missing_keys:
-            raise KeyError(f"Missing required configuration items: {', '.join(missing_keys)}")
+                # Check CUDA availability
+                if torch.cuda.is_available():
+                    self.logger.info(f"✓ CUDA available (Device: {torch.cuda.get_device_name(0)})")
+                else:
+                    self.logger.warning("! CUDA not available - will use CPU (this will be much slower)")
 
-        # Create download folder if it doesn't exist
-        os.makedirs(config['download_folder'], exist_ok=True)
+            except ImportError:
+                self.logger.error("✗ torch not found. Please run: pip install torch")
+                return False
 
-        logger.info("Configuration loaded successfully")
-        return config
-    except Exception as e:
-        logger.error(f"Error loading config: {str(e)}")
-        logger.error(f"Full error: {traceback.format_exc()}")
-        raise
+            # All checks passed
+            self.logger.info("All required dependencies found")
+            return True
 
-def get_task(config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-    """Request a task from the orchestrator service."""
-    headers = {
-        'Authorization': f"Bearer {config['api_token']}"
-    }
-    try:
-        response = requests.get(
-            f"{config['orchestrator_url']}/get-task",
-            headers=headers,
-            timeout=10
-        )
+        except Exception as e:
+            self.logger.error(f"Error checking dependencies: {str(e)}")
+            return False
 
-        if response.status_code == 200:
-            task = response.json()
-            logger.info(f"Received task: {json.dumps(task, indent=2)}")
-            return task
-        elif response.status_code == 204:
-            logger.debug("No tasks available")
+    def setup_signal_handlers(self):
+        """Setup graceful shutdown handlers."""
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+    def signal_handler(self, signum, frame):
+        """Handle shutdown signals."""
+        self.logger.info(f"Received shutdown signal {signum}. Finishing current task and exiting...")
+        self.keep_running = False
+
+    def load_config(self, config_path: str) -> Dict[str, Any]:
+        """Load and validate configuration."""
+        try:
+            self.logger.debug(f"Loading config from {config_path}")
+            if not os.path.exists(config_path):
+                raise FileNotFoundError(f"Config file not found at {config_path}")
+
+            with open(config_path, 'r') as file:
+                config = yaml.safe_load(file)
+
+            required_keys = ['orchestrator_url', 'download_folder', 'api_token']
+            missing_keys = [key for key in required_keys if key not in config]
+            if missing_keys:
+                raise KeyError(f"Missing required configuration: {', '.join(missing_keys)}")
+
+            os.makedirs(config['download_folder'], exist_ok=True)
+            self.logger.info("Configuration loaded successfully")
+            return config
+        except Exception as e:
+            self.logger.error(f"Error loading config: {str(e)}")
+            raise
+
+    def get_task(self) -> Optional[Dict[str, Any]]:
+        """Get task from orchestrator."""
+        headers = {'Authorization': f"Bearer {self.config['api_token']}"}
+        try:
+            response = requests.get(
+                f"{self.config['orchestrator_url']}/get-task",
+                headers=headers,
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                task = response.json()
+                self.logger.info(f"Received task: {json.dumps(task, indent=2)}")
+                return task
+            elif response.status_code == 204:
+                self.logger.debug("No tasks available")
+                return None
+            else:
+                self.logger.error(f"Failed to get task: {response.status_code} {response.text}")
+                return None
+        except Exception as e:
+            self.logger.error(f"Error requesting task: {str(e)}")
             return None
-        else:
-            logger.error(f"Failed to get task: {response.status_code} {response.text}")
+
+    def process_task(self, task: Dict[str, Any]) -> bool:
+        """Process a single transcription task."""
+        task_id = task['task_id']
+        encoded_key = task['object_key']  # Keep encoded for local storage
+        presigned_get_url = task['presigned_get_url']
+        presigned_put_url = task['presigned_put_url']
+
+        # Use encoded filename for local storage
+        filename = os.path.basename(encoded_key)
+        local_audio_path = os.path.join(self.config['download_folder'], filename)
+        local_transcript_path = os.path.join(self.config['download_folder'], f"{filename}.txt")
+
+        try:
+            # 1. Download audio file
+            if not self.download_file(presigned_get_url, local_audio_path):
+                self.update_task_status(task_id, "Failed", "Failed to download audio file")
+                return False
+
+            # 2. Transcribe audio
+            transcription = self.transcribe_audio(local_audio_path)
+            if not transcription:
+                self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
+                self.cleanup_files([local_audio_path])
+                return False
+
+            # 3. Save and upload transcription
+            if not self.save_and_upload_transcription(
+                transcription,
+                local_transcript_path,
+                presigned_put_url
+            ):
+                self.update_task_status(task_id, "Failed", "Failed to upload transcription")
+                self.cleanup_files([local_audio_path, local_transcript_path])
+                return False
+
+            # 4. Mark as completed and cleanup
+            self.update_task_status(task_id, "Completed")
+            self.cleanup_files([local_audio_path, local_transcript_path])
+            self.logger.info(f"Successfully processed task {task_id}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error processing task {task_id}: {str(e)}")
+            self.logger.error(traceback.format_exc())
+            self.update_task_status(task_id, "Failed", str(e))
+            self.cleanup_files([local_audio_path, local_transcript_path])
+            return False
+
+    def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
+        """Transcribe the audio file."""
+        try:
+            from faster_whisper import WhisperModel
+            import torch
+
+            # Verify CUDA availability
+            if not torch.cuda.is_available():
+                self.logger.warning("CUDA is not available, falling back to CPU")
+                device = "cpu"
+                compute_type = "int8"
+            else:
+                device = "cuda"
+                compute_type = "float16"
+
+            # Load the model
+            model_size = "medium"
+            self.logger.info(f"Loading Whisper model: {model_size} on {device}")
+            model = WhisperModel(model_size, device=device, compute_type=compute_type)
+
+            # Verify input file
+            if not os.path.exists(local_audio_path):
+                raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
+
+            # Transcribe the audio file
+            self.logger.info(f"Starting transcription of {local_audio_path}")
+            segments, info = model.transcribe(local_audio_path)
+
+            # Combine the transcribed text from segments
+            transcription = "".join([segment.text for segment in segments])
+
+            if not transcription:
+                self.logger.warning("Transcription resulted in empty text")
+                return None
+
+            self.logger.info(f"Successfully transcribed {local_audio_path}")
+            return transcription
+        except Exception as e:
+            self.logger.error(f"Error transcribing file: {str(e)}")
+            self.logger.error(f"Full error: {traceback.format_exc()}")
             return None
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error requesting task: {str(e)}")
-        return None
 
-def update_task_status(config: Dict[str, Any], task_id: str, status: str, failure_reason: Optional[str] = None):
-    """Update task status via the orchestrator API."""
-    headers = {
-        'Authorization': f"Bearer {config['api_token']}",
-        'Content-Type': 'application/json'
-    }
+    def download_file(self, presigned_url: str, local_path: str) -> bool:
+        """Download file using pre-signed URL."""
+        try:
+            self.logger.info(f"Downloading to: {local_path}")
+            response = requests.get(presigned_url, stream=True)
 
-    data = {
-        'task_id': task_id,
-        'status': status
-    }
-    if failure_reason:
-        data['failure_reason'] = failure_reason
+            if response.status_code == 200:
+                with open(local_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            f.write(chunk)
 
-    try:
-        response = requests.post(
-            f"{config['orchestrator_url']}/update-task-status",
-            headers=headers,
-            json=data,
-            timeout=10
-        )
-
-        if response.status_code != 200:
-            logger.error(f"Failed to update task status: {response.status_code} {response.text}")
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error updating task status: {str(e)}")
-
-def step1_download_from_presigned_url(presigned_url: str, local_audio_path: str) -> bool:
-    """Download audio file using a pre-signed URL."""
-    try:
-        response = requests.get(presigned_url, stream=True, timeout=30)
-        if response.status_code == 200:
-            with open(local_audio_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    if chunk:
-                        f.write(chunk)
-
-            if os.path.exists(local_audio_path) and os.path.getsize(local_audio_path) > 0:
-                logger.info(f"Downloaded audio file to {local_audio_path}")
+                file_size = os.path.getsize(local_path)
+                self.logger.info(f"Download complete. Size: {file_size} bytes")
                 return True
             else:
-                logger.error("Downloaded file is empty or does not exist")
+                self.logger.error(f"Download failed: {response.status_code} {response.text}")
                 return False
-        else:
-            logger.error(f"Failed to download file: {response.status_code} {response.text}")
+
+        except Exception as e:
+            self.logger.error(f"Download error: {str(e)}")
             return False
-    except Exception as e:
-        logger.error(f"Error downloading file: {str(e)}")
-        return False
 
-def step2_transcribe_audio(local_audio_path: str) -> Optional[str]:
-    """Transcribe the audio file."""
-    try:
-        from faster_whisper import WhisperModel
-        import torch
+    def save_and_upload_transcription(
+        self,
+        transcription: str,
+        local_path: str,
+        presigned_url: str
+    ) -> bool:
+        """Save transcription locally and upload to S3."""
+        try:
+            # Save locally
+            with open(local_path, 'w', encoding='utf-8') as f:
+                f.write(transcription)
+            self.logger.info(f"Saved transcription to {local_path}")
 
-        # Verify CUDA availability
-        if not torch.cuda.is_available():
-            logger.warning("CUDA is not available, falling back to CPU")
-            device = "cpu"
-            compute_type = "int8"
-        else:
-            device = "cuda"
-            compute_type = "float16"
+            # Upload to S3
+            with open(local_path, 'rb') as f:
+                response = requests.put(
+                    presigned_url,
+                    data=f,
+                    headers={'Content-Type': 'text/plain'},
+                    timeout=30
+                )
 
-        # Load the model
-        model_size = "medium"
-        logger.info(f"Loading Whisper model: {model_size} on {device}")
-        model = WhisperModel(model_size, device=device, compute_type=compute_type)
+            if response.status_code in [200, 204]:
+                self.logger.info("Successfully uploaded transcription")
+                return True
+            else:
+                self.logger.error(f"Upload failed: {response.status_code} {response.text}")
+                return False
 
-        # Verify input file
-        if not os.path.exists(local_audio_path):
-            raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
-
-        # Transcribe the audio file
-        logger.info(f"Starting transcription of {local_audio_path}")
-        segments, info = model.transcribe(local_audio_path)
-
-        # Combine the transcribed text from segments
-        transcription = "".join([segment.text for segment in segments])
-
-        if not transcription:
-            logger.warning("Transcription resulted in empty text")
-            return None
-
-        logger.info(f"Successfully transcribed {local_audio_path}")
-        return transcription
-    except Exception as e:
-        logger.error(f"Error transcribing file: {str(e)}")
-        logger.error(f"Full error: {traceback.format_exc()}")
-        return None
-
-def step3_upload_to_presigned_url(presigned_url: str, local_file_path: str) -> bool:
-    """Upload transcription using a pre-signed URL."""
-    try:
-        if not os.path.exists(local_file_path):
-            raise FileNotFoundError(f"File not found: {local_file_path}")
-
-        with open(local_file_path, 'rb') as f:
-            headers = {'Content-Type': 'text/plain'}
-            response = requests.put(presigned_url, data=f, headers=headers, timeout=30)
-
-        if response.status_code in [200, 204]:
-            logger.info(f"Successfully uploaded transcription from {local_file_path}")
-            return True
-        else:
-            logger.error(f"Failed to upload file: {response.status_code} {response.text}")
+        except Exception as e:
+            self.logger.error(f"Error saving/uploading transcription: {str(e)}")
             return False
-    except Exception as e:
-        logger.error(f"Error uploading file: {str(e)}")
-        return False
+
+    def update_task_status(
+        self,
+        task_id: str,
+        status: str,
+        failure_reason: Optional[str] = None
+    ):
+        """Update task status via orchestrator API."""
+        data = {
+            'task_id': task_id,
+            'status': status
+        }
+        if failure_reason:
+            data['failure_reason'] = failure_reason
+
+        try:
+            response = requests.post(
+                f"{self.config['orchestrator_url']}/update-task-status",
+                headers={
+                    'Authorization': f"Bearer {self.config['api_token']}",
+                    'Content-Type': 'application/json'
+                },
+                json=data,
+                timeout=10
+            )
+
+            if response.status_code != 200:
+                self.logger.error(f"Failed to update status: {response.status_code} {response.text}")
+        except Exception as e:
+            self.logger.error(f"Error updating status: {str(e)}")
+
+    def cleanup_files(self, file_paths: list):
+        """Clean up local files."""
+        for file_path in file_paths:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    self.logger.debug(f"Cleaned up: {file_path}")
+            except Exception as e:
+                self.logger.warning(f"Failed to clean up {file_path}: {str(e)}")
+
+    def run(self):
+        """Main processing loop."""
+        try:
+            while self.keep_running:
+                try:
+                    task = self.get_task()
+                    if not task:
+                        time.sleep(10)
+                        continue
+
+                    self.process_task(task)
+
+                except Exception as e:
+                    self.logger.error(f"Error in processing loop: {str(e)}")
+                    self.logger.error(traceback.format_exc())
+                    time.sleep(5)
+
+        finally:
+            self.logger.info("Cleaning up before shutdown...")
+            self.cleanup_files(
+                [f for f in os.listdir(self.config['download_folder'])]
+            )
+            self.logger.info("Shutdown complete")
 
 def main():
-    """Main entry point of the application."""
+    """Application entry point."""
     try:
-        # Load configuration
-        config = load_config('config.yaml')
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('worker.log'),
+                logging.StreamHandler()
+            ]
+        )
 
-        while keep_running:
-            try:
-                # Request a task from the orchestrator
-                task = get_task(config)
-                if not task:
-                    time.sleep(10)
-                    continue
+        logger = logging.getLogger(__name__)
+        logger.info("Starting Audio Transcription Worker")
 
-                # Extract task details
-                task_id = task['task_id']
-                presigned_get_url = task['presigned_get_url']
-                presigned_put_url = task['presigned_put_url']
-                object_key = task['object_key']
-                filename = os.path.basename(object_key)
-                local_audio_path = os.path.join(config['download_folder'], filename)
+        try:
+            worker = AudioTranscriptionWorker('config.yaml')
+        except SystemExit as e:
+            logger.error(str(e))
+            logger.error("""
+Please ensure all dependencies are installed:
+1. Activate virtual environment: source ~/faster-whisper-env/bin/activate
+2. Install packages: pip install faster-whisper torch
+""")
+            sys.exit(1)
 
-                logger.info(f"Starting processing for file: {filename}")
-
-                # Download from Pre-Signed URL
-                if not step1_download_from_presigned_url(presigned_get_url, local_audio_path):
-                    update_task_status(config, task_id, "Failed", "Failed to download audio file")
-                    continue
-
-                # Transcribe Audio
-                transcription = step2_transcribe_audio(local_audio_path)
-                if not transcription:
-                    update_task_status(config, task_id, "Failed", "Failed to transcribe audio")
-                    if os.path.exists(local_audio_path):
-                        os.remove(local_audio_path)
-                    continue
-
-                # Save transcription to a local file
-                transcription_output_filename = f"{filename}.txt"
-                transcription_output_path = os.path.join(
-                    config['download_folder'],
-                    transcription_output_filename
-                )
-                try:
-                    with open(transcription_output_path, 'w', encoding='utf-8') as f:
-                        f.write(transcription)
-                    logger.info(f"Saved transcription to {transcription_output_path}")
-                except Exception as e:
-                    logger.error(f"Failed to save transcription file: {str(e)}")
-                    update_task_status(config, task_id, "Failed", "Failed to save transcription file")
-                    if os.path.exists(local_audio_path):
-                        os.remove(local_audio_path)
-                    continue
-
-                # Upload via Pre-Signed URL
-                if not step3_upload_to_presigned_url(presigned_put_url, transcription_output_path):
-                    update_task_status(config, task_id, "Failed", "Failed to upload transcription")
-                    for file_path in [local_audio_path, transcription_output_path]:
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-                    continue
-
-                # Mark Task as Completed
-                update_task_status(config, task_id, "Completed")
-
-                # Clean up local files
-                for file_path in [local_audio_path, transcription_output_path]:
-                    try:
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-                            logger.debug(f"Cleaned up file: {file_path}")
-                    except Exception as e:
-                        logger.warning(f"Failed to clean up file {file_path}: {str(e)}")
-
-                logger.info(f"Completed processing for {filename}")
-
-            except Exception as e:
-                logger.error(f"Unexpected error during task processing: {str(e)}")
-                logger.error(f"Full error: {traceback.format_exc()}")
-                time.sleep(5)
-                continue
+        worker.run()
 
     except KeyboardInterrupt:
         logger.info("Received keyboard interrupt. Shutting down...")
     except Exception as e:
-        logger.critical(f"Critical error in main loop: {str(e)}")
-        logger.critical(f"Full error: {traceback.format_exc()}")
-        raise
-    finally:
-        logger.info("Cleaning up resources...")
+        logger.critical(f"Critical error: {str(e)}")
+        logger.critical(traceback.format_exc())
+        sys.exit(1)
 
-        # Clean up any remaining files in the download folder
-        try:
-            for file_name in os.listdir(config['download_folder']):
-                file_path = os.path.join(config['download_folder'], file_name)
-                if os.path.isfile(file_path):
-                    os.remove(file_path)
-            logger.info("Cleaned up download folder")
-        except Exception as e:
-            logger.error(f"Error cleaning up download folder: {str(e)}")
-
-        logger.info("Application shutdown complete")
 
 if __name__ == "__main__":
     main()
-~                           
+~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+~                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+~                          

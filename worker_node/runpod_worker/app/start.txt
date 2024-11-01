@@ -1,0 +1,1 @@
+source ~/faster-whisper-env/bin/activate

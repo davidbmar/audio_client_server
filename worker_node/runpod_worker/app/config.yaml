@@ -1,6 +1,6 @@
-#task_service_url: 'http://ec2-3-137-2-81.us-east-2.compute.amazonaws.com:5000/get-task'  #NOTE THIS IS FOR V1, for V2 we just use without the path.
+# config.yaml
 orchestrator_url: "http://ec2-3-137-2-81.us-east-2.compute.amazonaws.com:5000"
-api_token: 'YOUR_SECURE_API_TOKEN'
-download_folder: './downloads'
+download_folder: "./downloads"
+api_token: "XXXXXXXXXMYAPITOKENHEREie134k123l4j23;46754772a42c9f5b5b772e5fbec1e93be09914c1f26b"  # The same token configured in the orchestrator
 
 
