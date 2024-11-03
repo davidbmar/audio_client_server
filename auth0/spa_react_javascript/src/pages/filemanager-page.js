@@ -5,21 +5,42 @@ import { PageLayout } from "../components/page-layout";
 export const FileManagerPage = () => {
   const { getAccessTokenSilently } = useAuth0();
   const [directoryContents, setDirectoryContents] = useState({ directories: [], files: [] });
+  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
+  const [isLoading, setIsLoading] = useState({});
+
+  // Move makeAuthenticatedRequest inside useCallback to properly handle dependencies
+  const makeAuthenticatedRequest = useCallback(async (url) => {
+    const accessToken = await getAccessTokenSilently();
+    console.log("Making authenticated request to:", url);
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      console.error("Request failed:", {
+        url,
+        status: response.status,
+        statusText: response.statusText,
+        body: text,
+        headers: Object.fromEntries(response.headers.entries())
+      });
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response;
+  }, [getAccessTokenSilently]);
 
   const fetchDirectoryContents = useCallback(async () => {
     try {
-      const accessToken = await getAccessTokenSilently();
-      const response = await fetch("/api/list-directory?path=/", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      const response = await makeAuthenticatedRequest("/api/list-directory?path=/");
       const data = await response.json();
+      console.log("Directory listing response:", data);
       setDirectoryContents(data);
     } catch (error) {
       console.error("Error fetching directory contents:", error);
     }
-  }, [getAccessTokenSilently]);
+  }, [makeAuthenticatedRequest]);
 
   useEffect(() => {
     fetchDirectoryContents();
@@ -37,24 +58,52 @@ export const FileManagerPage = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const handlePlay = async (fileName) => {
+  const handlePlay = useCallback(async (fileName) => {
     try {
-      const accessToken = await getAccessTokenSilently();
-      const response = await fetch(`/api/get-file?file_path=${fileName}&bucket_type=input`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
+      setIsLoading(prev => ({ ...prev, [fileName]: true }));
+      console.log("Attempting to play:", fileName);
+
+      const encodedFileName = encodeURIComponent(fileName);
+      const url = `/api/get-file?file_path=${encodedFileName}&bucket_type=input`;
+      
+      console.log("Requesting file from:", url);
+      
+      const response = await makeAuthenticatedRequest(url);
+      console.log("Response headers:", Object.fromEntries(response.headers.entries()));
+      
+      const blob = await response.blob();
+      console.log("Received blob:", {
+        type: blob.type,
+        size: blob.size,
+        fileName: fileName
       });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        const audio = new Audio(url);
-        audio.play();
+      
+      if (currentlyPlaying) {
+        currentlyPlaying.pause();
+        URL.revokeObjectURL(currentlyPlaying.src);
       }
+
+      const audioUrl = URL.createObjectURL(blob);
+      const audio = new Audio(audioUrl);
+      
+      audio.addEventListener('canplaythrough', () => {
+        console.log("Audio loaded and ready to play");
+      });
+
+      audio.addEventListener('error', (e) => {
+        console.error("Audio error:", e.target.error);
+      });
+
+      await audio.play();
+      console.log("Audio playback started");
+      setCurrentlyPlaying(audio);
+
     } catch (error) {
       console.error("Error playing file:", error);
+    } finally {
+      setIsLoading(prev => ({ ...prev, [fileName]: false }));
     }
-  };
+  }, [makeAuthenticatedRequest, currentlyPlaying]);
 
   return (
     <PageLayout>
@@ -70,9 +119,14 @@ export const FileManagerPage = () => {
                 <div className="flex items-center space-x-4">
                   <button 
                     onClick={() => handlePlay(file.name)}
-                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                    disabled={isLoading[file.name]}
+                    className={`px-3 py-1 rounded ${
+                      isLoading[file.name] 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    }`}
                   >
-                    Play
+                    {isLoading[file.name] ? 'Loading...' : 'Play'}
                   </button>
                   <div className="flex flex-col">
                     <span className="font-medium">{file.name}</span>
