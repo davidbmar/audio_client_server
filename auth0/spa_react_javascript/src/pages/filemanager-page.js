@@ -12,34 +12,19 @@ export const FileManagerPage = () => {
   const [transcriptions, setTranscriptions] = useState({});
   const audioRef = useRef(null);
 
-  const loadDirectoryContents = useCallback(async (path) => {
-    try {
-      console.log(`[DEBUG] Loading directory contents for path: ${path}`);
-      const accessToken = await getAccessTokenSilently();
-      const response = await fetch(`/api/list-directory?path=${encodeURIComponent(path)}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const data = await response.json();
-      console.log('[DEBUG] Directory contents received:', data);
-      setFiles(data.files);
-      setDirectories(data.directories);
-      fetchTranscriptions(data.files);
-    } catch (error) {
-      console.error("[ERROR] Failed to load directory contents:", error);
-    }
-  }, [getAccessTokenSilently]);
-
-  const fetchTranscriptions = async (files) => {
+  // 1. Define fetchTranscriptions first
+  const fetchTranscriptions = useCallback(async (files) => {
     try {
       const accessToken = await getAccessTokenSilently();
       const transcriptionPromises = files.map(async (file) => {
-        const response = await fetch(`/api/get-transcription?file_path=${encodeURIComponent(currentPath + file.name)}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
+        const response = await fetch(
+          `/api/get-transcription?file_path=${encodeURIComponent(currentPath + file.name)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
         if (response.ok) {
           const transcription = await response.text();
           return { name: file.name, transcription };
@@ -57,17 +42,37 @@ export const FileManagerPage = () => {
     } catch (error) {
       console.error("Error fetching transcriptions:", error);
     }
-  };
+  }, [currentPath, getAccessTokenSilently]);
 
-  const loadAudio = async (file) => {
+  // 2. Define loadDirectoryContents which uses fetchTranscriptions
+  const loadDirectoryContents = useCallback(async (path) => {
+    try {
+      console.log(`[DEBUG] Loading directory contents for path: ${path}`);
+      const accessToken = await getAccessTokenSilently();
+      const response = await fetch(`/api/list-directory?path=${encodeURIComponent(path)}`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      console.log('[DEBUG] Directory contents received:', data);
+      setFiles(data.files);
+      setDirectories(data.directories);
+      fetchTranscriptions(data.files);
+    } catch (error) {
+      console.error("[ERROR] Failed to load directory contents:", error);
+    }
+  }, [getAccessTokenSilently, fetchTranscriptions]);
+
+  // 3. Define loadAudio
+  const loadAudio = useCallback(async (file) => {
     try {
       console.log(`[DEBUG] Attempting to load audio file from input bucket: ${file.name}`);
       const accessToken = await getAccessTokenSilently();
-      
-      // Still using get-file until backend is updated
-      const url = `/api/get-file?file_path=${encodeURIComponent(currentPath + file.name)}`;
+
+      const url = `/api/get-file?file_path=${encodeURIComponent(currentPath + file.name)}&file_type=audio`;
       console.log('[DEBUG] Fetching audio from URL:', url);
-      
+
       const response = await fetch(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -102,8 +107,9 @@ export const FileManagerPage = () => {
     } catch (error) {
       console.error("[ERROR] Error loading audio:", error);
     }
-  };
+  }, [currentPath, getAccessTokenSilently]);
 
+  // 4. Define createDirectory
   const createDirectory = async () => {
     const directoryName = prompt("Enter new directory name:");
     if (directoryName) {
@@ -122,6 +128,7 @@ export const FileManagerPage = () => {
     }
   };
 
+  // 5. Define handleFileAction
   const handleFileAction = async (action, file) => {
     const accessToken = await getAccessTokenSilently();
     switch (action) {
@@ -162,10 +169,7 @@ export const FileManagerPage = () => {
     }
   };
 
-  useEffect(() => {
-    loadDirectoryContents(currentPath);
-  }, [currentPath, loadDirectoryContents]);
-
+  // 6. Define renderBreadcrumb
   const renderBreadcrumb = () => {
     const paths = currentPath.split("/").filter(Boolean);
     return (
@@ -184,6 +188,12 @@ export const FileManagerPage = () => {
     );
   };
 
+  // 7. Set up useEffect
+  useEffect(() => {
+    loadDirectoryContents(currentPath);
+  }, [currentPath, loadDirectoryContents]);
+
+  // 8. Render component
   return (
     <PageLayout>
       <div id="app">
@@ -268,9 +278,9 @@ export const FileManagerPage = () => {
           {currentlyPlaying && (
             <div className="audio-player">
               <h3>Now Playing: {currentlyPlaying.name}</h3>
-              <audio 
-                ref={audioRef} 
-                controls 
+              <audio
+                ref={audioRef}
+                controls
                 onError={(e) => console.error('[ERROR] Audio player error:', e)}
                 onLoadStart={() => console.log('[DEBUG] Audio load started')}
                 onLoadedData={() => console.log('[DEBUG] Audio data loaded')}

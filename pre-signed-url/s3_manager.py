@@ -4,9 +4,7 @@ from datetime import datetime
 import pytz
 import logging
 import json
-from urllib.parse import quote, unquote
 
-# Function to retrieve secrets from AWS Secrets Manager
 def get_secrets():
     secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"
     region_name = "us-east-2"
@@ -35,12 +33,6 @@ if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE, REGION_NAME, INPUT_AUDIO_BUCKET, TRANS
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 
-def manage_url_encoding(s: str, encode: bool = True) -> str:
-    if encode:
-        return quote(s, safe='%-_.~')
-    else:
-        return unquote(s)
-
 def create_s3_client():
     return boto3.client('s3', region_name=REGION_NAME)
 
@@ -52,10 +44,7 @@ def get_presigned_url(user_id: str):
     try:
         s3_client = create_s3_client()
         file_name = generate_file_name()
-
-        # Use unencoded user_id
-        user_id_unencoded = unquote(user_id)
-        key = f"{user_id_unencoded}/{file_name}"
+        key = f"{user_id}/{file_name}"
 
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
@@ -71,16 +60,10 @@ def get_presigned_url(user_id: str):
 def list_s3_objects(user_id: str, path: str):
     try:
         s3_client = create_s3_client()
-
-        # Use unencoded user_id and path
-        user_id_unencoded = unquote(user_id)
-        path_unencoded = unquote(path.strip('/'))
-
-        if path_unencoded:
-            directory = f"{user_id_unencoded}/{path_unencoded}"
-        else:
-            directory = f"{user_id_unencoded}/"
-
+        path = path.strip('/')
+        
+        directory = f"{user_id}/{path}" if path else f"{user_id}/"
+        
         logging.debug(f"Constructed directory for S3: {directory}")
         response = s3_client.list_objects_v2(Bucket=INPUT_AUDIO_BUCKET, Prefix=directory)
         logging.debug(f"S3 ListObjectsV2 response: {response}")
@@ -89,10 +72,9 @@ def list_s3_objects(user_id: str, path: str):
             logging.debug(f"No contents found in S3 bucket for prefix: {directory}")
             return {"objects": []}
 
-        # Encode the keys for presentation
         objects = [
             {
-                'key': manage_url_encoding(obj['Key'].split('/')[-1], encode=True),
+                'key': obj['Key'].split('/')[-1],
                 'size': obj['Size']
             }
             for obj in response['Contents']
@@ -106,12 +88,8 @@ def list_s3_objects(user_id: str, path: str):
 def delete_file(user_id: str, file_path: str):
     try:
         s3_client = create_s3_client()
-
-        # Use unencoded user_id and file_path
-        user_id_unencoded = unquote(user_id)
-        file_path_unencoded = unquote(file_path.strip('/'))
-
-        key = f"{user_id_unencoded}/{file_path_unencoded}"
+        file_path = file_path.strip('/')
+        key = f"{user_id}/{file_path}"
 
         s3_client.delete_object(Bucket=INPUT_AUDIO_BUCKET, Key=key)
         return {"message": "File deleted successfully"}
@@ -122,14 +100,11 @@ def delete_file(user_id: str, file_path: str):
 def rename_file(user_id: str, old_path: str, new_path: str):
     try:
         s3_client = create_s3_client()
-
-        # Use unencoded user_id and paths
-        user_id_unencoded = unquote(user_id)
-        old_path_unencoded = unquote(old_path.strip('/'))
-        new_path_unencoded = unquote(new_path.strip('/'))
-
-        old_key = f"{user_id_unencoded}/{old_path_unencoded}"
-        new_key = f"{user_id_unencoded}/{new_path_unencoded}"
+        old_path = old_path.strip('/')
+        new_path = new_path.strip('/')
+        
+        old_key = f"{user_id}/{old_path}"
+        new_key = f"{user_id}/{new_path}"
 
         s3_client.copy_object(
             Bucket=INPUT_AUDIO_BUCKET,
@@ -146,12 +121,8 @@ def rename_file(user_id: str, old_path: str, new_path: str):
 def create_directory(user_id: str, directory_path: str):
     try:
         s3_client = create_s3_client()
-
-        # Use unencoded user_id and directory_path
-        user_id_unencoded = unquote(user_id)
-        path_unencoded = unquote(directory_path.strip('/'))
-
-        key = f"{user_id_unencoded}/{path_unencoded}/"
+        path = directory_path.strip('/')
+        key = f"{user_id}/{path}/"
 
         s3_client.put_object(Bucket=INPUT_AUDIO_BUCKET, Key=key)
         return {"message": "Directory created successfully"}
@@ -162,14 +133,9 @@ def create_directory(user_id: str, directory_path: str):
 def get_file(user_id: str, file_path: str, bucket_name: str = INPUT_AUDIO_BUCKET, prepend_user_id: bool = True):
     try:
         s3_client = create_s3_client()
+        file_path = file_path.strip('/')
 
-        user_id_unencoded = unquote(user_id)
-        file_path_unencoded = unquote(file_path.strip('/'))
-
-        if prepend_user_id:
-            key = f"{user_id_unencoded}/{file_path_unencoded}"
-        else:
-            key = file_path_unencoded
+        key = f"{user_id}/{file_path}" if prepend_user_id else file_path
 
         logging.debug(f"Attempting to retrieve file from bucket '{bucket_name}' with key '{key}'")
 
@@ -182,38 +148,26 @@ def get_file(user_id: str, file_path: str, bucket_name: str = INPUT_AUDIO_BUCKET
 def list_directory(user_id: str, path: str):
     try:
         s3_client = create_s3_client()
+        path = path.strip('/')
+        
+        user_path = f"{user_id}/{path}/" if path else f"{user_id}/"
 
-        # Use unencoded user_id and path when interacting with S3
-        user_id_unencoded = unquote(user_id)
-        path_unencoded = unquote(path.strip('/'))
-
-        # Construct the user path for S3
-        if path_unencoded:
-            user_path = f"{user_id_unencoded}/{path_unencoded}/"
-        else:
-            user_path = f"{user_id_unencoded}/"
-
-        logging.debug(f"user_id_unencoded: '{user_id_unencoded}'")
-        logging.debug(f"path_unencoded: '{path_unencoded}'")
         logging.debug(f"user_path (formatted for S3): '{user_path}'")
 
-        # List objects in S3 using the unencoded prefix
         response = s3_client.list_objects_v2(
             Bucket=INPUT_AUDIO_BUCKET,
             Prefix=user_path,
             Delimiter='/'
         )
 
-        # Process directories and encode names for the client
         directories = [
-            manage_url_encoding(prefix['Prefix'].rstrip('/').split('/')[-1], encode=True)
+            prefix['Prefix'].rstrip('/').split('/')[-1]
             for prefix in response.get('CommonPrefixes', [])
         ]
 
-        # Process files and encode names for the client
         files = [
             {
-                'name': manage_url_encoding(obj['Key'].split('/')[-1], encode=True),
+                'name': obj['Key'].split('/')[-1],
                 'size': obj['Size'],
                 'last_modified': obj['LastModified'].isoformat()
             }
@@ -225,3 +179,4 @@ def list_directory(user_id: str, path: str):
     except Exception as e:
         logging.error(f"Error listing directory: {e}")
         raise
+
