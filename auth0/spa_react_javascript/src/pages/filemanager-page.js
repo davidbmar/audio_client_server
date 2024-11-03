@@ -1,159 +1,92 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { PageLayout } from "../components/page-layout";
 
 export const FileManagerPage = () => {
   const { getAccessTokenSilently } = useAuth0();
-  const [currentPath, setCurrentPath] = useState("/");
-  const [files, setFiles] = useState([]);
-  const [directories, setDirectories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
-  const [transcriptions, setTranscriptions] = useState({});
-  const [isLoadingTranscriptions, setIsLoadingTranscriptions] = useState(false);
-  const [pollingEnabled, setPollingEnabled] = useState(true);
-  const audioRef = useRef(null);
-  const transcriptionRequestsInFlight = useRef(new Set());
+  const [directoryContents, setDirectoryContents] = useState({ directories: [], files: [] });
 
-  const fetchTranscriptions = useCallback(async (files, path) => {
-    if (isLoadingTranscriptions) return;
-
-    try {
-      setIsLoadingTranscriptions(true);
-      const accessToken = await getAccessTokenSilently();
-
-      // Only fetch transcriptions for MP3 files that don't have successful transcriptions yet
-      const audioFiles = files.filter(file => {
-        const filePath = path + file.name;
-        const currentTranscription = transcriptions[filePath];
-        return file.name.toLowerCase().endsWith('.mp3') && 
-               (!currentTranscription || 
-                currentTranscription === "Loading transcription..." ||
-                currentTranscription === "Failed to load transcription");
-      });
-
-      if (audioFiles.length === 0) {
-        setIsLoadingTranscriptions(false);
-        return;
-      }
-
-      const transcriptionPromises = audioFiles.map(async (file) => {
-        const filePath = path + file.name;
-
-        if (transcriptionRequestsInFlight.current.has(filePath)) {
-          return { filePath, transcription: transcriptions[filePath] || "Loading..." };
-        }
-
-        transcriptionRequestsInFlight.current.add(filePath);
-
-        try {
-          const response = await fetch(
-            `/api/get-transcription?file_path=${encodeURIComponent(file.name)}`,
-            {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }
-          );
-
-          transcriptionRequestsInFlight.current.delete(filePath);
-
-          if (response.status === 404) {
-            return {
-              filePath,
-              transcription: "Transcription not available"
-            };
-          }
-
-          if (response.ok) {
-            const transcription = await response.text();
-            return {
-              filePath,
-              transcription: transcription || "No transcription available."
-            };
-          }
-
-          return {
-            filePath,
-            transcription: "Failed to load transcription"
-          };
-        } catch (error) {
-          transcriptionRequestsInFlight.current.delete(filePath);
-          console.error(`Error fetching transcription for ${file.name}:`, error);
-          return {
-            filePath,
-            transcription: "Error loading transcription"
-          };
-        }
-      });
-
-      const results = await Promise.all(transcriptionPromises);
-
-      setTranscriptions(prev => {
-        const updates = {};
-        results.forEach(({ filePath, transcription }) => {
-          updates[filePath] = transcription;
-        });
-        return { ...prev, ...updates };
-      });
-    } catch (error) {
-      console.error("Error fetching transcriptions:", error);
-    } finally {
-      setIsLoadingTranscriptions(false);
-    }
-  }, [getAccessTokenSilently, transcriptions, isLoadingTranscriptions]);
-
-  const loadDirectoryContents = useCallback(async (path) => {
+  const fetchDirectoryContents = useCallback(async () => {
     try {
       const accessToken = await getAccessTokenSilently();
-      const response = await fetch(`/api/list-directory?path=${encodeURIComponent(path)}`, {
+      const response = await fetch("/api/list-directory?path=/", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
       const data = await response.json();
-      setFiles(data.files);
-      setDirectories(data.directories);
-
-      // Clear transcriptions for the new directory
-      setTranscriptions({});
-      // Clear the in-flight requests set
-      transcriptionRequestsInFlight.current.clear();
-
-      // Fetch new transcriptions
-      fetchTranscriptions(data.files, path);
+      setDirectoryContents(data);
     } catch (error) {
-      console.error("Error loading directory contents:", error);
+      console.error("Error fetching directory contents:", error);
     }
-  }, [getAccessTokenSilently, fetchTranscriptions]);
+  }, [getAccessTokenSilently]);
 
-  // Rest of your existing functions (handleFileAction, loadAudio, createDirectory, performSearch)
-  // ... [keeping them exactly as they were] ...
-
-  // Add polling effect
   useEffect(() => {
-    let pollTimer;
-    if (pollingEnabled) {
-      pollTimer = setInterval(() => {
-        loadDirectoryContents(currentPath);
-      }, 10000); // Poll every 10 seconds
-    }
+    fetchDirectoryContents();
+  }, [fetchDirectoryContents]);
 
-    return () => {
-      if (pollTimer) {
-        clearInterval(pollTimer);
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const handlePlay = async (fileName) => {
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const response = await fetch(`/api/get-file?file_path=${fileName}&bucket_type=input`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        audio.play();
       }
-    };
-  }, [currentPath, pollingEnabled, loadDirectoryContents]);
-
-  // Initial load effect
-  useEffect(() => {
-    loadDirectoryContents(currentPath);
-  }, [currentPath, loadDirectoryContents]);
+    } catch (error) {
+      console.error("Error playing file:", error);
+    }
+  };
 
   return (
     <PageLayout>
-      {/* ... [rest of your JSX exactly as it was] ... */}
+      <div className="p-4">
+        <h1 className="text-2xl font-bold mb-4">Audio Files</h1>
+        <div className="mt-4">
+          <div className="space-y-2">
+            {directoryContents.files.map((file) => (
+              <div 
+                key={file.name} 
+                className="flex items-center justify-between p-3 bg-gray-50 rounded hover:bg-gray-100"
+              >
+                <div className="flex items-center space-x-4">
+                  <button 
+                    onClick={() => handlePlay(file.name)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    Play
+                  </button>
+                  <div className="flex flex-col">
+                    <span className="font-medium">{file.name}</span>
+                    <span className="text-sm text-gray-500">
+                      {formatDate(file.last_modified)}
+                    </span>
+                  </div>
+                </div>
+                <span className="text-gray-500">{formatFileSize(file.size)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
     </PageLayout>
   );
 };
