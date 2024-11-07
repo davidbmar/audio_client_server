@@ -10,9 +10,10 @@ export const FileManagerPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentlyPlaying, setCurrentlyPlaying] = useState(null);
   const [transcriptions, setTranscriptions] = useState({});
+  const [showTranscriptionPanel, setShowTranscriptionPanel] = useState(false);
   const audioRef = useRef(null);
 
-  // 1. Define fetchTranscriptions first
+  // Existing fetchTranscriptions function
   const fetchTranscriptions = useCallback(async (files) => {
     try {
       const accessToken = await getAccessTokenSilently();
@@ -44,7 +45,7 @@ export const FileManagerPage = () => {
     }
   }, [currentPath, getAccessTokenSilently]);
 
-  // 2. Define loadDirectoryContents which uses fetchTranscriptions
+  // Existing loadDirectoryContents function
   const loadDirectoryContents = useCallback(async (path) => {
     try {
       console.log(`[DEBUG] Loading directory contents for path: ${path}`);
@@ -64,7 +65,7 @@ export const FileManagerPage = () => {
     }
   }, [getAccessTokenSilently, fetchTranscriptions]);
 
-  // 3. Define loadAudio
+  // Existing loadAudio function
   const loadAudio = useCallback(async (file) => {
     try {
       console.log(`[DEBUG] Attempting to load audio file from input bucket: ${file.name}`);
@@ -109,7 +110,7 @@ export const FileManagerPage = () => {
     }
   }, [currentPath, getAccessTokenSilently]);
 
-  // 4. Define createDirectory
+  // Existing createDirectory function
   const createDirectory = async () => {
     const directoryName = prompt("Enter new directory name:");
     if (directoryName) {
@@ -128,7 +129,7 @@ export const FileManagerPage = () => {
     }
   };
 
-  // 5. Define handleFileAction
+  // Existing handleFileAction function
   const handleFileAction = async (action, file) => {
     const accessToken = await getAccessTokenSilently();
     switch (action) {
@@ -169,7 +170,16 @@ export const FileManagerPage = () => {
     }
   };
 
-  // 6. Define renderBreadcrumb
+  // Add this new function for copying just the transcription text
+  const handleCopyTranscriptions = () => {
+    const transcriptionText = files
+      .map(file => transcriptions[file.name] || "No transcription available.")
+      .filter(text => text !== "No transcription available.")
+      .join('\n');
+    navigator.clipboard.writeText(transcriptionText);
+  };
+
+  // Existing renderBreadcrumb function
   const renderBreadcrumb = () => {
     const paths = currentPath.split("/").filter(Boolean);
     return (
@@ -188,12 +198,11 @@ export const FileManagerPage = () => {
     );
   };
 
-  // 7. Set up useEffect
+  // Existing useEffect
   useEffect(() => {
     loadDirectoryContents(currentPath);
   }, [currentPath, loadDirectoryContents]);
 
-  // 8. Render component
   return (
     <PageLayout>
       <div id="app">
@@ -202,6 +211,9 @@ export const FileManagerPage = () => {
             <nav aria-label="breadcrumb">
               {renderBreadcrumb()}
             </nav>
+            <button onClick={() => setShowTranscriptionPanel(!showTranscriptionPanel)}>
+              {showTranscriptionPanel ? 'Hide' : 'Show'} Transcriptions
+            </button>
             <button id="create-directory" onClick={createDirectory}>
               Create Directory
             </button>
@@ -290,9 +302,41 @@ export const FileManagerPage = () => {
             </div>
           )}
         </main>
+
+        {/* Floating transcription panel */}
+        {showTranscriptionPanel && (
+          <div className="fixed bottom-0 left-0 right-0 bg-black text-white p-4" 
+               style={{ maxHeight: '40vh', overflowY: 'auto', zIndex: 1000 }}>
+            <div className="flex justify-between items-center mb-2">
+              <button 
+                onClick={handleCopyTranscriptions}
+                className="p-2 hover:bg-gray-800 rounded"
+                title="Copy all transcriptions"
+              >
+                Copy
+              </button>
+              <button 
+                onClick={() => setShowTranscriptionPanel(false)}
+                className="p-2 hover:bg-gray-800 rounded"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="whitespace-pre-wrap">
+              {files
+                .filter(file => transcriptions[file.name] && transcriptions[file.name] !== "No transcription available.")
+                .map(file => (
+                  <div key={file.name}>
+                    {transcriptions[file.name]}
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
       </div>
     </PageLayout>
   );
 };
 
-export default FileManagerPage;
+export default FileManagerPage;	
