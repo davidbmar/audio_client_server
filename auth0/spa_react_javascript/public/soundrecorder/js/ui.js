@@ -1,4 +1,4 @@
-// UI Elements
+// ui.js
 const UI = {
     recordButton: document.getElementById('recordButton'),
     meterContainer: document.getElementById('meterContainer'),
@@ -14,7 +14,6 @@ const UI = {
     chunksList: document.getElementById('chunksList')
 };
 
-// UI update functions
 const UIController = {
     updateMeter(db) {
         const normalizedDb = Math.max(0, Math.min(100, (db + 60) * 1.66));
@@ -59,7 +58,7 @@ const UIController = {
     },
 
     updateChunksList(chunks) {
-        UI.chunksList.innerHTML = chunks.map((chunk, index) => `
+        UI.chunksList.innerHTML = chunks.map((chunk) => `
             <div class="chunk-item">
                 <div class="chunk-info">
                     <span class="chunk-number">Chunk ${chunk.number}</span>
@@ -67,20 +66,29 @@ const UIController = {
                 </div>
                 <div class="chunk-controls">
                     <button class="chunk-button play" 
-                            onclick="window.handleChunkPlay(${index})">
+                            onclick="window.handleChunkPlay(${chunk.id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polygon points="5 3 19 12 5 21 5 3"></polygon>
                         </svg>
                         Play
                     </button>
                     <button class="chunk-button" 
-                            onclick="window.handleChunkDownload(${index})">
+                            onclick="window.handleChunkDownload(${chunk.id})">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
                             <line x1="12" y1="15" x2="12" y2="3"></line>
                         </svg>
                         Download
+                    </button>
+                    <button class="chunk-button delete" 
+                            onclick="window.handleChunkDelete(${chunk.id})">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
+                        Delete
                     </button>
                 </div>
             </div>

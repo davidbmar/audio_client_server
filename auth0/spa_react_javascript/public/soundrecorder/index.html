@@ -18,7 +18,6 @@
                 </svg>
             </button>
         </div>
-
         <div id="meterContainer" class="hidden">
             <div class="volume-meter">
                 <div class="meter-bar">
@@ -26,7 +25,6 @@
                 </div>
                 <div id="volumeValue" class="meter-value">-∞ dB</div>
             </div>
-
             <div id="status" class="status">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/>
@@ -36,7 +34,6 @@
                 <span id="statusText">Initializing...</span>
             </div>
         </div>
-
         <div class="control-panel">
             <h2>Controls</h2>
             <div class="slider-container">
@@ -59,15 +56,14 @@
                 <button class="preset-button" data-value="-36">Low</button>
             </div>
         </div>
-
         <div class="chunks-list">
             <h2>Recorded Chunks</h2>
             <div id="chunksList"></div>
         </div>
     </div>
-
     <!-- Load scripts in correct order -->
     <script src="js/config.js"></script>
+    <script src="js/db.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/main.js"></script>

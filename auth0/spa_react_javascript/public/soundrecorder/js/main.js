@@ -1,21 +1,27 @@
+// main.js
 // Initialize audio controller
 const audioController = new AudioController();
-
 // Initialize UI
-UIController.initialize();  // Changed from initializeUI to initialize
+UIController.initialize();
 
 // Global handlers for chunk controls
-window.handleChunkPlay = (index) => {
-    const chunk = audioController.recordedChunks[index];
+window.handleChunkPlay = (id) => {
+    const chunk = audioController.recordedChunks.find(c => c.id === id);
     if (chunk && chunk.blob) {
         audioController.playChunk(chunk.blob);
     }
 };
 
-window.handleChunkDownload = (index) => {
-    const chunk = audioController.recordedChunks[index];
+window.handleChunkDownload = (id) => {
+    const chunk = audioController.recordedChunks.find(c => c.id === id);
     if (chunk && chunk.blob) {
         audioController.downloadChunk(chunk.blob, chunk.number);
+    }
+};
+
+window.handleChunkDelete = async (id) => {
+    if (confirm('Are you sure you want to delete this chunk?')) {
+        await audioController.deleteChunk(id);
     }
 };
 
@@ -39,6 +45,11 @@ UI.durationSlider.addEventListener('input', (e) => {
     audioController.currentChunkDuration = duration;
     UI.durationValue.textContent = `${duration}s`;
     CONFIG.DEFAULT_CHUNK_DURATION = duration;
+    
+    // Restart chunk timer with new duration if recording
+    if (audioController.isRecording) {
+        audioController.startChunkTimer();
+    }
 });
 
 UI.presetButtons.forEach(button => {

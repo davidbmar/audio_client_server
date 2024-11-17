@@ -1,3 +1,4 @@
+// config.js
 const CONFIG = {
     SILENCE_THRESHOLD: -48, // dB
     FFT_SIZE: 2048,

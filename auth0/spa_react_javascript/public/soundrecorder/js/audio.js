@@ -1,3 +1,4 @@
+// audio.js
 class AudioController {
     constructor() {
         this.isRecording = false;
@@ -12,6 +13,24 @@ class AudioController {
         this.currentChunkDuration = CONFIG.DEFAULT_CHUNK_DURATION;
         this.chunkTimer = null;
         this.recordedChunks = [];
+        this.dbStorage = new DBStorage();
+        
+        // Initialize storage and load existing chunks
+        this.initializeStorage();
+    }
+
+    async initializeStorage() {
+        try {
+            await this.dbStorage.initialize();
+            const savedChunks = await this.dbStorage.getAllChunks();
+            this.recordedChunks = savedChunks.sort((a, b) => b.number - a.number);
+            this.chunkCounter = this.recordedChunks.length > 0 
+                ? Math.max(...this.recordedChunks.map(chunk => chunk.number))
+                : 0;
+            UIController.updateChunksList(this.recordedChunks);
+        } catch (err) {
+            console.error('Error initializing storage:', err);
+        }
     }
 
     async startRecording() {
@@ -118,10 +137,16 @@ class AudioController {
         UIController.updateRecordingState(false);
     }
 
-    addChunkToList(chunkData) {
-        this.recordedChunks.unshift(chunkData); // Add to beginning of array
-        UIController.updateChunksList(this.recordedChunks);
-        console.log(`Added chunk ${chunkData.number} to list`);
+    async addChunkToList(chunkData) {
+        try {
+            const id = await this.dbStorage.saveChunk(chunkData);
+            chunkData.id = id;
+            this.recordedChunks.unshift(chunkData);
+            UIController.updateChunksList(this.recordedChunks);
+            console.log(`Added chunk ${chunkData.number} to list`);
+        } catch (err) {
+            console.error('Error saving chunk:', err);
+        }
     }
 
     playChunk(blob) {
@@ -138,6 +163,27 @@ class AudioController {
         a.download = `chunk-${number}.webm`;
         a.click();
         URL.revokeObjectURL(url);
+    }
+
+    async deleteChunk(id) {
+        try {
+            await this.dbStorage.deleteChunk(id);
+            this.recordedChunks = this.recordedChunks.filter(chunk => chunk.id !== id);
+            UIController.updateChunksList(this.recordedChunks);
+        } catch (err) {
+            console.error('Error deleting chunk:', err);
+        }
+    }
+
+    async clearAllChunks() {
+        try {
+            await this.dbStorage.clearAll();
+            this.recordedChunks = [];
+            this.chunkCounter = 0;
+            UIController.updateChunksList(this.recordedChunks);
+        } catch (err) {
+            console.error('Error clearing chunks:', err);
+        }
     }
 
     startAnalysis() {
