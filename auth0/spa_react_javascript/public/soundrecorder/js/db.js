@@ -8,7 +8,7 @@ class DBStorage {
 
     async initialize() {
         return new Promise((resolve, reject) => {
-            const request = indexedDB.open(this.dbName, 1);
+            const request = indexedDB.open(this.dbName, 2); // Increment version for schema update
 
             request.onerror = () => reject(request.error);
             request.onsuccess = () => {
@@ -19,7 +19,14 @@ class DBStorage {
             request.onupgradeneeded = (event) => {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains(this.storeName)) {
-                    db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
+                    const store = db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
+                    store.createIndex('syncStatus', 'syncStatus', { unique: false });
+                } else if (event.oldVersion < 2) {
+                    // Add syncStatus field to existing records
+                    const store = event.target.transaction.objectStore(this.storeName);
+                    if (!store.indexNames.contains('syncStatus')) {
+                        store.createIndex('syncStatus', 'syncStatus', { unique: false });
+                    }
                 }
             };
         });
@@ -30,16 +37,39 @@ class DBStorage {
             const transaction = this.db.transaction([this.storeName], 'readwrite');
             const store = transaction.objectStore(this.storeName);
             
-            const request = store.add({
+            const record = {
                 number: chunkData.number,
                 blob: chunkData.blob,
                 timestamp: chunkData.timestamp,
                 duration: chunkData.duration,
-                date: new Date().toISOString()
-            });
+                date: new Date().toISOString(),
+                syncStatus: 'pending' // New field: pending, synced, failed
+            };
 
+            const request = store.add(record);
             request.onsuccess = () => resolve(request.result);
             request.onerror = () => reject(request.error);
+        });
+    }
+
+    async updateChunkSyncStatus(id, status) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.storeName], 'readwrite');
+            const store = transaction.objectStore(this.storeName);
+            
+            const getRequest = store.get(id);
+            getRequest.onsuccess = () => {
+                const chunk = getRequest.result;
+                if (chunk) {
+                    chunk.syncStatus = status;
+                    const updateRequest = store.put(chunk);
+                    updateRequest.onsuccess = () => resolve();
+                    updateRequest.onerror = () => reject(updateRequest.error);
+                } else {
+                    reject(new Error('Chunk not found'));
+                }
+            };
+            getRequest.onerror = () => reject(getRequest.error);
         });
     }
 

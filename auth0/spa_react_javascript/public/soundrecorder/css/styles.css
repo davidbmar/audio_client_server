@@ -257,6 +257,7 @@ h1 {
     display: flex;
     align-items: center;
     gap: 12px;
+    flex-grow: 1;
 }
 
 .chunk-number {
@@ -307,3 +308,37 @@ h1 {
     min-width: 120px;
     color: #475569;
 }
+/* Add these to your existing styles.css */
+.sync-status {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 8px;
+}
+
+.sync-icon {
+    transition: all 0.3s ease;
+}
+
+.sync-icon.pending {
+    color: #f59e0b;
+    animation: rotate 2s linear infinite;
+}
+
+.sync-icon.synced {
+    color: #10b981;
+}
+
+.sync-icon.failed {
+    color: #ef4444;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+

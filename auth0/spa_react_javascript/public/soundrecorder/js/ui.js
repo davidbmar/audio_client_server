@@ -15,46 +15,27 @@ const UI = {
 };
 
 const UIController = {
-    updateMeter(db) {
-        const normalizedDb = Math.max(0, Math.min(100, (db + 60) * 1.66));
-        UI.meterFill.style.width = `${normalizedDb}%`;
-        UI.volumeValue.textContent = `${db.toFixed(1)} dB`;
+    // ... (keep existing methods)
 
-        const isSilent = db < CONFIG.SILENCE_THRESHOLD;
-        UI.status.className = `status ${isSilent ? 'silent' : 'active'}`;
-        UI.statusText.textContent = isSilent ? 'Silence Detected' : 'Audio Detected';
-    },
-
-    updateRecordingState(isRecording) {
-        if (isRecording) {
-            UI.recordButton.className = 'button button-stop record-button recording';
-            UI.recordButton.innerHTML = `
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="4" y="4" width="16" height="16"/>
-                </svg>
-            `;
-            UI.meterContainer.classList.remove('hidden');
-        } else {
-            UI.recordButton.className = 'button button-record record-button';
-            UI.recordButton.innerHTML = `
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-                    <line x1="12" x2="12" y1="19" y2="22"/>
-                </svg>
-            `;
-            UI.meterContainer.classList.add('hidden');
-        }
-    },
-
-    updatePresetButtons(value) {
-        UI.presetButtons.forEach(button => {
-            if (parseInt(button.dataset.value) === value) {
-                button.classList.add('active');
-            } else {
-                button.classList.remove('active');
-            }
-        });
+    getSyncStatusIcon(status) {
+        const icons = {
+            pending: `
+                <svg class="sync-icon pending" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>`,
+            synced: `
+                <svg class="sync-icon synced" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>`,
+            failed: `
+                <svg class="sync-icon failed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>`
+        };
+        return icons[status] || icons.pending;
     },
 
     updateChunksList(chunks) {
@@ -63,6 +44,9 @@ const UIController = {
                 <div class="chunk-info">
                     <span class="chunk-number">Chunk ${chunk.number}</span>
                     <span class="chunk-time">${chunk.timestamp} (${chunk.duration}s)</span>
+                    <span class="sync-status" title="Sync Status: ${chunk.syncStatus}">
+                        ${this.getSyncStatusIcon(chunk.syncStatus)}
+                    </span>
                 </div>
                 <div class="chunk-controls">
                     <button class="chunk-button play" 
