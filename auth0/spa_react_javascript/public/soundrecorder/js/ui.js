@@ -15,7 +15,87 @@ const UI = {
 };
 
 const UIController = {
-    // ... (keep existing methods)
+    recordingStartTime: null,
+    recordingTimer: null,
+
+    initialize() {
+        // Set initial values
+        UI.thresholdSlider.value = CONFIG.SILENCE_THRESHOLD;
+        UI.thresholdValue.textContent = `${CONFIG.SILENCE_THRESHOLD} dB`;
+        UI.durationSlider.value = CONFIG.DEFAULT_CHUNK_DURATION;
+        UI.durationValue.textContent = `${CONFIG.DEFAULT_CHUNK_DURATION}s`;
+        
+        // Set initial status
+        this.updateStatusText('Ready to record');
+    },
+
+    updateRecordingState(isRecording) {
+        const button = UI.recordButton;
+        const status = UI.status;
+        
+        if (isRecording) {
+            button.classList.add('recording');
+            status.classList.add('recording');
+            this.startRecordingTimer();
+            
+            // Update status text with recording indicator
+            UI.statusText.innerHTML = `
+                <div class="recording-indicator">
+                    <div class="recording-dot"></div>
+                    Recording
+                    <span class="recording-timer">00:00</span>
+                </div>
+            `;
+        } else {
+            button.classList.remove('recording');
+            status.classList.remove('recording');
+            this.stopRecordingTimer();
+            this.updateStatusText('Ready to record');
+        }
+
+        // Show/hide meter container
+        UI.meterContainer.classList.toggle('hidden', !isRecording);
+    },
+
+    startRecordingTimer() {
+        this.recordingStartTime = Date.now();
+        this.recordingTimer = setInterval(() => {
+            const elapsed = Date.now() - this.recordingStartTime;
+            const minutes = Math.floor(elapsed / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerElement = UI.statusText.querySelector('.recording-timer');
+            if (timerElement) {
+                timerElement.textContent = timeStr;
+            }
+        }, 1000);
+    },
+
+    stopRecordingTimer() {
+        if (this.recordingTimer) {
+            clearInterval(this.recordingTimer);
+            this.recordingTimer = null;
+            this.recordingStartTime = null;
+        }
+    },
+
+    updateStatusText(text) {
+        UI.statusText.textContent = text;
+    },
+
+    updateMeter(db) {
+        const normalizedDb = Math.max(-60, Math.min(0, db));
+        const percentage = ((normalizedDb + 60) / 60) * 100;
+        UI.meterFill.style.width = `${percentage}%`;
+        UI.volumeValue.textContent = `${db.toFixed(1)} dB`;
+    },
+
+    updatePresetButtons(value) {
+        UI.presetButtons.forEach(button => {
+            button.classList.toggle('active', parseInt(button.dataset.value) === value);
+        });
+    },
 
     getSyncStatusIcon(status) {
         const icons = {
@@ -77,13 +157,5 @@ const UIController = {
                 </div>
             </div>
         `).join('');
-    },
-
-    initialize() {
-        // Set initial values
-        UI.thresholdSlider.value = CONFIG.SILENCE_THRESHOLD;
-        UI.thresholdValue.textContent = `${CONFIG.SILENCE_THRESHOLD} dB`;
-        UI.durationSlider.value = CONFIG.DEFAULT_CHUNK_DURATION;
-        UI.durationValue.textContent = `${CONFIG.DEFAULT_CHUNK_DURATION}s`;
     }
 };
