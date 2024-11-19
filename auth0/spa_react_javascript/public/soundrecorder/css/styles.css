@@ -330,3 +330,62 @@ h1 {
     min-width: 120px;
     color: #475569;
 }
+
+.sync-status {
+    display: flex;
+    align-items: center;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.875rem;
+}
+
+.sync-icon {
+    margin-right: 4px;
+}
+
+.sync-icon.pending {
+    color: #f59e0b;
+    animation: rotate 2s linear infinite;
+}
+
+.sync-icon.syncing {
+    color: #3b82f6;
+    animation: rotate 1s linear infinite;
+}
+
+.sync-icon.synced {
+    color: #10b981;
+}
+
+.sync-icon.failed {
+    color: #ef4444;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.status-pending .sync-status {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.status-syncing .sync-status {
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.status-synced .sync-status {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.status-failed .sync-status {
+    background-color: #fee2e2;
+    color: #b91c1c;
+}
