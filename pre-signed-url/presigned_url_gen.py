@@ -88,13 +88,29 @@ app.add_middleware(
 #    allow_headers=["*"],
 #)
 
-# Endpoint to generate a presigned URL for file upload
+## Endpoint to generate a presigned URL for file upload
 @app.get("/api/get-presigned-url")
 async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
     try:
         return get_presigned_url(current_user.sub)
     except Exception:
         raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+
+# REMEMBER TO REMOVE THIS. This is only for Test.  If you enable the below code, then
+# it would write to AmazonS3->Buckets->currentBucketForInput->test_user->nameoffile.
+#
+#@app.get("/api/get-presigned-url")
+## Remove the auth dependency temporarily
+## async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
+#async def get_presigned_url_endpoint():
+#    try:
+#        # Use a test user ID for now
+#        test_user_id = "test_user"
+#        return get_presigned_url(test_user_id)
+#    except Exception:
+#        raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+#
+
 
 # Endpoint to list all objects in the user's S3 folder
 @app.get("/api/get-s3-objects")
