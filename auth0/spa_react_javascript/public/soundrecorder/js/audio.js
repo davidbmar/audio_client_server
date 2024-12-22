@@ -136,6 +136,38 @@ class AudioController {
 
     async addChunkToList(chunkData) {
         try {
+            // Save to IndexedDB as before
+            const id = await this.dbStorage.saveChunk(chunkData);
+            chunkData.id = id;
+            this.recordedChunks.unshift(chunkData);
+            UIController.updateChunksList(this.recordedChunks, UI);
+            
+            // Try to upload to S3
+            try {
+                // Get presigned URL
+                const presignedUrlResponse = await window.uploadService.getPresignedUrl();
+                
+                if (presignedUrlResponse && presignedUrlResponse.url) {
+                    // Upload the chunk
+                    await window.uploadService.uploadChunk(presignedUrlResponse.url, chunkData.blob);
+                    await this.dbStorage.updateChunkSyncStatus(id, 'synced');
+                    console.log(`Successfully uploaded chunk ${chunkData.number}`);
+                } else {
+                    console.error('No presigned URL received');
+                    await this.dbStorage.updateChunkSyncStatus(id, 'failed');
+                }
+            } catch (uploadError) {
+                console.error('Error uploading chunk:', uploadError);
+                await this.dbStorage.updateChunkSyncStatus(id, 'failed');
+            }
+            
+        } catch (err) {
+            console.error('Error saving chunk:', err);
+        }
+    }
+
+    async addChunkToList(chunkData) {
+        try {
             const id = await this.dbStorage.saveChunk(chunkData);
             chunkData.id = id;
             this.recordedChunks.unshift(chunkData);

@@ -21,6 +21,11 @@ class DBStorage {
                 if (!db.objectStoreNames.contains(this.storeName)) {
                     const store = db.createObjectStore(this.storeName, { keyPath: 'id', autoIncrement: true });
                     store.createIndex('syncStatus', 'syncStatus', { unique: false });
+                } else if (event.oldVersion < 2) {
+                    const store = event.target.transaction.objectStore(this.storeName);
+                    if (!store.indexNames.contains('syncStatus')) {
+                        store.createIndex('syncStatus', 'syncStatus', { unique: false });
+                    }
                 }
             };
         });
@@ -46,6 +51,18 @@ class DBStorage {
         });
     }
 
+    // Add this new method
+    async getChunkById(id) {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.storeName], 'readonly');
+            const store = transaction.objectStore(this.storeName);
+            const request = store.get(id);
+
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    }
+
     async updateChunkSyncStatus(id, status) {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -64,18 +81,6 @@ class DBStorage {
                 }
             };
             getRequest.onerror = () => reject(getRequest.error);
-        });
-    }
-
-    async getPendingChunks() {
-        return new Promise((resolve, reject) => {
-            const transaction = this.db.transaction([this.storeName], 'readonly');
-            const store = transaction.objectStore(this.storeName);
-            const index = store.index('syncStatus');
-            const request = index.getAll('pending');
-
-            request.onsuccess = () => resolve(request.result);
-            request.onerror = () => reject(request.error);
         });
     }
 

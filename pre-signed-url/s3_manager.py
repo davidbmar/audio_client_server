@@ -43,19 +43,53 @@ def generate_file_name():
 def get_presigned_url(user_id: str):
     try:
         s3_client = create_s3_client()
-        file_name = generate_file_name()
+        file_name = generate_file_name()  # Keep your existing file name generator
         key = f"{user_id}/{file_name}"
+
+        # Add debugging
+        logging.debug(f"Generating presigned URL for key: {key}")
+        logging.debug(f"User ID: {user_id}")
+        logging.debug(f"Bucket: {INPUT_AUDIO_BUCKET}")
 
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
-            Params={'Bucket': INPUT_AUDIO_BUCKET, 'Key': key},
-            ExpiresIn=7200
+            Params={
+                'Bucket': INPUT_AUDIO_BUCKET,
+                'Key': key,
+                'ContentType': 'audio/webm',  # Specify content type
+                'ACL': 'private',  # Ensure private ACL
+            },
+            ExpiresIn=7200  # 2 hours
         )
 
-        return {"url": presigned_url}
+        logging.debug(f"Generated presigned URL (base): {presigned_url.split('?')[0]}")
+
+        return {
+            "url": presigned_url,
+            "key": key,
+            "contentType": "audio/webm",
+            "bucket": INPUT_AUDIO_BUCKET  # Add bucket info for debugging
+        }
     except Exception as e:
         logging.error(f"Error generating presigned URL: {e}")
         raise
+
+#def get_presigned_url(user_id: str):
+    #try:
+        #s3_client = create_s3_client()
+        #file_name = generate_file_name()
+        #key = f"{user_id}/{file_name}"
+#
+        #presigned_url = s3_client.generate_presigned_url(
+            #'put_object',
+            #Params={'Bucket': INPUT_AUDIO_BUCKET, 'Key': key},
+            #ExpiresIn=7200
+        #)
+#
+        #return {"url": presigned_url}
+    #except Exception as e:
+        #logging.error(f"Error generating presigned URL: {e}")
+        #raise
 
 def list_s3_objects(user_id: str, path: str):
     try:

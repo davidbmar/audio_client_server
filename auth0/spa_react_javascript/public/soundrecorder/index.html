@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Silence Detector</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
 </head>
 <body>
     <div class="container">
@@ -61,6 +62,60 @@
             <div id="chunksList"></div>
         </div>
     </div>
+
+
+    <script>
+    let auth0Client;
+    
+    async function initAuth0() {
+        try {
+            console.log('Starting Auth0 initialization...');
+            auth0Client = await auth0.createAuth0Client({
+                domain: 'dev-onz3ew6jph17oszl.us.auth0.com',
+                clientId: 'YOUR_CLIENT_ID',  // Make sure this matches your Auth0 application
+                authorizationParams: {
+                    redirect_uri: window.location.origin,
+                    audience: 'https://www.davidbmar.com/api/get-presigned-url',
+                    scope: 'openid profile email'
+                }
+            });
+    
+            if (location.search.includes("code=")) {
+                console.log('Processing callback...');
+                await auth0Client.handleRedirectCallback();
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+    
+            const isAuthenticated = await auth0Client.isAuthenticated();
+            console.log('Is authenticated:', isAuthenticated);
+    
+            if (isAuthenticated) {
+                const token = await auth0Client.getTokenSilently();
+                console.log('Token obtained:', token.substring(0, 10) + '...');
+                const user = await auth0Client.getUser();
+                console.log('User info:', user);
+            } else {
+                console.log('Not authenticated, starting login...');
+                await auth0Client.loginWithRedirect();
+            }
+        } catch (error) {
+            console.error('Auth0 error:', error);
+            console.error('Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+        }
+    }
+    
+    // Initialize Auth0
+    initAuth0().then(() => {
+        console.log('Auth0 initialization complete');
+    }).catch(err => {
+        console.error('Auth0 initialization failed:', err);
+    });
+    </script>
+
     <!-- Load scripts in correct order -->
     <script src="js/config.js"></script>
     <script src="js/ui.js"></script>
