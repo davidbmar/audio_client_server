@@ -1,5 +1,5 @@
 Directory Stucture:
-'''
+```
 cognito/
 ├── static/             # Frontend assets
 │   ├── css/            # CSS files
@@ -11,7 +11,7 @@ cognito/
 ├── middleware.py       # Login decorators and middleware
 ├── requirements.txt    # Dependencies
 └── README.md           # Project documentation
-'''
+```
 
 
 For production setup, create a systemd service. Create a file /etc/systemd/system/flask-app.service:
