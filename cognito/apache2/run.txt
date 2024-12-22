@@ -1,0 +1,7 @@
+#!/usr/bin/bash
+sudo a2enmod expires
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+
