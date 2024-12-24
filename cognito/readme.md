@@ -1,6 +1,7 @@
 Directory Stucture:
 ```
 cognito/
+├── apache2             # config file for apache2 which forwards on to the npm server for dynamic pages, while serving static pages.
 ├── static/             # Frontend assets
 │   ├── css/            # CSS files
 │   ├── js/             # JavaScript files
@@ -12,6 +13,7 @@ cognito/
 ├── requirements.txt    # Dependencies
 └── README.md           # Project documentation
 ```
+
 
 
 For production setup, create a systemd service. Create a file /etc/systemd/system/flask-app.service:

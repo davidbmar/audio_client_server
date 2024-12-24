@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Transcriber</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Audio Transcriber</h1>
+            <button id="recordButton" class="button button-record record-button">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                    <line x1="12" x2="12" y1="19" y2="22"/>
+                </svg>
+            </button>
+        </div>
+        <div id="meterContainer" class="hidden">
+            <div class="volume-meter">
+                <div class="meter-bar">
+                    <div id="meterFill" class="meter-fill"></div>
+                </div>
+                <div id="volumeValue" class="meter-value">-∞ dB</div>
+            </div>
+            <div id="status" class="status">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" x2="12" y1="8" y2="12"/>
+                    <line x1="12" x2="12.01" y1="16" y2="16"/>
+                </svg>
+                <span id="statusText">Initializing...</span>
+            </div>
+        </div>
+        <div class="control-panel">
+            <h2>Controls</h2>
+            <div class="slider-container">
+                <div class="slider-row">
+                    <label for="thresholdSlider">Silence Threshold:</label>
+                    <input type="range" id="thresholdSlider" class="slider" 
+                           min="-80" max="-20" step="1" value="-48">
+                    <span id="thresholdValue" class="slider-value">-48 dB</span>
+                </div>
+                <div class="slider-row">
+                    <label for="durationSlider">Chunk Duration:</label>
+                    <input type="range" id="durationSlider" class="slider"
+                           min="5" max="60" step="5" value="15">
+                    <span id="durationValue" class="slider-value">15s</span>
+                </div>
+            </div>
+            <div class="preset-buttons">
+                <button class="preset-button" data-value="-60">High</button>
+                <button class="preset-button active" data-value="-48">Medium</button>
+                <button class="preset-button" data-value="-36">Low</button>
+            </div>
+        </div>
+        <div class="chunks-list">
+            <h2>Recorded Chunks</h2>
+            <div id="chunksList"></div>
+        </div>
+    </div>
+    <!-- Load scripts in correct order -->
+    <script src="js/config.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
