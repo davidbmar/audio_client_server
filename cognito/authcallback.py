@@ -1,35 +1,119 @@
-from flask import Flask, redirect, url_for, session, request, render_template_string
+# authcallback.py
+import boto3
+from s3_manager import get_secrets, create_s3_client, get_input_bucket
+import json
+
+from flask import (
+    Flask, redirect, url_for, session, request, 
+    render_template_string, Response, make_response
+)
 from authlib.integrations.flask_client import OAuth
 from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
 import os
+import logging
+import secrets
+from datetime import datetime, timedelta
+from typing import Optional, Callable, Dict, Any
+import json
 
-# Decorator definition first
-def login_required(f):
+# Update logging configuration
+logging.basicConfig(
+    level=logging.DEBUG,  # Changed to DEBUG level
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+
+def sanitize_token_for_logging(token: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Creates a copy of the token safe for logging by removing sensitive fields
+    """
+    sensitive_fields = {'access_token', 'refresh_token', 'id_token'}
+    return {k: v for k, v in token.items() if k not in sensitive_fields}
+
+
+def debug_log_session():
+    """Log current session information"""
+    user_info = session.get('user', {})
+    logger.debug("Current session info:")
+    logger.debug(json.dumps(user_info, indent=2))
+    
+    if user_info:
+        # Get S3 path that would be used
+        user_id = user_info.get('sub', '')
+        user_type = user_info.get('user_type', 'customer')
+        s3_path = f"users/{user_type}/{user_id}/"
+        logger.debug(f"S3 path for user: {s3_path}")
+        
+        # Get S3 bucket information
+        try:
+            input_bucket = get_input_bucket()
+            logger.debug(f"S3 bucket: {input_bucket}")
+            logger.debug(f"Full S3 path: s3://{input_bucket}/{s3_path}")
+        except Exception as e:
+            logger.error(f"Error getting S3 information: {e}")
+
+def extract_provider_from_token(userinfo: dict) -> str:
+    """
+    Extract the authentication provider from the userinfo.
+    Returns 'cognito', 'google', etc.
+    """
+    try:
+        issuer = userinfo.get('iss', '')
+        if 'cognito-idp' in issuer:
+            return 'cognito'
+        elif 'accounts.google.com' in issuer:
+            return 'google'
+        elif 'github.com' in issuer:
+            return 'github'
+        else:
+            logger.warning(f"Unknown provider issuer: {issuer}")
+            return 'unknown'
+    except Exception as e:
+        logger.error(f"Error extracting provider: {str(e)}")
+        return 'unknown'
+
+
+# Security decorator for routes
+def login_required(f: Callable) -> Callable:
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = session.get('user')
         if user is None:
+            logger.warning("Unauthenticated access attempt")
             return redirect(url_for('login'))
+        
+        # Check session expiry
+        authenticated_at = datetime.fromisoformat(user.get('authenticated_at', ''))
+        if datetime.utcnow() - authenticated_at > timedelta(hours=12):
+            logger.info("Session expired, redirecting to login")
+            session.clear()
+            return redirect(url_for('login'))
+            
         return f(*args, **kwargs)
     return decorated_function
 
+# Initialize Flask app with security configurations
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-app.secret_key = 'your-secure-secret-key-here'
-oauth = OAuth(app)
-
+# Secure session configuration
 app.config.update(
+    SECRET_KEY=os.environ.get('FLASK_SECRET_KEY', secrets.token_urlsafe(32)),
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
+    PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
+    SESSION_TYPE='filesystem'
 )
 
+# Initialize OAuth
+oauth = OAuth(app)
 oauth.register(
     name='oidc',
-    client_id='3ko89b532mtv90e3242ni1fno4',
-    client_secret='14jan2ru58v1f5houc2sbdscm21v3d3g7ovrkua2sbedintm069l',
+    client_id=os.environ.get('COGNITO_CLIENT_ID', '3ko89b532mtv90e3242ni1fno4'),
+    client_secret=os.environ.get('COGNITO_CLIENT_SECRET', '14jan2ru58v1f5houc2sbdscm21v3d3g7ovrkua2sbedintm069l'),
     server_metadata_url='https://cognito-idp.us-east-2.amazonaws.com/us-east-2_cBWwWPDou/.well-known/openid-configuration',
     client_kwargs={
         'scope': 'openid email phone',
@@ -37,14 +121,26 @@ oauth.register(
     }
 )
 
-# Public page - anyone can access
+def set_security_headers(response: Response) -> Response:
+    """Add security headers to all responses"""
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['Content-Security-Policy'] = "default-src 'self'"
+    return response
+
+@app.after_request
+def after_request(response: Response) -> Response:
+    """Global handler to set security headers"""
+    return set_security_headers(response)
+
 @app.route('/')
 def index():
     user = session.get('user')
-    return render_template_string('''
+    response = make_response(render_template_string('''
         <h1>Welcome to My App</h1>
         {% if user %}
-            <p>Hello, {{ user.email }}! <a href="/logout">Logout</a></p>
+            <p>Hello, {{ user.email }} ({{ user.user_type }})! <a href="/logout">Logout</a></p>
         {% else %}
             <p>Welcome! Please <a href="/login">Login</a></p>
         {% endif %}
@@ -54,23 +150,25 @@ def index():
                 <li><a href="/dashboard">Dashboard (Protected)</a></li>
             </ul>
         </nav>
-    ''', user=user)
+    ''', user=user))
+    return response
 
-# Another public page
 @app.route('/public')
 def public():
-    return render_template_string('''
+    response = make_response(render_template_string('''
         <h1>Public Page</h1>
         <p>This content is visible to everyone!</p>
         <p><a href="/">Back to Home</a></p>
-    ''')
+    '''))
+    return response
 
-# Protected page - only authenticated users can access
 @app.route('/dashboard')
 @login_required
 def dashboard():
     user = session.get('user')
-    return render_template_string('''
+    s3_path = f"users/{user['user_type']}/{user['provider']}/{user['sub']}/"
+    
+    response = make_response(render_template_string('''
         <h1>Protected Dashboard</h1>
         <h2>Welcome, {{ user.email }}!</h2>
         <h3>Your Profile Information:</h3>
@@ -79,44 +177,110 @@ def dashboard():
                 <li><strong>{{ key }}:</strong> {{ value }}</li>
             {% endfor %}
         </ul>
+        <h3>Your S3 Information:</h3>
+        <ul>
+            <li><strong>User ID:</strong> {{ user.sub }}</li>
+            <li><strong>User Type:</strong> {{ user.user_type }}</li>
+            <li><strong>Provider:</strong> {{ user.provider }}</li>
+            <li><strong>S3 Path:</strong> {{ s3_path }}</li>
+        </ul>
         <p>
             <a href="/">Back to Home</a> | 
             <a href="/logout">Logout</a>
         </p>
-    ''', user=user)
-
+    ''', user=user, s3_path=s3_path))
+    return response
 
 @app.route('/login')
 def login():
+    # Generate and store CSRF token
+    csrf_token = secrets.token_urlsafe(32)
+    session['csrf_token'] = csrf_token
+    
     redirect_uri = url_for('callback', _external=True)
     return oauth.oidc.authorize_redirect(redirect_uri)
+
 
 @app.route('/auth/callback')
 def callback():
     try:
         token = oauth.oidc.authorize_access_token()
-        user = token.get('userinfo')
-        if user:
-            session['user'] = user
-            return redirect(url_for('index'))
-        else:
-            return 'Failed to get user info', 400
+        userinfo = token.get('userinfo')
+        
+        if not userinfo or not userinfo.get('sub'):
+            logger.error("Failed to get valid user info from OAuth provider")
+            return redirect(url_for('login'))
+
+        # Extract provider from token
+        provider = extract_provider_from_token(userinfo)
+        
+        # Clear and create new session
+        session.clear()
+        session.permanent = True
+        session['_id'] = secrets.token_urlsafe(32)
+        
+        # Store user information with provider
+        session['user'] = {
+            'sub': userinfo['sub'],
+            'email': userinfo.get('email', ''),
+            'user_type': 'customer',  # Default type
+            'provider': provider,
+            'authenticated_at': datetime.utcnow().isoformat()
+        }
+        
+        logger.info(f"Successfully authenticated user: {userinfo.get('email')} via {provider}")
+        return redirect(url_for('index'))
+
     except Exception as e:
-        print(f"Error during callback: {str(e)}")
+        logger.error(f"Error during authentication callback: {str(e)}")
         session.clear()
         return redirect(url_for('login'))
 
+
 @app.route('/logout')
 def logout():
-    session.clear()
+    try:
+        # Clear session
+        session.clear()
+        
+        # Cognito logout URL construction
+        cognito_domain = "https://davidbmar.auth.us-east-2.amazoncognito.com"
+        client_id = os.environ.get('COGNITO_CLIENT_ID', '3ko89b532mtv90e3242ni1fno4')
+        logout_uri = "https://www.davidbmar.com"
 
-    cognito_domain = "https://davidbmar.auth.us-east-2.amazoncognito.com"
-    client_id = "3ko89b532mtv90e3242ni1fno4"
-    logout_uri = "https://www.davidbmar.com"  # Match this with Cognito's allowed sign-out URL
+        logout_url = (
+            f"{cognito_domain}/logout?"
+            f"client_id={client_id}&"
+            f"logout_uri={logout_uri}"
+        )
+        
+        logger.info("User logged out successfully")
+        return redirect(logout_url)
+        
+    except Exception as e:
+        logger.error(f"Error during logout: {str(e)}")
+        return redirect(url_for('index'))
 
-    return redirect(
-        f"{cognito_domain}/logout?client_id={client_id}&logout_uri={logout_uri}"
-    )
+# Error handlers
+@app.errorhandler(404)
+def not_found_error(error):
+    logger.warning(f"404 error: {request.url}")
+    return make_response(render_template_string('''
+        <h1>Page Not Found</h1>
+        <p>The requested page could not be found.</p>
+        <p><a href="/">Return to Home</a></p>
+    '''), 404)
+
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"500 error: {str(error)}")
+    return make_response(render_template_string('''
+        <h1>Internal Server Error</h1>
+        <p>An unexpected error has occurred.</p>
+        <p><a href="/">Return to Home</a></p>
+    '''), 500)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    # Ensure debug mode is off in production
+    debug_mode = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', debug=debug_mode)

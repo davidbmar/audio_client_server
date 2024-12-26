@@ -49,16 +49,32 @@ def generate_file_name():
     now = datetime.now(pytz.timezone('US/Central'))
     return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".mp3"
 
-def get_presigned_url(user_id: str):
+def get_s3_path(user_id: str, user_type: str, provider: str, path: str = "") -> str:
+    """
+    Constructs the S3 path using the new structure.
+    Args:
+        user_id: The user's sub identifier
+        user_type: The type of user (customer, admin, etc.)
+        provider: The authentication provider (cognito, google, etc.)
+        path: Additional path components
+    Returns:
+        str: The complete S3 path
+    """
+    base_path = f"users/{user_type}/{provider}/{user_id}"
+    if path:
+        clean_path = path.strip('/')
+        return f"{base_path}/{clean_path}" if clean_path else base_path
+    return base_path
+
+def get_presigned_url(user_id: str, user_type: str, provider: str):
     try:
         s3_client = create_s3_client()
         file_name = generate_file_name()
         input_bucket = get_input_bucket()
-        key = f"users/{user_id}/{file_name}"
+        key = f"{get_s3_path(user_id, user_type, provider)}/{file_name}"
 
         logging.debug(f"Generating presigned URL for key: {key}")
-        logging.debug(f"User ID: {user_id}")
-        logging.debug(f"Bucket: {input_bucket}")
+        logging.debug(f"User ID: {user_id}, Type: {user_type}, Provider: {provider}")
 
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
@@ -71,8 +87,6 @@ def get_presigned_url(user_id: str):
             ExpiresIn=7200
         )
 
-        logging.debug(f"Generated presigned URL (base): {presigned_url.split('?')[0]}")
-
         return {
             "url": presigned_url,
             "key": key,
@@ -83,16 +97,14 @@ def get_presigned_url(user_id: str):
         logging.error(f"Error generating presigned URL: {e}")
         raise
 
-def list_s3_objects(user_id: str, path: str):
+def list_s3_objects(user_id: str, user_type: str, provider: str, path: str = ""):
     try:
         s3_client = create_s3_client()
         input_bucket = get_input_bucket()
-        path = path.strip('/')
-        directory = f"users/{user_id}/{path}" if path else f"users/{user_id}/"
+        directory = get_s3_path(user_id, user_type, provider, path)
 
-        logging.debug(f"Constructed directory for S3: {directory}")
+        logging.debug(f"Listing objects in directory: {directory}")
         response = s3_client.list_objects_v2(Bucket=input_bucket, Prefix=directory)
-        logging.debug(f"S3 ListObjectsV2 response: {response}")
 
         if 'Contents' not in response:
             logging.debug(f"No contents found in S3 bucket for prefix: {directory}")
@@ -111,12 +123,11 @@ def list_s3_objects(user_id: str, path: str):
         logging.error(f"Error listing S3 objects: {e}")
         raise
 
-def delete_file(user_id: str, file_path: str):
+def delete_file(user_id: str, user_type: str, provider: str, file_path: str):
     try:
         s3_client = create_s3_client()
         input_bucket = get_input_bucket()
-        file_path = file_path.strip('/')
-        key = f"users/{user_id}/{file_path}"
+        key = get_s3_path(user_id, user_type, provider, file_path)
 
         s3_client.delete_object(Bucket=input_bucket, Key=key)
         return {"message": "File deleted successfully"}
@@ -124,34 +135,33 @@ def delete_file(user_id: str, file_path: str):
         logging.error(f"Error deleting file: {e}")
         raise
 
-def rename_file(user_id: str, old_path: str, new_path: str):
+def rename_file(user_id: str, user_type: str, provider: str, old_path: str, new_path: str):
     try:
         s3_client = create_s3_client()
         input_bucket = get_input_bucket()
-        old_path = old_path.strip('/')
-        new_path = new_path.strip('/')
+        
+        old_key = get_s3_path(user_id, user_type, provider, old_path)
+        new_key = get_s3_path(user_id, user_type, provider, new_path)
 
-        old_key = f"users/{user_id}/{old_path}"
-        new_key = f"users/{user_id}/{new_path}"
-
+        # Copy the object to the new location
         s3_client.copy_object(
             Bucket=input_bucket,
             CopySource={'Bucket': input_bucket, 'Key': old_key},
             Key=new_key
         )
 
+        # Delete the old object
         s3_client.delete_object(Bucket=input_bucket, Key=old_key)
         return {"message": "File renamed successfully"}
     except Exception as e:
         logging.error(f"Error renaming file: {e}")
         raise
 
-def create_directory(user_id: str, directory_path: str):
+def create_directory(user_id: str, user_type: str, provider: str, directory_path: str):
     try:
         s3_client = create_s3_client()
         input_bucket = get_input_bucket()
-        path = directory_path.strip('/')
-        key = f"users/{user_id}/{path}/"
+        key = get_s3_path(user_id, user_type, provider, directory_path) + "/"
 
         s3_client.put_object(Bucket=input_bucket, Key=key)
         return {"message": "Directory created successfully"}
@@ -159,16 +169,15 @@ def create_directory(user_id: str, directory_path: str):
         logging.error(f"Error creating directory: {e}")
         raise
 
-def get_file(user_id: str, file_path: str, bucket_name: str = None, prepend_user_id: bool = True):
+def get_file(user_id: str, user_type: str, provider: str, file_path: str, bucket_name: str = None, prepend_user_id: bool = True):
     try:
         s3_client = create_s3_client()
         if bucket_name is None:
             bucket_name = get_input_bucket()
             
-        file_path = file_path.strip('/')
-        key = f"users/{user_id}/{file_path}" if prepend_user_id else file_path
+        key = get_s3_path(user_id, user_type, provider, file_path) if prepend_user_id else file_path
 
-        logging.debug(f"Attempting to retrieve file from bucket '{bucket_name}' with key '{key}'")
+        logging.debug(f"Retrieving file from bucket '{bucket_name}' with key '{key}'")
 
         response = s3_client.get_object(Bucket=bucket_name, Key=key)
         return response
@@ -176,19 +185,17 @@ def get_file(user_id: str, file_path: str, bucket_name: str = None, prepend_user
         logging.error(f"Error retrieving file from bucket {bucket_name}: {e}")
         raise
 
-def list_directory(user_id: str, path: str):
+def list_directory(user_id: str, user_type: str, provider: str, path: str):
     try:
         s3_client = create_s3_client()
         input_bucket = get_input_bucket()
-        path = path.strip('/')
+        directory_path = get_s3_path(user_id, user_type, provider, path)
         
-        user_path = f"users/{user_id}/{path}/" if path else f"users/{user_id}/"
-
-        logging.debug(f"user_path (formatted for S3): '{user_path}'")
+        logging.debug(f"Listing directory: {directory_path}")
 
         response = s3_client.list_objects_v2(
             Bucket=input_bucket,
-            Prefix=user_path,
+            Prefix=directory_path,
             Delimiter='/'
         )
 
