@@ -4,6 +4,10 @@ from datetime import datetime
 import pytz
 import logging
 import json
+from typing import Dict, Any, Optional
+from auth import TokenData  # Add this import at the top
+
+logger = logging.getLogger(__name__)
 
 def get_secrets():
     secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"
@@ -32,6 +36,69 @@ if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE, REGION_NAME, INPUT_AUDIO_BUCKET, TRANS
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
+
+def construct_s3_key(user_data: TokenData, filename: str = None) -> str:
+    """
+    Constructs the S3 key following the pattern: users/customer/cognito/{user_id}/
+    """
+    base_path = f"users/{user_data.user_type}/{user_data.provider}/{user_data.sub}"
+    if filename:
+        return f"{base_path}/{filename}"
+    return base_path
+
+def generate_filename() -> str:
+    """
+    Generates a unique filename with timestamp
+    """
+    now = datetime.now(pytz.timezone('UTC'))
+    return f"{now.strftime('%Y-%m-%d-%H-%M-%S-%f')}.webm"
+
+def get_presigned_url(user_data: TokenData) -> Dict[str, Any]:
+    """
+    Generate a presigned URL for S3 upload with proper user path
+    """
+    try:
+        logger.debug(f"Generating presigned URL for user: {user_data.sub}")
+        
+        # Get S3 client
+        s3_client = create_s3_client()
+        input_bucket = get_input_bucket()
+        
+        # Generate filename and full S3 key
+        filename = generate_filename()
+        s3_key = construct_s3_key(user_data, filename)
+        
+        logger.debug(f"Generated S3 key: {s3_key}")
+        
+        # Generate presigned URL
+        presigned_url = s3_client.generate_presigned_url(
+            'put_object',
+            Params={
+                'Bucket': input_bucket,
+                'Key': s3_key,
+                'ContentType': 'audio/webm',
+                'ACL': 'private'
+            },
+            ExpiresIn=3600,  # URL expires in 1 hour
+            HttpMethod='PUT'
+        )
+        
+        logger.info(f"Successfully generated presigned URL for key: {s3_key}")
+        
+        return {
+            "url": presigned_url,
+            "key": s3_key,
+            "bucket": input_bucket,
+            "filename": filename,
+            "contentType": "audio/webm",
+            "path": f"s3://{input_bucket}/{s3_key}"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error generating presigned URL: {str(e)}")
+        raise Exception(f"Failed to generate presigned URL: {str(e)}")
+
+
 
 def create_s3_client():
     return boto3.client('s3', region_name=REGION_NAME)

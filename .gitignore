@@ -3,7 +3,7 @@ terraform.tfstate
 terraform.tfstate.backup
 terraform.tfvars
 .pyc
-__pycahce__
+__pycache__
 *secret*
 
 

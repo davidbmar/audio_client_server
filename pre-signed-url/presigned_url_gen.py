@@ -1,10 +1,15 @@
 # presigned_url_gen.py
 import boto3
 import json
-from typing import Dict, Any
-from fastapi import FastAPI, Depends, HTTPException, Query
+import jwt
+import logging
+
+from typing import Dict, Any, Optional, List
+from fastapi import FastAPI, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse, PlainTextResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+
 from auth import get_current_user, TokenData
 from s3_manager import (
     get_presigned_url,
@@ -15,6 +20,17 @@ from s3_manager import (
     get_file,
     list_directory
 )
+
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Security scheme for JWT
+security = HTTPBearer()
+
+
+
+
 
 # Initialize AWS clients
 secrets_client = boto3.client('secretsmanager', region_name='us-east-2')
@@ -63,6 +79,70 @@ def get_secrets() -> Dict[str, str]:
 # Get configuration from Secrets Manager
 config = get_secrets()
 
+
+class TokenData:
+    def __init__(self, sub: str, email: Optional[str] = None, cognito_username: Optional[str] = None):
+        self.sub = sub
+        self.email = email
+        self.cognito_username = cognito_username
+        self.user_type = "customer"  # Default user type
+        self.provider = "cognito"    # Set provider to cognito
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> TokenData:
+    """
+    Validate Cognito JWT token and return user information
+    """
+    try:
+        token = credentials.credentials
+        logger.debug("Received token for validation")
+        
+        # Decode token without verification first to get the key id
+        unverified_headers = jwt.get_unverified_header(token)
+        logger.debug(f"Token headers: {unverified_headers}")
+        
+        # Configure Cognito JWT validation
+        issuer = "https://cognito-idp.us-east-2.amazonaws.com/us-east-2_cBWwWPDou"
+        
+        # Decode and verify the token
+        payload = jwt.decode(
+            token,
+            options={"verify_signature": False},  # For now, we'll add signature verification later
+            audience="3ko89b532mtv90e3242ni1fno4",
+            issuer=issuer
+        )
+        
+        logger.debug(f"Decoded token payload: {payload}")
+        
+        # Extract user information
+        sub = payload.get('sub')
+        email = payload.get('email')
+        cognito_username = payload.get('cognito:username')
+        
+        if not sub:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials - missing sub claim",
+            )
+            
+        logger.info(f"Successfully validated token for user: {sub}")
+        return TokenData(sub=sub, email=email, cognito_username=cognito_username)
+        
+    except jwt.InvalidTokenError as e:
+        logger.error(f"Invalid token error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Could not validate credentials: {str(e)}",
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in auth: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+        )
+
+
+
+
 # Initialize FastAPI app
 app = FastAPI()
 
@@ -88,28 +168,47 @@ app.add_middleware(
 #    allow_headers=["*"],
 #)
 
-## Endpoint to generate a presigned URL for file upload
 @app.get("/api/get-presigned-url")
 async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
+    """
+    Generate a presigned URL for file upload
+    """
     try:
-        return get_presigned_url(current_user.sub)
-    except Exception:
-        raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
+        logger.debug(f"Presigned URL request from user: {current_user.sub}")
+        logger.debug(f"User details - Type: {current_user.user_type}, Provider: {current_user.provider}")
+        
+        result = get_presigned_url(current_user)
+        
+        # Log success but mask the actual URL
+        logger.info(f"Successfully generated presigned URL for user {current_user.sub}")
+        logger.debug(f"S3 path: {result['path']}")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error in presigned URL endpoint: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate presigned URL: {str(e)}"
+        )
 
-# REMEMBER TO REMOVE THIS. This is only for Test.  If you enable the below code, then
-# it would write to AmazonS3->Buckets->currentBucketForInput->test_user->nameoffile.
-#
-#@app.get("/api/get-presigned-url")
-## Remove the auth dependency temporarily
-## async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
-#async def get_presigned_url_endpoint():
-#    try:
-#        # Use a test user ID for now
-#        test_user_id = "test_user"
-#        return get_presigned_url(test_user_id)
-#    except Exception:
-#        raise HTTPException(status_code=500, detail="Failed to generate presigned URL")
-#
+# Optional: Add a test endpoint for development
+@app.get("/api/test-user-path")
+async def test_user_path(current_user: TokenData = Depends(get_current_user)):
+    """
+    Test endpoint to verify user path construction
+    """
+    try:
+        base_path = construct_s3_key(current_user)
+        return {
+            "user_id": current_user.sub,
+            "user_type": current_user.user_type,
+            "provider": current_user.provider,
+            "base_path": base_path,
+            "example_file_path": construct_s3_key(current_user, "example.webm")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Endpoint to list all objects in the user's S3 folder
