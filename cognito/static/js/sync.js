@@ -4,34 +4,98 @@ class SyncService {
         this.dbStorage = dbStorage;
         this.syncQueue = new Set();
         this.isSyncing = false;
-        // Using relative path instead of hardcoded domain
-        this.apiBaseUrl = '/api';
+        
+        // Get base URL from current location
+        const baseUrl = window.location.origin;
+        this.apiBaseUrl = `${baseUrl}/api`;
+        
+        console.log('🔧 SyncService Configuration:', {
+            baseUrl: baseUrl,
+            apiUrl: this.apiBaseUrl,
+            protocol: window.location.protocol,
+            host: window.location.host
+        });
+    }
+
+    async getPresignedUrl() {
+        const url = `${this.apiBaseUrl}/get-presigned-url`;
+        console.log(`🔑 Requesting presigned URL from: ${url}`);
+
+        try {
+            // Log the request
+            console.group('Request Details');
+            console.log('URL:', url);
+            console.log('Method: GET');
+            console.log('Headers:', {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            });
+            console.groupEnd();
+
+            const response = await fetch(url, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            // Log response details
+            console.group('Response Details');
+            console.log('Status:', response.status);
+            console.log('OK:', response.ok);
+            console.log('Headers:', Object.fromEntries(response.headers.entries()));
+            
+            const text = await response.text();
+            console.log('Response Body:', text);
+            console.groupEnd();
+
+            if (!response.ok) {
+                throw new Error(`HTTP Error: ${response.status} - ${text}`);
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                console.error('Failed to parse response:', text);
+                throw new Error('Invalid JSON response');
+            }
+        } catch (error) {
+            console.error('Presigned URL Error:', error);
+            throw error;
+        }
     }
 
     async syncChunk(chunkId) {
+        console.group(`📤 Syncing Chunk ${chunkId}`);
+        
         try {
+            // Get chunk data
             const chunk = await this.dbStorage.getChunkById(chunkId);
             if (!chunk) {
-                console.error('Chunk not found:', chunkId);
-                return;
+                throw new Error('Chunk not found');
             }
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Presigned URL error details:', errorText);
-                throw new Error(`Failed to get presigned URL: ${response.status}`);
-            }
+            console.log('Retrieved chunk:', {
+                id: chunkId,
+                size: chunk.blob.size,
+                type: chunk.blob.type
+            });
 
-            const data = await response.json();
-            console.log('Got presigned URL response:', data);
-            
-            if (!data.url) {
+            // Get presigned URL
+            const presignedData = await this.getPresignedUrl();
+            if (!presignedData?.url) {
                 throw new Error('No presigned URL in response');
             }
 
-            // Upload the chunk
-            console.log('Uploading chunk to:', data.url);
-            const uploadResponse = await fetch(data.url, {
+            // Upload to S3
+            console.log('Uploading to S3:', {
+                url: presignedData.url.substring(0, 50) + '...',
+                contentType: 'audio/webm'
+            });
+
+            const uploadResponse = await fetch(presignedData.url, {
                 method: 'PUT',
                 body: chunk.blob,
                 headers: {
@@ -40,22 +104,31 @@ class SyncService {
             });
 
             if (!uploadResponse.ok) {
-                throw new Error(`Upload failed: ${uploadResponse.status}`);
+                const errorText = await uploadResponse.text();
+                throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
             }
 
-            console.log('Upload successful');
             await this.dbStorage.updateChunkSyncStatus(chunkId, 'synced');
-
+            console.log('✅ Sync completed successfully');
+            
+            return true;
         } catch (error) {
-            console.error('Error syncing chunk:', error);
+            console.error('❌ Sync failed:', error);
             await this.dbStorage.updateChunkSyncStatus(chunkId, 'failed');
             throw error;
+        } finally {
+            console.groupEnd();
         }
     }
 
     queueChunkForSync(chunkId) {
-        console.log('Queueing chunk for sync:', chunkId);
+        console.log(`➕ Queueing chunk ${chunkId}`, {
+            queueSize: this.syncQueue.size,
+            isSyncing: this.isSyncing
+        });
+        
         this.syncQueue.add(chunkId);
+        
         if (!this.isSyncing) {
             this.processSyncQueue();
         }
@@ -66,16 +139,19 @@ class SyncService {
             return;
         }
 
+        console.group('🔄 Processing Queue');
+        console.log('Queue status:', {
+            size: this.syncQueue.size,
+            chunks: Array.from(this.syncQueue)
+        });
+
         this.isSyncing = true;
-        console.log('Processing sync queue, size:', this.syncQueue.size);
 
         try {
             for (const chunkId of this.syncQueue) {
                 try {
-                    console.log('Processing chunk:', chunkId);
                     await this.syncChunk(chunkId);
                     this.syncQueue.delete(chunkId);
-                    console.log('Successfully processed chunk:', chunkId);
                 } catch (error) {
                     console.error(`Failed to sync chunk ${chunkId}:`, error);
                 }
@@ -84,9 +160,10 @@ class SyncService {
             this.isSyncing = false;
             
             if (this.syncQueue.size > 0) {
-                console.log('Queue still has items, scheduling next process');
                 setTimeout(() => this.processSyncQueue(), 1000);
             }
+            
+            console.groupEnd();
         }
     }
 }

@@ -389,3 +389,28 @@ h1 {
     background-color: #fee2e2;
     color: #b91c1c;
 }
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.button-debug {
+    background-color: #4a5568;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.button-debug:hover {
+    background-color: #2d3748;
+    transform: scale(1.05);
+}
+
+/* Add pulse animation for when debug window is open */
+.button-debug.active {
+    background-color: #48bb78;
+}
+
+.button-debug.active:hover {
+    background-color: #38a169;
+}

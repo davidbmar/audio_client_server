@@ -4,3 +4,6 @@ terraform.tfstate.backup
 terraform.tfvars
 .pyc
 __pycahce__
+*secret*
+
+
