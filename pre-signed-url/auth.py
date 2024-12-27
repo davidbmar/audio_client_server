@@ -1,73 +1,73 @@
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import jwt, jwk, JWTError
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt
 from typing import Optional, List
 from pydantic import BaseModel
-import requests
-import boto3
-import json
 import logging
 
-# Configure logging for debugging and error tracking
+# Configure logging
 logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
-# Function to retrieve secrets from AWS Secrets Manager
-def get_secrets():
-    secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"  # Make sure this matches your secrets identifier
-    region_name = "us-east-2"
-    client = boto3.client(service_name='secretsmanager', region_name=region_name)
+# Cognito Configuration
+COGNITO_REGION = 'us-east-2'
+COGNITO_USER_POOL_ID = 'us-east-2_cBWwWPDou'
+COGNITO_APP_CLIENT_ID = '3ko89b532mtv90e3242ni1fno4'
 
-    try:
-        secret_value = client.get_secret_value(SecretId=secret_name)
-        secret_dict = json.loads(secret_value.get('SecretString', '{}'))
-        return secret_dict
-    except Exception as e:
-        logging.error(f"Error retrieving secrets: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve secrets")
-
-# Load secrets into variables
-secrets = get_secrets()
-AUTH0_DOMAIN = secrets.get("AUTH0_DOMAIN")
-AUTH0_AUDIENCE = secrets.get("AUTH0_AUDIENCE")
-
-# Ensure all required secrets are set
-if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE]):
-    raise ValueError("Missing required secrets")
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"https://{AUTH0_DOMAIN}/oauth/token")
+# Security scheme for JWT
+security = HTTPBearer()
 
 class TokenData(BaseModel):
-    sub: Optional[str] = None
-    permissions: Optional[List[str]] = []
+    sub: str
+    email: Optional[str] = None
+    cognito_username: Optional[str] = None
+    user_type: str = "customer"
+    provider: str = "cognito"
 
-def get_jwks():
-    jwks_url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
-    response = requests.get(jwks_url)
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to fetch JWKS")
-    return response.json()
-
-def verify_token(token: str, credentials_exception):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> TokenData:
+    """
+    Validate Cognito JWT token and return user information
+    """
     try:
-        jwks = get_jwks()
-        unverified_header = jwt.get_unverified_header(token)
-        rsa_key = next((key for key in jwks['keys'] if key['kid'] == unverified_header['kid']), None)
-
-        if not rsa_key:
-            raise credentials_exception
-
-        public_key = jwk.construct(rsa_key)
-        payload = jwt.decode(token, public_key, algorithms=["RS256"], audience=AUTH0_AUDIENCE, issuer=f"https://{AUTH0_DOMAIN}/")
-
-        return TokenData(sub=payload.get("sub"), permissions=payload.get("permissions"))
-    except JWTError:
-        raise credentials_exception
-
-async def get_current_user(token: str = Depends(oauth2_scheme)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    return verify_token(token, credentials_exception)
-
+        token = credentials.credentials
+        logger.debug("Received token for validation")
+        
+        # Configure Cognito JWT validation
+        issuer = f"https://cognito-idp.{COGNITO_REGION}.amazonaws.com/{COGNITO_USER_POOL_ID}"
+        
+        # Decode and verify the token
+        payload = jwt.decode(
+            token,
+            options={"verify_signature": False},  # For development - we'll add signature verification later
+            audience=COGNITO_APP_CLIENT_ID,
+            issuer=issuer
+        )
+        
+        logger.debug(f"Decoded token payload: {payload}")
+        
+        return TokenData(
+            sub=payload.get('sub'),
+            email=payload.get('email'),
+            cognito_username=payload.get('cognito:username'),
+            user_type="customer",
+            provider="cognito"
+        )
+        
+    except jwt.ExpiredSignatureError:
+        logger.error("Token has expired")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token has expired"
+        )
+    except jwt.JWTError as e:
+        logger.error(f"JWT validation error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in auth: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials"
+        )

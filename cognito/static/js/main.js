@@ -2,6 +2,7 @@
 // Initialize UI elements
 const UI = {
     recordButton: document.getElementById('recordButton'),
+    debugButton: document.getElementById('debugButton'),  // Add debug button
     meterContainer: document.getElementById('meterContainer'),
     meterFill: document.getElementById('meterFill'),
     volumeValue: document.getElementById('volumeValue'),
@@ -25,6 +26,12 @@ let syncService; // Will be initialized after DB is ready
 // Initialize everything
 async function initialize() {
     try {
+        // Log initialization start
+        window.debugManager.info('Application initialization started', {
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent
+        });
+
         await audioController.initializeStorage();
         syncService = new SyncService(audioController.dbStorage);
         window.syncService = syncService; // Make it globally available
@@ -33,36 +40,69 @@ async function initialize() {
         // Set up event listeners after initialization
         setupEventListeners();
         
-        console.log('Application initialized successfully');
+        window.debugManager.info('Application initialized successfully');
     } catch (error) {
+        window.debugManager.error('Failed to initialize application', {
+            error: error.message,
+            stack: error.stack
+        });
         console.error('Failed to initialize:', error);
     }
 }
 
 function setupEventListeners() {
+    // Debug button handler
+    UI.debugButton.addEventListener('click', () => {
+        window.debugManager.openDebugWindow();
+        UI.debugButton.classList.add('active');
+        
+        // Add window close listener to remove active state
+        if (window.debugManager.debugWindow) {
+            window.debugManager.debugWindow.addEventListener('unload', () => {
+                UI.debugButton.classList.remove('active');
+            });
+        }
+    });
+
     // Record button click handler
     UI.recordButton.addEventListener('click', async () => {
-        console.log('Record button clicked, current state:', audioController.isRecording);
+        window.debugManager.info('Record button clicked', {
+            currentState: audioController.isRecording
+        });
+        
         if (audioController.isRecording) {
+            window.debugManager.info('Stopping recording');
             audioController.stopRecording();
         } else {
+            window.debugManager.info('Starting recording');
             const started = await audioController.startRecording();
             if (!started) {
-                console.error('Failed to start recording');
+                window.debugManager.error('Failed to start recording');
             }
         }
     });
 
-    // Threshold slider handler
+    // Threshold slider handler with debug logging
     UI.thresholdSlider.addEventListener('input', (e) => {
-        CONFIG.SILENCE_THRESHOLD = parseInt(e.target.value);
+        const newValue = parseInt(e.target.value);
+        window.debugManager.info('Threshold changed', {
+            oldValue: CONFIG.SILENCE_THRESHOLD,
+            newValue: newValue
+        });
+        
+        CONFIG.SILENCE_THRESHOLD = newValue;
         UI.thresholdValue.textContent = `${CONFIG.SILENCE_THRESHOLD} dB`;
         UIController.updatePresetButtons(CONFIG.SILENCE_THRESHOLD, UI);
     });
 
-    // Duration slider handler
+    // Duration slider handler with debug logging
     UI.durationSlider.addEventListener('input', (e) => {
         const duration = parseInt(e.target.value);
+        window.debugManager.info('Duration changed', {
+            oldValue: audioController.currentChunkDuration,
+            newValue: duration
+        });
+        
         audioController.currentChunkDuration = duration;
         UI.durationValue.textContent = `${duration}s`;
         CONFIG.DEFAULT_CHUNK_DURATION = duration;
@@ -72,10 +112,16 @@ function setupEventListeners() {
         }
     });
 
-    // Preset buttons handler
+    // Preset buttons handler with debug logging
     UI.presetButtons.forEach(button => {
         button.addEventListener('click', () => {
             const value = parseInt(button.dataset.value);
+            window.debugManager.info('Preset selected', {
+                oldValue: CONFIG.SILENCE_THRESHOLD,
+                newValue: value,
+                preset: button.textContent
+            });
+            
             CONFIG.SILENCE_THRESHOLD = value;
             UI.thresholdSlider.value = value;
             UI.thresholdValue.textContent = `${value} dB`;
@@ -84,32 +130,48 @@ function setupEventListeners() {
     });
 }
 
-// Global handlers for chunk controls
+// Global handlers for chunk controls with debug logging
 window.handleChunkPlay = (id) => {
+    window.debugManager.info('Playing chunk', { chunkId: id });
     const chunk = audioController.recordedChunks.find(c => c.id === id);
     if (chunk && chunk.blob) {
         audioController.playChunk(chunk.blob);
+    } else {
+        window.debugManager.error('Chunk not found or invalid', { chunkId: id });
     }
 };
 
 window.handleChunkDownload = (id) => {
+    window.debugManager.info('Downloading chunk', { chunkId: id });
     const chunk = audioController.recordedChunks.find(c => c.id === id);
     if (chunk && chunk.blob) {
         audioController.downloadChunk(chunk.blob, chunk.number);
+    } else {
+        window.debugManager.error('Chunk not found or invalid', { chunkId: id });
     }
 };
 
 window.handleChunkDelete = async (id) => {
     if (confirm('Are you sure you want to delete this chunk?')) {
+        window.debugManager.info('Deleting chunk', { chunkId: id });
         await audioController.deleteChunk(id);
     }
 };
 
 window.handleRetrySync = (id) => {
+    window.debugManager.info('Retrying chunk sync', { chunkId: id });
     if (syncService) {
         syncService.queueChunkForSync(id);
+    } else {
+        window.debugManager.error('Sync service not initialized');
     }
 };
 
 // Initialize the application
-initialize().catch(console.error);
+initialize().catch(error => {
+    window.debugManager.error('Fatal initialization error', {
+        error: error.message,
+        stack: error.stack
+    });
+    console.error(error);
+});

@@ -18,22 +18,36 @@ class AudioController {
 
     async initializeStorage() {
         try {
+            window.debugManager.info('Initializing storage');
             await this.dbStorage.initialize();
             const savedChunks = await this.dbStorage.getAllChunks();
             this.recordedChunks = savedChunks.sort((a, b) => b.number - a.number);
             this.chunkCounter = this.recordedChunks.length > 0 
                 ? Math.max(...this.recordedChunks.map(chunk => chunk.number))
                 : 0;
+            window.debugManager.info('Storage initialized', {
+                savedChunks: this.recordedChunks.length,
+                lastChunkNumber: this.chunkCounter
+            });
             UIController.updateChunksList(this.recordedChunks, UI);
         } catch (err) {
+            window.debugManager.error('Error initializing storage', {
+                error: err.message,
+                stack: err.stack
+            });
             console.error('Error initializing storage:', err);
         }
     }
 
     async startRecording() {
         try {
+            window.debugManager.info('Starting recording process');
             this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
+            window.debugManager.info('Audio stream obtained', {
+                streamSettings: this.audioStream.getTracks()[0].getSettings()
+            });
+
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             const source = this.audioContext.createMediaStreamSource(this.audioStream);
@@ -44,6 +58,11 @@ class AudioController {
             this.isRecording = true;
             this.recordingStartTime = Date.now();
             
+            window.debugManager.info('Audio context initialized', {
+                sampleRate: this.audioContext.sampleRate,
+                fftSize: this.analyser.fftSize
+            });
+
             // Start first chunk
             this.startNewChunk();
             
@@ -55,6 +74,10 @@ class AudioController {
             
             return true;
         } catch (err) {
+            window.debugManager.error('Error accessing microphone', {
+                error: err.message,
+                stack: err.stack
+            });
             console.error('Error accessing microphone:', err);
             alert('Error accessing microphone. Please ensure you have granted microphone permissions.');
             return false;
@@ -62,6 +85,11 @@ class AudioController {
     }
 
     startNewChunk() {
+        window.debugManager.info('Starting new chunk', {
+            chunkNumber: this.chunkCounter + 1,
+            duration: this.currentChunkDuration
+        });
+
         // Stop current recording if exists
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
             this.mediaRecorder.stop();
@@ -73,6 +101,10 @@ class AudioController {
         this.mediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) {
                 chunks.push(e.data);
+                window.debugManager.info('Chunk data received', {
+                    size: e.data.size,
+                    type: e.data.type
+                });
             }
         };
 
@@ -80,6 +112,11 @@ class AudioController {
             if (chunks.length > 0) {
                 const blob = new Blob(chunks, { type: 'audio/webm' });
                 this.chunkCounter++;
+                window.debugManager.info('Chunk recording complete', {
+                    chunkNumber: this.chunkCounter,
+                    size: blob.size,
+                    duration: this.currentChunkDuration
+                });
                 this.addChunkToList({
                     number: this.chunkCounter,
                     blob: blob,
@@ -90,10 +127,13 @@ class AudioController {
         };
 
         this.mediaRecorder.start();
-        console.log(`Starting new chunk recording: ${this.chunkCounter + 1}`);
     }
 
     startChunkTimer() {
+        window.debugManager.info('Starting chunk timer', {
+            interval: this.currentChunkDuration * 1000
+        });
+        
         // Clear existing timer if any
         if (this.chunkTimer) {
             clearInterval(this.chunkTimer);
@@ -108,6 +148,8 @@ class AudioController {
     }
 
     stopRecording() {
+        window.debugManager.info('Stopping recording');
+        
         // Clear the chunk timer
         if (this.chunkTimer) {
             clearInterval(this.chunkTimer);
@@ -132,42 +174,20 @@ class AudioController {
 
         this.isRecording = false;
         UIController.updateRecordingState(false, UI);
+        
+        window.debugManager.info('Recording stopped', {
+            totalChunks: this.chunkCounter,
+            duration: (Date.now() - this.recordingStartTime) / 1000
+        });
     }
 
     async addChunkToList(chunkData) {
         try {
-            // Save to IndexedDB as before
-            const id = await this.dbStorage.saveChunk(chunkData);
-            chunkData.id = id;
-            this.recordedChunks.unshift(chunkData);
-            UIController.updateChunksList(this.recordedChunks, UI);
-            
-            // Try to upload to S3
-            try {
-                // Get presigned URL
-                const presignedUrlResponse = await window.uploadService.getPresignedUrl();
-                
-                if (presignedUrlResponse && presignedUrlResponse.url) {
-                    // Upload the chunk
-                    await window.uploadService.uploadChunk(presignedUrlResponse.url, chunkData.blob);
-                    await this.dbStorage.updateChunkSyncStatus(id, 'synced');
-                    console.log(`Successfully uploaded chunk ${chunkData.number}`);
-                } else {
-                    console.error('No presigned URL received');
-                    await this.dbStorage.updateChunkSyncStatus(id, 'failed');
-                }
-            } catch (uploadError) {
-                console.error('Error uploading chunk:', uploadError);
-                await this.dbStorage.updateChunkSyncStatus(id, 'failed');
-            }
-            
-        } catch (err) {
-            console.error('Error saving chunk:', err);
-        }
-    }
+            window.debugManager.info('Adding chunk to list', {
+                chunkNumber: chunkData.number,
+                timestamp: chunkData.timestamp
+            });
 
-    async addChunkToList(chunkData) {
-        try {
             const id = await this.dbStorage.saveChunk(chunkData);
             chunkData.id = id;
             this.recordedChunks.unshift(chunkData);
@@ -175,23 +195,38 @@ class AudioController {
             
             // Queue the new chunk for sync if syncService exists
             if (window.syncService) {
+                window.debugManager.info('Queueing chunk for sync', { chunkId: id });
                 window.syncService.queueChunkForSync(id);
             }
             
-            console.log(`Added chunk ${chunkData.number} to list`);
         } catch (err) {
+            window.debugManager.error('Error saving chunk', {
+                error: err.message,
+                stack: err.stack
+            });
             console.error('Error saving chunk:', err);
         }
     }
 
     playChunk(blob) {
+        window.debugManager.info('Playing chunk', {
+            size: blob.size,
+            type: blob.type
+        });
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
-        audio.onended = () => URL.revokeObjectURL(url);
+        audio.onended = () => {
+            URL.revokeObjectURL(url);
+            window.debugManager.info('Chunk playback complete');
+        };
         audio.play();
     }
 
     downloadChunk(blob, number) {
+        window.debugManager.info('Downloading chunk', {
+            number: number,
+            size: blob.size
+        });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -202,22 +237,17 @@ class AudioController {
 
     async deleteChunk(id) {
         try {
+            window.debugManager.info('Deleting chunk', { id: id });
             await this.dbStorage.deleteChunk(id);
             this.recordedChunks = this.recordedChunks.filter(chunk => chunk.id !== id);
             UIController.updateChunksList(this.recordedChunks, UI);
+            window.debugManager.info('Chunk deleted successfully');
         } catch (err) {
+            window.debugManager.error('Error deleting chunk', {
+                error: err.message,
+                stack: err.stack
+            });
             console.error('Error deleting chunk:', err);
-        }
-    }
-
-    async clearAllChunks() {
-        try {
-            await this.dbStorage.clearAll();
-            this.recordedChunks = [];
-            this.chunkCounter = 0;
-            UIController.updateChunksList(this.recordedChunks, UI);
-        } catch (err) {
-            console.error('Error clearing chunks:', err);
         }
     }
 
@@ -239,4 +269,4 @@ class AudioController {
 
         analyze();
     }
-}
+}}
