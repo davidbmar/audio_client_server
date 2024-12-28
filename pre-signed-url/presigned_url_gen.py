@@ -21,16 +21,24 @@ from s3_manager import (
     list_directory
 )
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger(__name__)
+# Configure root logger
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+# Create logger for this module
+logger = logging.getLogger('presigned_url_gen')
+logger.setLevel(logging.INFO)
+
+# Suppress verbose logging from AWS libraries
+for aws_logger in ['boto3', 'botocore', 'urllib3', 's3transfer']:
+    logging.getLogger(aws_logger).setLevel(logging.WARNING)
+
+
 
 # Security scheme for JWT
 security = HTTPBearer()
-
-
-
-
 
 # Initialize AWS clients
 secrets_client = boto3.client('secretsmanager', region_name='us-east-2')
@@ -46,6 +54,8 @@ def get_secrets() -> Dict[str, str]:
         Exception: If there's an error retrieving or parsing the secrets
     """
     try:
+        logger.info("Retrieving secrets from AWS Secrets Manager")
+
         secrets_client = boto3.client('secretsmanager', region_name='us-east-2')
         secret_response = secrets_client.get_secret_value(
             SecretId='dev/audioclientserver/frontend/pre_signed_url_gen'
@@ -70,10 +80,13 @@ def get_secrets() -> Dict[str, str]:
         return secrets
 
     except json.JSONDecodeError as e:
+        logger.error(f"Failed to parse secrets JSON: {str(e)}")
         raise Exception(f"Failed to parse secrets JSON: {str(e)}")
     except KeyError as e:
+        logger.error(f"Missing required secrets: {str(e)}")
         raise Exception(f"Missing required secrets: {str(e)}")
     except Exception as e:
+        logger.error(f"Failed to retrieve secrets: {str(e)}")
         raise Exception(f"Error retrieving secrets: {str(e)}")
 
 # Get configuration from Secrets Manager
@@ -167,27 +180,24 @@ app.add_middleware(
 #    allow_methods=["*"],
 #    allow_headers=["*"],
 #)
+
 @app.get("/api/get-presigned-url")
 async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
-    """
-    Generate a presigned URL for file upload
-    """
+    """Generate a presigned URL for file upload"""
     try:
-        logger.debug(f"Presigned URL request from user: {current_user.sub}")
-        logger.debug(f"User details - Type: {current_user.user_type}, Provider: {current_user.provider}")
+        logger.info(f"Received presigned URL request for user: {current_user.sub}")
         
         result = get_presigned_url(current_user)
-        logger.debug(f"Generated presigned URL response: {result}")
         
+        logger.info(
+            f"Generated presigned URL - Key: {result['key']}, "
+            f"Bucket: {result['bucket']}"
+        )
         return result
         
     except Exception as e:
-        logger.error(f"Error in presigned URL endpoint: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Failed to generate presigned URL: {str(e)}"
-        )
-
+        logger.error(f"Failed to generate presigned URL: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Optional: Add a test endpoint for development
 @app.get("/api/test-user-path")

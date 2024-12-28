@@ -7,7 +7,9 @@ import json
 from typing import Dict, Any, Optional
 from auth import TokenData  # Add this import at the top
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger('s3_manager')
+logger.setLevel(logging.INFO)
 
 def get_secrets():
     secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"
@@ -34,20 +36,12 @@ TRANSCRIBED_BUCKET = secrets.get("TRANSCRIBED_BUCKET")
 if not all([AUTH0_DOMAIN, AUTH0_AUDIENCE, REGION_NAME, INPUT_AUDIO_BUCKET, TRANSCRIBED_BUCKET]):
     raise ValueError("Missing required secrets")
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-
 def construct_s3_key(user_data: TokenData, filename: str = None) -> str:
-    if not user_data.sub:
-        raise ValueError("Invalid TokenData: 'sub' field is required.")
-
-    user_id = user_data.sub
-    logger.debug(f"Constructing S3 key for user ID: {user_id}")
-
-    base_path = f"users/{user_data.user_type}/{user_data.provider}/{user_id}"
+    """Construct S3 key from user data"""
+    base_path = f"users/{user_data.user_type}/{user_data.provider}/{user_data.sub}"
     if filename:
         full_path = f"{base_path}/{filename}"
-        logger.debug(f"Generated full S3 key: {full_path}")
+        logger.debug(f"Generated S3 key: {full_path}")
         return full_path
     return base_path
 
@@ -58,21 +52,16 @@ def generate_filename() -> str:
     now = datetime.now(pytz.timezone('UTC'))
     return f"{now.strftime('%Y-%m-%d-%H-%M-%S-%f')}.webm"
 
-
 def get_presigned_url(user_data: TokenData) -> Dict[str, Any]:
-    """
-    Generate a presigned URL for S3 upload, constructing the path using user_data.
-    """
+    """Generate a presigned URL for S3 upload"""
     try:
         s3_client = create_s3_client()
-        file_name = generate_file_name()
-        # Build the key from the TokenData object
+        file_name = generate_filename()
         key = construct_s3_key(user_data, file_name)
-
-        logger.debug(f"Generating presigned URL for key: {key}")
-        logger.debug(f"Bucket: {INPUT_AUDIO_BUCKET}")
-
-        presigned_url = s3_client.generate_presigned_url(
+        
+        logger.info(f"Generating presigned URL for key: {key}")
+        
+        url = s3_client.generate_presigned_url(
             'put_object',
             Params={
                 'Bucket': INPUT_AUDIO_BUCKET,
@@ -80,17 +69,19 @@ def get_presigned_url(user_data: TokenData) -> Dict[str, Any]:
                 'ContentType': 'audio/webm',
                 'ACL': 'private'
             },
-            ExpiresIn=7200  # 2 hours
+            ExpiresIn=7200
         )
-
+        
+        logger.info("Successfully generated presigned URL")
         return {
-            "url": presigned_url,
+            "url": url,
             "key": key,
             "contentType": "audio/webm",
             "bucket": INPUT_AUDIO_BUCKET
         }
+        
     except Exception as e:
-        logger.error(f"Error generating presigned URL: {e}")
+        logger.error(f"Error generating presigned URL: {str(e)}")
         raise
 
 def create_s3_client():
