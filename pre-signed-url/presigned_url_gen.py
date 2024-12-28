@@ -167,7 +167,6 @@ app.add_middleware(
 #    allow_methods=["*"],
 #    allow_headers=["*"],
 #)
-
 @app.get("/api/get-presigned-url")
 async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_current_user)):
     """
@@ -178,10 +177,7 @@ async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_curre
         logger.debug(f"User details - Type: {current_user.user_type}, Provider: {current_user.provider}")
         
         result = get_presigned_url(current_user)
-        
-        # Log success but mask the actual URL
-        logger.info(f"Successfully generated presigned URL for user {current_user.sub}")
-        logger.debug(f"S3 path: {result['path']}")
+        logger.debug(f"Generated presigned URL response: {result}")
         
         return result
         
@@ -191,6 +187,7 @@ async def get_presigned_url_endpoint(current_user: TokenData = Depends(get_curre
             status_code=500,
             detail=f"Failed to generate presigned URL: {str(e)}"
         )
+
 
 # Optional: Add a test endpoint for development
 @app.get("/api/test-user-path")
