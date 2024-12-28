@@ -2,6 +2,7 @@
 import boto3
 from s3_manager import get_secrets, create_s3_client, get_input_bucket
 import json
+from flask_session import Session
 
 from flask import (
     Flask, redirect, url_for, session, request, 
@@ -74,20 +75,23 @@ def extract_provider_from_token(userinfo: dict) -> str:
         logger.error(f"Error extracting provider: {str(e)}")
         return 'unknown'
 
-
-# Security decorator for routes
 def login_required(f: Callable) -> Callable:
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = session.get('user')
         if user is None:
             logger.warning("Unauthenticated access attempt")
+            debug_log_session()
             return redirect(url_for('login'))
         
-        # Check session expiry
-        authenticated_at = datetime.fromisoformat(user.get('authenticated_at', ''))
-        if datetime.utcnow() - authenticated_at > timedelta(hours=12):
-            logger.info("Session expired, redirecting to login")
+        try:
+            authenticated_at = datetime.fromisoformat(user.get('authenticated_at', ''))
+            if datetime.utcnow() - authenticated_at > timedelta(hours=12):
+                logger.info("Session expired, redirecting to login")
+                session.clear()
+                return redirect(url_for('login'))
+        except Exception as e:
+            logger.error(f"Error validating session expiration: {str(e)}")
             session.clear()
             return redirect(url_for('login'))
             
@@ -98,15 +102,16 @@ def login_required(f: Callable) -> Callable:
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Secure session configuration
+# Update app.config for session
 app.config.update(
     SECRET_KEY=os.environ.get('FLASK_SECRET_KEY', secrets.token_urlsafe(32)),
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE='Lax',
-    PERMANENT_SESSION_LIFETIME=timedelta(hours=12),
-    SESSION_TYPE='filesystem'
+    SESSION_TYPE='filesystem',  # Replace with 'redis' for production
+    SESSION_PERMANENT=True
 )
+Session(app)
 
 # Initialize OAuth
 oauth = OAuth(app)
@@ -134,7 +139,7 @@ def after_request(response: Response) -> Response:
     """Global handler to set security headers"""
     return set_security_headers(response)
 
-@app.route('/')
+@app.route('/home')
 def index():
     user = session.get('user')
     response = make_response(render_template_string('''
@@ -193,19 +198,25 @@ def dashboard():
 
 @app.route('/login')
 def login():
-    # Generate and store CSRF token
-    csrf_token = secrets.token_urlsafe(32)
-    session['csrf_token'] = csrf_token
-    
-    redirect_uri = url_for('callback', _external=True)
-    return oauth.oidc.authorize_redirect(redirect_uri)
-
+    try:
+        csrf_token = secrets.token_urlsafe(32)
+        session['csrf_token'] = csrf_token
+        redirect_uri = url_for('callback', _external=True)
+        logger.debug(f"Generated redirect URI: {redirect_uri}")
+        return oauth.oidc.authorize_redirect(redirect_uri)
+    except Exception as e:
+        logger.error(f"Error during login redirect: {str(e)}", exc_info=True)
+        return redirect(url_for('index'))
 
 @app.route('/auth/callback')
 def callback():
     try:
+        logger.info("Starting authentication callback...")
         token = oauth.oidc.authorize_access_token()
-        userinfo = token.get('userinfo')
+        logger.debug(f"Retrieved token: {sanitize_token_for_logging(token)}")
+        
+        userinfo = token.get('userinfo', {})
+        logger.debug(f"Retrieved userinfo: {userinfo}")
         
         if not userinfo or not userinfo.get('sub'):
             logger.error("Failed to get valid user info from OAuth provider")
@@ -213,13 +224,13 @@ def callback():
 
         # Extract provider from token
         provider = extract_provider_from_token(userinfo)
+        logger.debug(f"Authentication provider: {provider}")
         
         # Clear and create new session
         session.clear()
         session.permanent = True
         session['_id'] = secrets.token_urlsafe(32)
         
-        # Store user information with provider
         session['user'] = {
             'sub': userinfo['sub'],
             'email': userinfo.get('email', ''),
@@ -228,13 +239,18 @@ def callback():
             'authenticated_at': datetime.utcnow().isoformat()
         }
         
-        logger.info(f"Successfully authenticated user: {userinfo.get('email')} via {provider}")
+        logger.info(f"User {userinfo.get('email')} authenticated successfully via {provider}")
+        debug_log_session()
         return redirect(url_for('index'))
 
     except Exception as e:
-        logger.error(f"Error during authentication callback: {str(e)}")
+        logger.error(f"Error during authentication callback: {str(e)}", exc_info=True)
         session.clear()
-        return redirect(url_for('login'))
+        return render_template_string('''
+            <h1>Something went wrong</h1>
+            <p>{{ error }}</p>
+        ''', error=str(e))
+
 
 
 @app.route('/logout')
@@ -260,6 +276,29 @@ def logout():
     except Exception as e:
         logger.error(f"Error during logout: {str(e)}")
         return redirect(url_for('index'))
+
+@app.route('/get-presigned-url')
+@login_required
+def get_presigned_url():
+    try:
+        user = session.get('user')
+        if not user:
+            logger.error("No user found in session")
+            return jsonify({'error': 'User not authenticated'}), 401
+
+        # Log attempt for debugging
+        logger.info(f"Presigned URL request from user: {user.get('email')}")
+        
+        # For initial test, just return user info
+        return jsonify({
+            'message': 'Test endpoint working',
+            'user_id': user.get('sub'),
+            'email': user.get('email')
+        })
+
+    except Exception as e:
+        logger.error(f"Error in get-presigned-url endpoint: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 # Error handlers
 @app.errorhandler(404)
