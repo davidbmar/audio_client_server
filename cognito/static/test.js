@@ -1,39 +1,105 @@
 document.getElementById('uploadButton').addEventListener('click', async () => {
     const fileInput = document.getElementById('fileInput');
     const statusText = document.getElementById('uploadStatus');
+    const uploadButton = document.getElementById('uploadButton');
 
-    if (!fileInput.files.length) {
-        statusText.textContent = 'Status: Please select a file.';
-        return;
-    }
+    // Disable button during upload
+    const setUploading = (isUploading) => {
+        uploadButton.disabled = isUploading;
+        uploadButton.textContent = isUploading ? 'Uploading...' : 'Upload';
+    };
 
-    const file = fileInput.files[0];
-    statusText.textContent = `Status: Uploading ${file.name}...`;
+    const updateStatus = (message, isError = false) => {
+        statusText.textContent = message;
+        statusText.style.color = isError ? '#dc2626' : '#059669'; // red for error, green for success
+    };
 
     try {
-        // Request a presigned URL through the Flask service
-        const response = await fetch('/auth/audio-upload', { method: 'GET', credentials: 'include' });
-        if (!response.ok) throw new Error(`Failed to get URL: ${response.statusText}`);
+        if (!fileInput.files.length) {
+            updateStatus('Please select a file first.', true);
+            return;
+        }
 
-        const { url, key } = await response.json();
+        const file = fileInput.files[0];
 
+        // Basic file validation
+        if (!file.type.startsWith('audio/')) {
+            updateStatus('Please select an audio file.', true);
+            return;
+        }
 
-        // Upload file to S3
-        const uploadResponse = await fetch(url, {
-            method: 'PUT',
-            body: file, // Ensure this is the actual file (Blob or File object)
-            headers: {
-                'Content-Type': file.type || 'audio/webm', // Ensure the content type matches
-                'x-amz-acl': 'private', // Include this header if required
-            },
+        // Size validation (e.g., 100MB limit)
+        const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB in bytes
+        if (file.size > MAX_FILE_SIZE) {
+            updateStatus('File is too large. Maximum size is 100MB.', true);
+            return;
+        }
+
+        setUploading(true);
+        updateStatus('Getting upload permission...');
+
+        // Request presigned URL
+        const response = await fetch('/auth/audio-upload', { 
+            method: 'GET', 
+            credentials: 'include' 
         });
         
-        if (!uploadResponse.ok) throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+        if (!response.ok) {
+            throw new Error(`Failed to get upload permission: ${response.statusText}`);
+        }
 
-        statusText.textContent = `Status: Upload successful. File stored at ${key}`;
+        const { url, key } = await response.json();
+        updateStatus('Starting upload...');
+
+        // Upload to S3
+        const uploadResponse = await fetch(url, {
+            method: 'PUT',
+            body: file,
+            headers: {
+                'Content-Type': 'audio/webm',
+                'x-amz-acl': 'private'
+            },
+            mode: 'cors',
+            credentials: 'omit'
+        });
+        
+        if (!uploadResponse.ok) {
+            const errorText = await uploadResponse.text();
+            console.error('Upload failed:', {
+                status: uploadResponse.status,
+                statusText: uploadResponse.statusText,
+                responseText: errorText
+            });
+            throw new Error(`Upload failed: ${uploadResponse.statusText}`);
+        }
+
+        console.log('Upload successful:', {
+            status: uploadResponse.status,
+            headers: Object.fromEntries(uploadResponse.headers)
+        });
+
+        updateStatus(`Upload successful! File ID: ${key.split('/').pop()}`);
+        
+        // Optional: Clear the file input after successful upload
+        fileInput.value = '';
+
     } catch (error) {
-        statusText.textContent = `Status: Error - ${error.message}`;
-        console.error(error);
+        console.error('Upload error:', error);
+        let errorMessage = 'Upload failed: ';
+        
+        // Provide specific error messages based on error type
+        if (error.name === 'NetworkError' || !navigator.onLine) {
+            errorMessage += 'Please check your internet connection.';
+        } else if (error.message.includes('permission')) {
+            errorMessage += 'Not authorized. Please try logging in again.';
+        } else if (error.message.includes('Failed to fetch')) {
+            errorMessage += 'Server is unreachable. Please try again later.';
+        } else {
+            errorMessage += error.message;
+        }
+        
+        updateStatus(errorMessage, true);
+    } finally {
+        setUploading(false);
     }
 });
-

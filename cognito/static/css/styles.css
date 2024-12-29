@@ -414,3 +414,32 @@ h1 {
 .button-debug.active:hover {
     background-color: #38a169;
 }
+
+
+#uploadStatus {
+    margin-top: 10px;
+    padding: 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+#uploadButton:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.error-text {
+    color: #dc2626;
+}
+
+.success-text {
+    color: #059669;
+}
+
+.upload-container {
+    margin: 20px 0;
+}
+
+.file-input-wrapper {
+    margin-bottom: 10px;
+}
