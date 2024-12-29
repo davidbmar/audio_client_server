@@ -1,22 +1,29 @@
 # authcallback.py
 import boto3
-from s3_manager import get_secrets, create_s3_client, get_input_bucket
 import json
-from flask_session import Session
+import logging
+import os
+import requests
+import secrets
 
+from authlib.integrations.flask_client import OAuth
+from datetime import datetime, timedelta
+from flask_session import Session
 from flask import (
     Flask, redirect, url_for, session, request, 
-    render_template_string, Response, make_response
+    render_template_string, Response, make_response, jsonify
 )
-from authlib.integrations.flask_client import OAuth
-from werkzeug.middleware.proxy_fix import ProxyFix
 from functools import wraps
-import os
-import logging
-import secrets
-from datetime import datetime, timedelta
+from s3_manager import get_secrets, create_s3_client, get_input_bucket
 from typing import Optional, Callable, Dict, Any
-import json
+from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import HTTPException
+
+
+# Configuration for internal service URL  SECURITY WARNING - note this should be an internal service only, fix the apache2 conf.
+# This could be moved to environment variables or config file
+PRESIGNED_URL_SERVICE = os.environ.get('PRESIGNED_URL_SERVICE', 'http://localhost:8000')
+REGION = 'us-east-2'
 
 # Update logging configuration
 logging.basicConfig(
@@ -32,6 +39,21 @@ def sanitize_token_for_logging(token: Dict[str, Any]) -> Dict[str, Any]:
     """
     sensitive_fields = {'access_token', 'refresh_token', 'id_token'}
     return {k: v for k, v in token.items() if k not in sensitive_fields}
+
+
+def validate_cognito_token(token):
+    """
+    Validates the Cognito JWT token and returns the claims if valid
+    Raises ValueError if invalid
+    """
+    try:
+        # Decode and verify the token
+        # Note: In production, you'd want to verify against Cognito's public keys
+        claims = jwt.decode(token, verify=False)
+        return claims
+    except jwt.InvalidTokenError as e:
+        raise ValueError(f"Invalid token: {str(e)}")
+
 
 
 def debug_log_session():
@@ -251,6 +273,70 @@ def callback():
             <p>{{ error }}</p>
         ''', error=str(e))
 
+@app.route('/auth/audio-upload', methods=['POST'])
+def handle_audio_upload_request():
+    """
+    Handles requests for audio upload URLs
+    """
+    try:
+        # Validate required headers
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return jsonify({'error': 'Missing Authorization header'}), 401
+            
+        # Split header and validate format
+        parts = auth_header.split()
+        if len(parts) != 2 or parts[0].lower() != 'bearer':
+            return jsonify({'error': 'Invalid Authorization header format'}), 401
+            
+        token = parts[1]
+        
+        # Validate Content-Type
+        if request.headers.get('Content-Type') != 'application/x-amz-json-1.1':
+            return jsonify({'error': 'Invalid Content-Type'}), 400
+
+        try:
+            claims = validate_cognito_token(token)
+        except ValueError as e:
+            return jsonify({'error': str(e)}), 401
+
+        # Generate timestamp for the file
+        timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S-%f')
+        
+        # Construct the path
+        user_type = claims.get('custom:user_type', 'default')
+        provider = claims.get('custom:provider', 'default')
+        user_sub = claims['sub']
+        file_path = f"users/{user_type}/{provider}/{user_sub}/{timestamp}.webm"
+
+        # Forward request to PresignedURL service
+        presigned_url_request = {
+            'bucket': '2024-09-23-audiotranscribe-input-bucket',
+            'key': file_path,
+            'content_type': 'audio/webm'
+        }
+
+        response = requests.post(
+            PRESIGNED_URL_SERVICE,
+            json=presigned_url_request,
+            headers={'Content-Type': 'application/json'}
+        )
+
+        if response.status_code != 200:
+            return jsonify({'error': 'Failed to generate upload URL'}), 502
+
+        presigned_data = response.json()
+        
+        return jsonify({
+            'upload_url': presigned_data['url'],
+            'key': file_path
+        })
+
+    except HTTPException as e:
+        return jsonify({'error': str(e)}), e.code
+    except Exception as e:
+        app.logger.error(f"Unexpected error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/logout')

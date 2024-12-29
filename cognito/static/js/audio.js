@@ -1,4 +1,3 @@
-// audio.js
 class AudioController {
     constructor() {
         this.isRecording = false;
@@ -14,6 +13,10 @@ class AudioController {
         this.chunkTimer = null;
         this.recordedChunks = [];
         this.dbStorage = new DBStorage();
+        
+        // Upload related properties
+        this.uploadQueue = [];
+        this.isUploading = false;
     }
 
     async initializeStorage() {
@@ -108,7 +111,7 @@ class AudioController {
             }
         };
 
-        this.mediaRecorder.onstop = () => {
+        this.mediaRecorder.onstop = async () => {
             if (chunks.length > 0) {
                 const blob = new Blob(chunks, { type: 'audio/webm' });
                 this.chunkCounter++;
@@ -117,16 +120,128 @@ class AudioController {
                     size: blob.size,
                     duration: this.currentChunkDuration
                 });
-                this.addChunkToList({
+                const chunkData = {
                     number: this.chunkCounter,
                     blob: blob,
                     timestamp: new Date().toLocaleTimeString(),
                     duration: this.currentChunkDuration
-                });
+                };
+                await this.addChunkToList(chunkData);
+                
+                // Queue the chunk for upload
+                this.queueChunkForUpload(blob);
             }
         };
 
         this.mediaRecorder.start();
+    }
+
+    getAuthToken() {
+        const token = localStorage.getItem('cognitoToken');
+        if (!token) {
+            window.debugManager.error('No auth token found in localStorage');
+            return null;
+        }
+        return `Bearer ${token}`;  // Ensure proper Bearer format
+    }
+
+    async queueChunkForUpload(blob) {
+        window.debugManager.info('Queueing chunk for upload', {
+            size: blob.size
+        });
+        this.uploadQueue.push(blob);
+        this.processUploadQueue();
+    }
+
+    async processUploadQueue() {
+        if (this.isUploading || this.uploadQueue.length === 0) {
+            return;
+        }
+
+        this.isUploading = true;
+        window.debugManager.info('Processing upload queue', {
+            queueLength: this.uploadQueue.length
+        });
+
+        try {
+            while (this.uploadQueue.length > 0) {
+                const chunk = this.uploadQueue.shift();
+                await this.performUpload(chunk);
+            }
+        } finally {
+            this.isUploading = false;
+        }
+    }
+
+    async performUpload(chunk) {
+        try {
+            window.debugManager.info('Requesting upload URL');
+            
+            const authToken = this.getAuthToken();
+            if (!authToken) {
+                throw new Error('No authentication token available');
+            }
+
+            // Get the upload URL from the auth service
+            const uploadUrlResponse = await fetch('/auth/audio-upload', {
+                method: 'POST',
+                headers: {
+                    'Authorization': authToken,
+                    'Content-Type': 'application/x-amz-json-1.1'
+                }
+            });
+
+            if (!uploadUrlResponse.ok) {
+                const errorText = await uploadUrlResponse.text();
+                window.debugManager.error('Failed to get upload URL', {
+                    status: uploadUrlResponse.status,
+                    response: errorText
+                });
+                throw new Error(`Failed to get upload URL: ${uploadUrlResponse.status}`);
+            }
+
+            const { upload_url, key } = await uploadUrlResponse.json();
+            
+            window.debugManager.info('Upload URL obtained', { key });
+
+            // Upload to S3 using presigned URL
+            const uploadResponse = await fetch(upload_url, {
+                method: 'PUT',
+                body: chunk,
+                headers: {
+                    'Content-Type': 'audio/webm'
+                }
+            });
+
+            if (!uploadResponse.ok) {
+                const errorText = await uploadResponse.text();
+                window.debugManager.error('Upload failed', {
+                    status: uploadResponse.status,
+                    response: errorText
+                });
+                throw new Error(`Failed to upload chunk: ${uploadResponse.status}`);
+            }
+
+            window.debugManager.info('Chunk uploaded successfully', { key });
+            
+            // Emit upload success event
+            const event = new CustomEvent('chunkUploaded', { 
+                detail: { key, timestamp: new Date().toISOString() }
+            });
+            window.dispatchEvent(event);
+
+        } catch (error) {
+            window.debugManager.error('Upload error', {
+                error: error.message,
+                stack: error.stack
+            });
+            
+            // Emit upload failure event
+            const event = new CustomEvent('chunkUploadFailed', {
+                detail: { error: error.message, timestamp: new Date().toISOString() }
+            });
+            window.dispatchEvent(event);
+        }
     }
 
     startChunkTimer() {
@@ -269,4 +384,4 @@ class AudioController {
 
         analyze();
     }
-}}
+}
