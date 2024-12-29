@@ -101,22 +101,39 @@ def login_required(f: Callable) -> Callable:
     @wraps(f)
     def decorated_function(*args, **kwargs):
         user = session.get('user')
+        is_api_request = request.path.startswith('/auth/audio-upload') or request.headers.get('Accept') == 'application/json'
+        
         if user is None:
             logger.warning("Unauthenticated access attempt")
             debug_log_session()
+            if is_api_request:
+                return jsonify({
+                    'error': 'session_expired',
+                    'message': 'Your session has expired or you are not logged in'
+                }), 401
             return redirect(url_for('login'))
-        
+
         try:
             authenticated_at = datetime.fromisoformat(user.get('authenticated_at', ''))
             if datetime.utcnow() - authenticated_at > timedelta(hours=12):
                 logger.info("Session expired, redirecting to login")
                 session.clear()
+                if is_api_request:
+                    return jsonify({
+                        'error': 'session_timeout',
+                        'message': 'Your session has timed out after 12 hours'
+                    }), 401
                 return redirect(url_for('login'))
         except Exception as e:
             logger.error(f"Error validating session expiration: {str(e)}")
             session.clear()
+            if is_api_request:
+                return jsonify({
+                    'error': 'session_error',
+                    'message': 'Session validation error occurred'
+                }), 401
             return redirect(url_for('login'))
-            
+
         return f(*args, **kwargs)
     return decorated_function
 

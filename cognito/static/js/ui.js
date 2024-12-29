@@ -14,6 +14,111 @@ const UIController = {
         this.updateStatusText('Ready to record', ui);
     },
 
+    showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.innerHTML = `
+            <div class="notification-content">
+                <span class="notification-message">${message}</span>
+                ${type === 'session' ? '<button class="refresh-button">Refresh Page</button>' : ''}
+                <button class="close-button">×</button>
+            </div>
+        `;
+        
+        // Add styles dynamically if not already present
+        if (!document.getElementById('notification-styles')) {
+            const styles = document.createElement('style');
+            styles.id = 'notification-styles';
+            styles.textContent = `
+                .notification {
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 16px;
+                    border-radius: 8px;
+                    background: white;
+                    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                    z-index: 1000;
+                    max-width: 400px;
+                    animation: slideIn 0.3s ease-out;
+                }
+                .notification-content {
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
+                .notification-message {
+                    flex-grow: 1;
+                }
+                .notification-error {
+                    background: #fee2e2;
+                    border-left: 4px solid #ef4444;
+                }
+                .notification-session {
+                    background: #fef3c7;
+                    border-left: 4px solid #f59e0b;
+                }
+                .refresh-button, .close-button {
+                    padding: 6px 12px;
+                    border: none;
+                    border-radius: 4px;
+                    cursor: pointer;
+                }
+                .refresh-button {
+                    background: #3b82f6;
+                    color: white;
+                }
+                .refresh-button:hover {
+                    background: #2563eb;
+                }
+                .close-button {
+                    background: transparent;
+                    color: #4b5563;
+                }
+                .close-button:hover {
+                    background: #f3f4f6;
+                }
+                @keyframes slideIn {
+                    from {
+                        transform: translateX(100%);
+                        opacity: 0;
+                    }
+                    to {
+                        transform: translateX(0);
+                        opacity: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(styles);
+        }
+        
+        document.body.appendChild(notification);
+        
+        // Handle refresh button
+        const refreshButton = notification.querySelector('.refresh-button');
+        if (refreshButton) {
+            refreshButton.addEventListener('click', () => {
+                window.location.reload();
+            });
+        }
+        
+        // Handle close button
+        const closeButton = notification.querySelector('.close-button');
+        closeButton.addEventListener('click', () => {
+            notification.remove();
+        });
+        
+        // Auto-remove after 10 seconds unless it's a session notification
+        if (type !== 'session') {
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+    },
+
+
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
         const button = ui.recordButton;
@@ -155,6 +260,7 @@ const UIController = {
                                 </svg>
                                 Download
                             </button>
+
                             <button class="chunk-button delete" 
                                     onclick="window.handleChunkDelete(${chunk.id})">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -164,12 +270,24 @@ const UIController = {
                                 </svg>
                                 Delete
                             </button>
+                            <button class="chunk-button upload" 
+                                    onclick="window.handleChunkUpload(${chunk.id})"
+                                    ${chunk.syncStatus === 'synced' ? 'disabled' : ''}>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="12 15 12 3"></polyline>
+                                    <polyline points="7 8 12 3 17 8"></polyline>
+                                </svg>
+                                Upload
+                            </button>
+    
                         </div>
                     </div>
                 `;
             }).join('');
         }
     }
+    
 };
 
 // Export the controller
