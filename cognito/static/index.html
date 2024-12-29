@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Transcriber</title>
     <link rel="stylesheet" href="css/styles.css">
+    <script src="test.js" defer></script>
+
 </head>
 <body>
     <div class="container">
@@ -83,6 +85,14 @@
                 </svg>
                 <span id="uploadProgressText">Waiting to upload...</span>
             </div>
+
+            <div class="container">
+                <h2>Test File Upload</h2>
+                <input type="file" id="fileInput" accept="audio/*" />
+                <button id="uploadButton" class="button">Upload</button>
+                <p id="uploadStatus">Status: Not started</p>
+            </div>
+
         </div>
     </div>
     <!-- Load scripts in correct order -->

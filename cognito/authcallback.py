@@ -273,70 +273,25 @@ def callback():
             <p>{{ error }}</p>
         ''', error=str(e))
 
-@app.route('/auth/audio-upload', methods=['POST'])
-def handle_audio_upload_request():
-    """
-    Handles requests for audio upload URLs
-    """
+@app.route('/auth/audio-upload', methods=['GET'])
+@login_required
+def audio_upload():
     try:
-        # Validate required headers
-        auth_header = request.headers.get('Authorization')
-        if not auth_header:
-            return jsonify({'error': 'Missing Authorization header'}), 401
-            
-        # Split header and validate format
-        parts = auth_header.split()
-        if len(parts) != 2 or parts[0].lower() != 'bearer':
-            return jsonify({'error': 'Invalid Authorization header format'}), 401
-            
-        token = parts[1]
-        
-        # Validate Content-Type
-        if request.headers.get('Content-Type') != 'application/x-amz-json-1.1':
-            return jsonify({'error': 'Invalid Content-Type'}), 400
+        logger.info("Received request for audio upload presigned URL")
 
-        try:
-            claims = validate_cognito_token(token)
-        except ValueError as e:
-            return jsonify({'error': str(e)}), 401
-
-        # Generate timestamp for the file
-        timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S-%f')
-        
-        # Construct the path
-        user_type = claims.get('custom:user_type', 'default')
-        provider = claims.get('custom:provider', 'default')
-        user_sub = claims['sub']
-        file_path = f"users/{user_type}/{provider}/{user_sub}/{timestamp}.webm"
-
-        # Forward request to PresignedURL service
-        presigned_url_request = {
-            'bucket': '2024-09-23-audiotranscribe-input-bucket',
-            'key': file_path,
-            'content_type': 'audio/webm'
+        # Forward the request to the FastAPI service
+        presigned_url_service = 'http://localhost:8000/api/get-presigned-url'
+        headers = {
+            'Authorization': request.headers.get('Authorization'),  # Forward JWT token
         }
 
-        response = requests.post(
-            PRESIGNED_URL_SERVICE,
-            json=presigned_url_request,
-            headers={'Content-Type': 'application/json'}
-        )
+        response = requests.get(presigned_url_service, headers=headers)
+        response.raise_for_status()  # Raise error if response is not 2xx
 
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to generate upload URL'}), 502
-
-        presigned_data = response.json()
-        
-        return jsonify({
-            'upload_url': presigned_data['url'],
-            'key': file_path
-        })
-
-    except HTTPException as e:
-        return jsonify({'error': str(e)}), e.code
-    except Exception as e:
-        app.logger.error(f"Unexpected error: {str(e)}")
-        return jsonify({'error': 'Internal server error'}), 500
+        return response.json(), response.status_code
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Error fetching presigned URL: {e}")
+        return jsonify({"error": f"Failed to fetch presigned URL: {str(e)}"}), response.status_code if 'response' in locals() else 503
 
 
 @app.route('/logout')
