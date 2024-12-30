@@ -295,11 +295,18 @@ def callback():
 def audio_upload():
     try:
         logger.info("Received request for audio upload presigned URL")
+        
+        # Get user info from session
+        user = session.get('user')
+        if not user:
+            return jsonify({"error": "User not found in session"}), 401
 
         # Forward the request to the FastAPI service
         presigned_url_service = 'http://localhost:8000/api/get-presigned-url'
         headers = {
-            'Authorization': request.headers.get('Authorization'),  # Forward JWT token
+            'X-User-Id': user.get('sub'),
+            'X-User-Type': user.get('user_type', 'customer'),
+            'X-Provider': user.get('provider', 'cognito'),
         }
 
         response = requests.get(presigned_url_service, headers=headers)

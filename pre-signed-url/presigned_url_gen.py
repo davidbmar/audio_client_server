@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Request  # Added Request here
 from fastapi.responses import JSONResponse
 import boto3
 from botocore.exceptions import ClientError
@@ -26,14 +26,30 @@ def generate_file_name():
     now = datetime.now(pytz.timezone("UTC"))
     return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".webm"
 
+
 @app.get("/api/get-presigned-url")
-async def get_presigned_url():
+async def get_presigned_url(request: Request):
     """Endpoint to generate a pre-signed URL for uploading files to S3."""
     try:
+        # Get user info from headers
+        user_id = request.headers.get('X-User-Id')
+        user_type = request.headers.get('X-User-Type', 'customer')
+        provider = request.headers.get('X-Provider', 'cognito')
+
+        if not user_id:
+            logger.error("Missing user information in request")
+            raise HTTPException(status_code=400, detail="Missing user information")
+
+        # Create user-specific path
+        user_path = f"users/{user_type}/{provider}/{user_id}"
+        file_name = generate_file_name()
+        key = f"{user_path}/{file_name}"
+
+        # Log the path being used
+        logger.info(f"Generating presigned URL for path: {key}")
+
         # Create S3 client
         s3_client = create_s3_client()
-        file_name = generate_file_name()
-        key = f"uploads/{file_name}"  # Adjust S3 key path as needed
 
         presigned_url = s3_client.generate_presigned_url(
             'put_object',
@@ -46,11 +62,13 @@ async def get_presigned_url():
             ExpiresIn=EXPIRATION_SECONDS
         )
 
-        logger.info(f"Generated presigned URL: {presigned_url}!!!")
-
         logger.info(f"Generated presigned URL for key: {key}")
         return JSONResponse(content={"url": presigned_url, "key": key})
+    
     except ClientError as e:
         logger.error(f"Failed to generate presigned URL: {e}")
         raise HTTPException(status_code=500, detail="Error generating presigned URL")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
 

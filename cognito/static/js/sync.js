@@ -18,7 +18,7 @@ class SyncService {
     }
 
     async getPresignedUrl() {
-        const url = `${this.apiBaseUrl}/get-presigned-url`;
+        const url = '/auth/audio-upload';  // Use the same endpoint as manual upload
         console.log(`🔑 Requesting presigned URL from: ${url}`);
 
         try {

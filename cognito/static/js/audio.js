@@ -140,7 +140,12 @@ class AudioController {
                     const uploadResponse = await fetch(presignedData.url, {
                         method: 'PUT',
                         body: chunkData.blob,
-                        headers: { 'Content-Type': 'audio/webm' }
+                        headers: {
+                            'Content-Type': 'audio/webm',
+                            'x-amz-acl': 'private'  // Add this
+                        },
+                        mode: 'cors',               // Add this
+                        credentials: 'omit'         // Add this
                     });
 
                     if (uploadResponse.ok) {
@@ -168,6 +173,34 @@ class AudioController {
             console.error('Error saving or uploading chunk:', err);
         }
     }
+
+
+    async deleteChunk(id) {
+        try {
+            window.debugManager.info('Deleting chunk', { chunkId: id });
+            
+            // Remove from IndexedDB
+            await this.dbStorage.deleteChunk(id);
+            
+            // Remove from memory array
+            const index = this.recordedChunks.findIndex(chunk => chunk.id === id);
+            if (index !== -1) {
+                this.recordedChunks.splice(index, 1);
+            }
+            
+            // Update UI
+            UIController.updateChunksList(this.recordedChunks, UI);
+            window.debugManager.info('Chunk deleted successfully', { chunkId: id });
+        } catch (err) {
+            window.debugManager.error('Error deleting chunk', {
+                chunkId: id,
+                error: err.message
+            });
+            console.error('Error deleting chunk:', err);
+            throw err;
+        }
+    }
+
 
     playChunk(blob) {
         const url = URL.createObjectURL(blob);
