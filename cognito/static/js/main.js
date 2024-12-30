@@ -166,74 +166,9 @@ window.handleChunkUpload = async (id) => {
         if (!chunk) {
             throw new Error('Chunk not found');
         }
-        
-        // Update UI to show upload is starting
-        await audioController.dbStorage.updateChunkSyncStatus(id, 'syncing');
-        UIController.updateChunksList(audioController.recordedChunks, UI);
-        
-        // Get presigned URL - using exact same pattern as test.js
-        const response = await fetch('/auth/audio-upload', { 
-            method: 'GET', 
-            credentials: 'include' 
-        });
-        
-        if (response.status === 401) {
-            const responseData = await response.json();
-            let message;
-            switch (responseData.error) {
-                case 'session_expired':
-                    message = 'Your session has expired. Please refresh the page to log in again.';
-                    break;
-                case 'session_timeout':
-                    message = 'Your session has timed out after 12 hours. Please refresh to continue.';
-                    break;
-                case 'session_error':
-                    message = 'There was an error with your session. Please refresh to continue.';
-                    break;
-                default:
-                    message = 'Authentication error. Please refresh the page to log in again.';
-            }
-            UIController.showNotification(message, 'session');
-            await audioController.dbStorage.updateChunkSyncStatus(id, 'failed');
-            UIController.updateChunksList(audioController.recordedChunks, UI);
-            return;
-        }
-        
-        if (!response.ok) {
-            throw new Error(`Failed to get upload permission: ${response.statusText}`);
-        }
-
-        const { url, key } = await response.json();
-
-        // Upload to S3 - using exact same pattern as test.js
-        const uploadResponse = await fetch(url, {
-            method: 'PUT',
-            body: chunk.blob,
-            headers: {
-                'Content-Type': 'audio/webm',
-                'x-amz-acl': 'private'
-            },
-            mode: 'cors',
-            credentials: 'omit'  // Important: This matches test.js
-        });
-        
-        if (!uploadResponse.ok) {
-            throw new Error(`Upload failed: ${uploadResponse.status} ${uploadResponse.statusText}`);
-        }
-
-        // Update status to reflect successful upload
-        await audioController.dbStorage.updateChunkSyncStatus(id, 'synced');
-        UIController.updateChunksList(audioController.recordedChunks, UI);
-        
-        window.debugManager.info('Upload completed successfully', { chunkId: id });
-    } catch (error) {
-        window.debugManager.error('Upload failed', { 
-            chunkId: id,
-            error: error.message 
-        });
-        console.error('Upload failed:', error);
-        await audioController.dbStorage.updateChunkSyncStatus(id, 'failed');
-        UIController.updateChunksList(audioController.recordedChunks, UI);
+        await audioController.uploadChunk(id, chunk.blob);
+    } catch (err) {
+        console.error('Manual upload failed:', err);
     }
 };
 

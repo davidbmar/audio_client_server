@@ -134,61 +134,79 @@ class AudioController {
 
     async addChunkToList(chunkData) {
         try {
-            window.statusManager.setStatus('warning', 'Saving audio chunk...');
+            // Part 1: Save the chunk to storage
             const id = await this.dbStorage.saveChunk(chunkData);
             chunkData.id = id;
             this.recordedChunks.unshift(chunkData);
             UIController.updateChunksList(this.recordedChunks, UI);
     
-            // Fetch a presigned URL and attempt upload
-            window.statusManager.setStatus('warning', 'Preparing to upload...');
-            const presignedData = await window.syncService.getPresignedUrl();
-            if (presignedData?.url) {
-                try {
-                    window.statusManager.setStatus('warning', 'Uploading chunk...');
-                    const uploadResponse = await fetch(presignedData.url, {
-                        method: 'PUT',
-                        body: chunkData.blob,
-                        headers: {
-                            'Content-Type': 'audio/webm',
-                            'x-amz-acl': 'private'
-                        },
-                        mode: 'cors',
-                        credentials: 'omit'
-                    });
-    
-                    if (uploadResponse.ok) {
-                        await this.dbStorage.updateChunkSyncStatus(id, 'synced');
-                        window.debugManager.info(`Chunk ${id} uploaded successfully`);
-                        window.statusManager.setStatus('success', 'Chunk uploaded successfully');
-                    } else {
-                        throw new Error(`Upload failed: ${uploadResponse.status}`);
-                    }
-                } catch (err) {
-                    await this.dbStorage.updateChunkSyncStatus(id, 'failed');
-                    window.debugManager.error('Upload failed', {
-                        chunkId: id,
-                        error: err.message
-                    });
-                    window.statusManager.setStatus('error', 'Upload failed', {
-                        label: 'Retry',
-                        action: () => this.retryUpload(id, chunkData.blob)
-                    });
-                    console.error('Upload failed:', err);
-                }
-            } else {
-                throw new Error('Failed to get presigned URL');
-            }
+            // Part 2: Upload the chunk
+            await this.uploadChunk(id, chunkData.blob);
         } catch (err) {
-            window.debugManager.error('Error saving or uploading chunk', {
+            window.debugManager.error('Error saving chunk', {
                 error: err.message,
                 stack: err.stack
             });
             window.statusManager.setStatus('error', 'Failed to save audio chunk', {
                 label: 'Retry',
-                action: () => this.addChunkToList(chunkData)
+                action: () => this.uploadChunk(chunkData.id, chunkData.blob)  // Note: changed to uploadChunk
             });
-            console.error('Error saving or uploading chunk:', err);
+            console.error('Error saving chunk:', err);
+        }
+    }
+    
+    // New separate upload method
+    async uploadChunk(id, blob) {
+        try {
+            // First update status to syncing
+            await this.dbStorage.updateChunkSyncStatus(id, 'syncing');
+            const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
+            if (chunkIndex !== -1) {
+                this.recordedChunks[chunkIndex].syncStatus = 'syncing';
+                UIController.updateChunksList(this.recordedChunks, UI);
+            }
+    
+            // Get presigned URL and upload
+            const presignedData = await window.syncService.getPresignedUrl();
+            if (!presignedData?.url) {
+                throw new Error('Failed to get presigned URL');
+            }
+    
+            const uploadResponse = await fetch(presignedData.url, {
+                method: 'PUT',
+                body: blob,
+                headers: {
+                    'Content-Type': 'audio/webm',
+                    'x-amz-acl': 'private'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            });
+    
+            if (uploadResponse.ok) {
+                await this.dbStorage.updateChunkSyncStatus(id, 'synced');
+                // Update in-memory status
+                if (chunkIndex !== -1) {
+                    this.recordedChunks[chunkIndex].syncStatus = 'synced';
+                }
+                window.statusManager.setStatus('success', 'Upload successful');
+                UIController.updateChunksList(this.recordedChunks, UI);
+            } else {
+                throw new Error(`Upload failed: ${uploadResponse.status}`);
+            }
+        } catch (err) {
+            // Update status to failed in both DB and memory
+            await this.dbStorage.updateChunkSyncStatus(id, 'failed');
+            const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
+            if (chunkIndex !== -1) {
+                this.recordedChunks[chunkIndex].syncStatus = 'failed';
+            }
+            window.statusManager.setStatus('error', 'Upload failed', {
+                label: 'Retry',
+                action: () => this.uploadChunk(id, blob)
+            });
+            console.error('Upload failed:', err);
+            UIController.updateChunksList(this.recordedChunks, UI);
         }
     }
 
@@ -246,39 +264,7 @@ class AudioController {
     }
 
     async retryUpload(id, blob) {
-        try {
-            window.statusManager.setStatus('warning', 'Retrying upload...');
-            const presignedData = await window.syncService.getPresignedUrl();
-            
-            if (!presignedData?.url) {
-                throw new Error('Failed to get presigned URL');
-            }
-    
-            const uploadResponse = await fetch(presignedData.url, {
-                method: 'PUT',
-                body: blob,
-                headers: {
-                    'Content-Type': 'audio/webm',
-                    'x-amz-acl': 'private'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
-    
-            if (uploadResponse.ok) {
-                await this.dbStorage.updateChunkSyncStatus(id, 'synced');
-                window.statusManager.setStatus('success', 'Upload retry successful');
-                UIController.updateChunksList(this.recordedChunks, UI);
-            } else {
-                throw new Error(`Upload failed: ${uploadResponse.status}`);
-            }
-        } catch (err) {
-            window.statusManager.setStatus('error', 'Retry upload failed', {
-                label: 'Try Again',
-                action: () => this.retryUpload(id, blob)
-            });
-            console.error('Retry upload failed:', err);
-        }
+        return this.uploadChunk(id, blob);
     }
 
 
