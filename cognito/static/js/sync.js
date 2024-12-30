@@ -17,21 +17,12 @@ class SyncService {
         });
     }
 
+
     async getPresignedUrl() {
-        const url = '/auth/audio-upload';  // Use the same endpoint as manual upload
+        const url = '/auth/audio-upload';  
         console.log(`🔑 Requesting presigned URL from: ${url}`);
-
+    
         try {
-            // Log the request
-            console.group('Request Details');
-            console.log('URL:', url);
-            console.log('Method: GET');
-            console.log('Headers:', {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
-            });
-            console.groupEnd();
-
             const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include',
@@ -40,29 +31,35 @@ class SyncService {
                     'Content-Type': 'application/json'
                 }
             });
-
-            // Log response details
-            console.group('Response Details');
-            console.log('Status:', response.status);
-            console.log('OK:', response.ok);
-            console.log('Headers:', Object.fromEntries(response.headers.entries()));
-            
-            const text = await response.text();
-            console.log('Response Body:', text);
-            console.groupEnd();
-
+    
+            // Handle authentication errors
+            if (response.status === 401) {
+                window.statusManager.setStatus('error', 'Session expired - please refresh', {
+                    label: 'Refresh',
+                    action: () => window.location.reload()
+                });
+                throw new Error('Authentication failed');
+            }
+    
             if (!response.ok) {
-                throw new Error(`HTTP Error: ${response.status} - ${text}`);
+                window.statusManager.setStatus('error', 'Failed to get upload permission', {
+                    label: 'Retry',
+                    action: () => this.syncChunk(chunkId)  // Add retry capability
+                });
+                throw new Error(`HTTP Error: ${response.status}`);
             }
-
-            try {
-                return JSON.parse(text);
-            } catch (e) {
-                console.error('Failed to parse response:', text);
-                throw new Error('Invalid JSON response');
-            }
+    
+            window.statusManager.setStatus('success', 'Ready to upload');
+            return JSON.parse(await response.text());
+    
         } catch (error) {
             console.error('Presigned URL Error:', error);
+            if (!error.message.includes('Authentication failed')) {
+                window.statusManager.setStatus('error', 'Network error - check your connection', {
+                    label: 'Retry',
+                    action: () => window.location.reload()
+                });
+            }
             throw error;
         }
     }
@@ -74,47 +71,59 @@ class SyncService {
             // Get chunk data
             const chunk = await this.dbStorage.getChunkById(chunkId);
             if (!chunk) {
+                window.statusManager.setStatus('error', 'Chunk not found in local storage');
                 throw new Error('Chunk not found');
             }
-
-            console.log('Retrieved chunk:', {
-                id: chunkId,
-                size: chunk.blob.size,
-                type: chunk.blob.type
-            });
-
+    
+            window.statusManager.setStatus('warning', 'Getting upload permission...');
+    
             // Get presigned URL
             const presignedData = await this.getPresignedUrl();
             if (!presignedData?.url) {
+                window.statusManager.setStatus('error', 'Failed to get upload URL', {
+                    label: 'Retry',
+                    action: () => this.syncChunk(chunkId)
+                });
                 throw new Error('No presigned URL in response');
             }
-
-            // Upload to S3
-            console.log('Uploading to S3:', {
-                url: presignedData.url.substring(0, 50) + '...',
-                contentType: 'audio/webm'
-            });
-
+    
+            // Update status before upload
+            window.statusManager.setStatus('warning', 'Uploading audio...');
+    
             const uploadResponse = await fetch(presignedData.url, {
                 method: 'PUT',
                 body: chunk.blob,
                 headers: {
                     'Content-Type': 'audio/webm'
-                }
+                    }
             });
-
+    
             if (!uploadResponse.ok) {
                 const errorText = await uploadResponse.text();
+                window.statusManager.setStatus('error', 'Upload failed', {
+                    label: 'Retry Upload',
+                    action: () => this.syncChunk(chunkId)
+                });
                 throw new Error(`Upload failed: ${uploadResponse.status} - ${errorText}`);
             }
-
+    
             await this.dbStorage.updateChunkSyncStatus(chunkId, 'synced');
+            window.statusManager.setStatus('success', 'Upload completed successfully');
             console.log('✅ Sync completed successfully');
             
             return true;
+    
         } catch (error) {
             console.error('❌ Sync failed:', error);
             await this.dbStorage.updateChunkSyncStatus(chunkId, 'failed');
+            
+            // Don't override auth errors from getPresignedUrl
+            if (!error.message.includes('Authentication failed')) {
+                window.statusManager.setStatus('error', 'Upload failed - check your connection', {
+                    label: 'Retry',
+                    action: () => this.syncChunk(chunkId)
+                });
+            }
             throw error;
         } finally {
             console.groupEnd();

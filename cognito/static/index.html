@@ -70,11 +70,19 @@
             <h2>Recorded Chunks</h2>
             <div id="chunksList"></div>
         </div>
+        <div id="statusBar" class="status-bar">
+            <div class="status-content">
+                <div class="status-indicator"></div>
+                <span id="statusMessage" class="status-message">System ready</span>
+                <button id="statusAction" class="status-action hidden">Retry</button>
+            </div>
+        </div>
     </div>
     <!-- Load scripts in correct order -->
     <script src="js/debug.js"></script>
+    <script src="js/status.js"></script>    
     <script src="js/config.js"></script>
-    <script src="js/audio.js"></script>    <!-- Move this before main.js -->
+    <script src="js/audio.js"></script>    
     <script src="js/ui.js"></script>
     <script src="js/db.js"></script>
     <script src="js/sync.js"></script>

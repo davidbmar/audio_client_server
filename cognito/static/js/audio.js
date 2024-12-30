@@ -41,23 +41,29 @@ class AudioController {
 
     async startRecording() {
         try {
+            window.statusManager.setStatus('warning', 'Requesting microphone access...');
             this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             const source = this.audioContext.createMediaStreamSource(this.audioStream);
             source.connect(this.analyser);
-
+    
             this.isRecording = true;
             this.recordingStartTime = Date.now();
-
+    
             this.startNewChunk();
             this.startChunkTimer();
-
+    
+            window.statusManager.setStatus('success', 'Recording in progress');
             UIController.updateRecordingState(true, UI);
             return true;
         } catch (err) {
             console.error('Error accessing microphone:', err);
-            alert('Error accessing microphone. Please ensure you have granted microphone permissions.');
+            window.statusManager.setStatus('error', 'Microphone access denied', {
+                label: 'Grant Access',
+                action: () => this.startRecording()
+            });
             return false;
         }
     }
@@ -128,29 +134,33 @@ class AudioController {
 
     async addChunkToList(chunkData) {
         try {
+            window.statusManager.setStatus('warning', 'Saving audio chunk...');
             const id = await this.dbStorage.saveChunk(chunkData);
             chunkData.id = id;
             this.recordedChunks.unshift(chunkData);
             UIController.updateChunksList(this.recordedChunks, UI);
-
+    
             // Fetch a presigned URL and attempt upload
+            window.statusManager.setStatus('warning', 'Preparing to upload...');
             const presignedData = await window.syncService.getPresignedUrl();
             if (presignedData?.url) {
                 try {
+                    window.statusManager.setStatus('warning', 'Uploading chunk...');
                     const uploadResponse = await fetch(presignedData.url, {
                         method: 'PUT',
                         body: chunkData.blob,
                         headers: {
                             'Content-Type': 'audio/webm',
-                            'x-amz-acl': 'private'  // Add this
+                            'x-amz-acl': 'private'
                         },
-                        mode: 'cors',               // Add this
-                        credentials: 'omit'         // Add this
+                        mode: 'cors',
+                        credentials: 'omit'
                     });
-
+    
                     if (uploadResponse.ok) {
                         await this.dbStorage.updateChunkSyncStatus(id, 'synced');
                         window.debugManager.info(`Chunk ${id} uploaded successfully`);
+                        window.statusManager.setStatus('success', 'Chunk uploaded successfully');
                     } else {
                         throw new Error(`Upload failed: ${uploadResponse.status}`);
                     }
@@ -159,6 +169,10 @@ class AudioController {
                     window.debugManager.error('Upload failed', {
                         chunkId: id,
                         error: err.message
+                    });
+                    window.statusManager.setStatus('error', 'Upload failed', {
+                        label: 'Retry',
+                        action: () => this.retryUpload(id, chunkData.blob)
                     });
                     console.error('Upload failed:', err);
                 }
@@ -170,10 +184,13 @@ class AudioController {
                 error: err.message,
                 stack: err.stack
             });
+            window.statusManager.setStatus('error', 'Failed to save audio chunk', {
+                label: 'Retry',
+                action: () => this.addChunkToList(chunkData)
+            });
             console.error('Error saving or uploading chunk:', err);
         }
     }
-
 
     async deleteChunk(id) {
         try {
@@ -227,5 +244,43 @@ class AudioController {
         audio.onended = () => URL.revokeObjectURL(url);
         audio.play();
     }
+
+    async retryUpload(id, blob) {
+        try {
+            window.statusManager.setStatus('warning', 'Retrying upload...');
+            const presignedData = await window.syncService.getPresignedUrl();
+            
+            if (!presignedData?.url) {
+                throw new Error('Failed to get presigned URL');
+            }
+    
+            const uploadResponse = await fetch(presignedData.url, {
+                method: 'PUT',
+                body: blob,
+                headers: {
+                    'Content-Type': 'audio/webm',
+                    'x-amz-acl': 'private'
+                },
+                mode: 'cors',
+                credentials: 'omit'
+            });
+    
+            if (uploadResponse.ok) {
+                await this.dbStorage.updateChunkSyncStatus(id, 'synced');
+                window.statusManager.setStatus('success', 'Upload retry successful');
+                UIController.updateChunksList(this.recordedChunks, UI);
+            } else {
+                throw new Error(`Upload failed: ${uploadResponse.status}`);
+            }
+        } catch (err) {
+            window.statusManager.setStatus('error', 'Retry upload failed', {
+                label: 'Try Again',
+                action: () => this.retryUpload(id, blob)
+            });
+            console.error('Retry upload failed:', err);
+        }
+    }
+
+
 }
 
