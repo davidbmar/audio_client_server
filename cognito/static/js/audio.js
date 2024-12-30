@@ -201,6 +201,25 @@ class AudioController {
         }
     }
 
+    downloadChunk(blob, chunkNumber) {
+        // Create a download URL from the blob
+        const url = URL.createObjectURL(blob);
+        
+        // Create a temporary link element
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `audio-chunk-${chunkNumber}.webm`; // Using .webm since that's our recording format
+        
+        // Trigger the download
+        document.body.appendChild(a);
+        a.click();
+        
+        // Clean up
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        window.debugManager.info('Download initiated', { chunkNumber });
+    }
 
     playChunk(blob) {
         const url = URL.createObjectURL(blob);
