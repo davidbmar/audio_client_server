@@ -36,6 +36,16 @@ async function initialize() {
         syncService = new SyncService(audioController.dbStorage);
         window.syncService = syncService; // Make it globally available
         UIController.initialize(UI);
+
+        // Add this check for failed uploads after storage is initialized
+        if (audioController.hasFailedUploads()) {
+            window.statusManager.setStatus('warning', 'There are failed uploads', {
+                label: 'Retry All Failed',
+                action: () => audioController.retryAllFailedUploads()
+            });
+        } else {
+            window.statusManager.setStatus('success', 'Ready to record');
+        }
         
         // Set up event listeners after initialization
         setupEventListeners();
@@ -49,6 +59,15 @@ async function initialize() {
         console.error('Failed to initialize:', error);
     }
 }
+
+// Initialize the application
+initialize().catch(error => {
+    window.debugManager.error('Fatal initialization error', {
+        error: error.message,
+        stack: error.stack
+    });
+    console.error(error);
+});
 
 function setupEventListeners() {
     // Debug button handler

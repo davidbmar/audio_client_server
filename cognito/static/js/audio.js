@@ -154,8 +154,7 @@ class AudioController {
             console.error('Error saving chunk:', err);
         }
     }
-    
-    // New separate upload method
+
     async uploadChunk(id, blob) {
         try {
             // First update status to syncing
@@ -166,12 +165,14 @@ class AudioController {
                 UIController.updateChunksList(this.recordedChunks, UI);
             }
     
-            // Get presigned URL and upload
+            // Get presigned URL and attempt upload
+            window.statusManager.setStatus('warning', 'Getting upload permission...');
             const presignedData = await window.syncService.getPresignedUrl();
             if (!presignedData?.url) {
                 throw new Error('Failed to get presigned URL');
             }
     
+            window.statusManager.setStatus('warning', 'Uploading audio...');
             const uploadResponse = await fetch(presignedData.url, {
                 method: 'PUT',
                 body: blob,
@@ -189,7 +190,15 @@ class AudioController {
                 if (chunkIndex !== -1) {
                     this.recordedChunks[chunkIndex].syncStatus = 'synced';
                 }
-                window.statusManager.setStatus('success', 'Upload successful');
+                // Check if there are still any failed uploads
+                if (this.hasFailedUploads()) {
+                    window.statusManager.setStatus('warning', 'Upload successful - some uploads still pending', {
+                        label: 'Retry All Failed',
+                        action: () => this.retryAllFailedUploads()
+                    });
+                } else {
+                    window.statusManager.setStatus('success', 'All uploads completed');
+                }
                 UIController.updateChunksList(this.recordedChunks, UI);
             } else {
                 throw new Error(`Upload failed: ${uploadResponse.status}`);
@@ -201,10 +210,30 @@ class AudioController {
             if (chunkIndex !== -1) {
                 this.recordedChunks[chunkIndex].syncStatus = 'failed';
             }
-            window.statusManager.setStatus('error', 'Upload failed', {
-                label: 'Retry',
-                action: () => this.uploadChunk(id, blob)
-            });
+    
+            // Handle different types of failures
+            if (err.message.includes('Failed to fetch') || !navigator.onLine) {
+                // Network connectivity issues
+                window.statusManager.setStatus('warning', 'Offline mode (recording available, uploads paused)', {
+                    label: 'Retry All Failed',
+                    action: () => this.retryAllFailedUploads()
+                });
+                document.title = 'Audio Transcriber (Offline)';
+            } else if (err.status === 401) {
+                // Authentication issues
+                window.statusManager.setStatus('warning', 'Not logged in (recording available, uploads paused)', {
+                    label: 'Login',
+                    action: () => window.location.href = '/login'
+                });
+                document.title = 'Audio Transcriber (Not logged in)';
+            } else {
+                // Other errors
+                window.statusManager.setStatus('error', 'Upload failed', {
+                    label: 'Retry All Failed',
+                    action: () => this.retryAllFailedUploads()
+                });
+            }
+    
             console.error('Upload failed:', err);
             UIController.updateChunksList(this.recordedChunks, UI);
         }
@@ -266,6 +295,56 @@ class AudioController {
     async retryUpload(id, blob) {
         return this.uploadChunk(id, blob);
     }
+
+
+    // Add this helper method to the AudioController class
+    hasFailedUploads() {
+        return this.recordedChunks.some(chunk => 
+            chunk.syncStatus === 'failed' || chunk.syncStatus === 'pending'
+        );
+    }
+
+
+
+    async retryAllFailedUploads() {
+        window.statusManager.setStatus('warning', 'Retrying all failed uploads...');
+    
+        // Find all failed chunks
+        const failedChunks = this.recordedChunks.filter(chunk => 
+            chunk.syncStatus === 'failed' || chunk.syncStatus === 'pending'
+        );
+    
+        if (failedChunks.length === 0) {
+            window.statusManager.setStatus('success', 'No failed uploads to retry');
+            return;
+        }
+    
+        // Try to upload each failed chunk
+        for (const chunk of failedChunks) {
+            try {
+                await this.uploadChunk(chunk.id, chunk.blob);
+            } catch (err) {
+                console.error(`Failed to retry upload for chunk ${chunk.id}:`, err);
+                // Continue with next chunk even if one fails
+            }
+        }
+    
+        // Check final status - are there still any failed uploads?
+        const remainingFailures = this.recordedChunks.filter(chunk => 
+            chunk.syncStatus === 'failed' || chunk.syncStatus === 'pending'
+        ).length;
+    
+        if (remainingFailures > 0) {
+            window.statusManager.setStatus('error', `Upload failed (${remainingFailures} remaining)`, {
+                label: 'Retry All Failed',
+                action: () => this.retryAllFailedUploads()
+            });
+        } else {
+            window.statusManager.setStatus('success', 'All uploads completed successfully');
+        }
+    }
+    
+
 
 
 }

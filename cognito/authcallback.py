@@ -317,6 +317,20 @@ def audio_upload():
         logger.error(f"Error fetching presigned URL: {e}")
         return jsonify({"error": f"Failed to fetch presigned URL: {str(e)}"}), response.status_code if 'response' in locals() else 503
 
+@app.route('/auth/check-status', methods=['GET'])
+def check_auth_status():
+    user = session.get('user')
+    if not user:
+        return jsonify({'authenticated': False}), 401
+    try:
+        authenticated_at = datetime.fromisoformat(user.get('authenticated_at', ''))
+        if datetime.utcnow() - authenticated_at > timedelta(hours=12):
+            return jsonify({'authenticated': False, 'reason': 'session_timeout'}), 401
+        return jsonify({'authenticated': True}), 200
+    except Exception as e:
+        logger.error(f"Error checking auth status: {str(e)}")
+        return jsonify({'authenticated': False, 'reason': 'error'}), 401
+
 
 @app.route('/logout')
 def logout():
