@@ -83,24 +83,28 @@ function setupEventListeners() {
         }
     });
 
-    // Record button click handler
     UI.recordButton.addEventListener('click', async () => {
+        console.log('Record button clicked, current state:', audioController.isRecording);
         window.debugManager.info('Record button clicked', {
-            currentState: audioController.isRecording
+            currentState: audioController.isRecording,
+            audioStream: audioController.audioStream ? 'exists' : 'null',
+            mediaRecorder: audioController.mediaRecorder ? 'exists' : 'null'
         });
         
         if (audioController.isRecording) {
-            window.debugManager.info('Stopping recording');
+            window.debugManager.info('Attempting to stop recording');
             audioController.stopRecording();
+            console.log('After stopRecording call, state:', audioController.isRecording);
         } else {
             window.debugManager.info('Starting recording');
             const started = await audioController.startRecording();
             if (!started) {
                 window.debugManager.error('Failed to start recording');
             }
+            console.log('After startRecording call, state:', audioController.isRecording);
         }
     });
-
+    
     // Threshold slider handler with debug logging
     UI.thresholdSlider.addEventListener('input', (e) => {
         const newValue = parseInt(e.target.value);
@@ -200,11 +204,3 @@ window.handleRetrySync = (id) => {
     }
 };
 
-// Initialize the application
-initialize().catch(error => {
-    window.debugManager.error('Fatal initialization error', {
-        error: error.message,
-        stack: error.stack
-    });
-    console.error(error);
-});

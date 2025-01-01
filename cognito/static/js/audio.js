@@ -112,25 +112,30 @@ class AudioController {
     }
 
     stopRecording() {
+        window.debugManager.info('Stopping recording');
+        window.statusManager.setStatus('warning', 'Stopping recording...');
+    
         if (this.chunkTimer) {
             clearInterval(this.chunkTimer);
             this.chunkTimer = null;
         }
-
+    
         if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
             this.mediaRecorder.stop();
         }
-
+    
         if (this.audioStream) {
             this.audioStream.getTracks().forEach(track => track.stop());
         }
         if (this.audioContext) {
             this.audioContext.close();
         }
-
+        
         this.isRecording = false;
         UIController.updateRecordingState(false, UI);
+        window.statusManager.setStatus('success', 'Recording stopped');
     }
+    
 
     async addChunkToList(chunkData) {
         try {
