@@ -1,6 +1,104 @@
 # config.yaml
-orchestrator_url: "http://ec2-3-137-2-81.us-east-2.compute.amazonaws.com:5000"
-download_folder: "./downloads"
-api_token: "XXXXXXXXXMYAPITOKENHEREie134k123l4j23;46754772a42c9f5b5b772e5fbec1e93be09914c1f26b"  # The same token configured in the orchestrator
+#orchestrator_url: "http://ec2-3-137-2-81.us-east-2.compute.amazonaws.com:5000"
+#download_folder: "./downloads"
+#api_token: "XXXXXXXXXMYAPITOKENHEREie134k123l4j23;46754772a42c9f5b5b772e5fbec1e93be09914c1f26b"  # The same token configured in the orchestrator
+#
+#
+#
+# Worker Node Configuration
+# This file contains non-sensitive configuration settings for the worker node
 
+#-----------------------------------------------
+# AWS Infrastructure Settings
+#-----------------------------------------------
+aws:
+  # AWS Region for services (should match infrastructure)
+  region: "us-east-2"
+  
+  # Name of the secrets manager secret that contains sensitive configs
+  secrets_key: "/DEV/audioClientServer/worker_node/v2"
 
+#-----------------------------------------------
+# File Processing Settings
+#-----------------------------------------------
+storage:
+  # Local temporary storage for processing files
+  # Should be a path with adequate disk space
+  download_folder: "./downloads"
+  
+  # Maximum size for file chunks during download (in bytes)
+  # Adjust based on memory constraints
+  # CHECK THIS, this seems odd!!!
+  # CHECK THIS, this seems odd!!!
+  # CHECK THIS, this seems odd!!!
+  # CHECK THIS, this seems odd!!!
+  # CHECK THIS, this seems odd!!!
+  chunk_size: 8192
+
+#-----------------------------------------------
+# Transcription Model Settings
+#-----------------------------------------------
+model:
+  # Whisper model size (tiny, base, small, medium, large)
+  # Affects accuracy and resource usage
+  size: "medium"
+  
+  # Compute type for model inference
+  # Options: int8, float16, float32
+  compute_type: "float16"
+  
+  # Device preferences for model execution
+  device:
+    # Whether to prefer CUDA when available
+    prefer_cuda: true
+    # Fallback device if CUDA is not available
+    fallback: "cpu"
+
+#-----------------------------------------------
+# Performance and Retry Settings
+#-----------------------------------------------
+performance:
+  # Time to wait between polling for new tasks (seconds)
+  poll_interval: 10
+  
+  # Maximum number of retries for failed operations
+  max_retries: 3
+  
+  # Delay between retries (seconds)
+  retry_delay: 5
+
+#-----------------------------------------------
+# Timeout Settings
+#-----------------------------------------------
+timeouts:
+  # API request timeout (seconds)
+  api: 10
+  
+  # File download timeout (seconds)
+  download: 300
+  
+  # File upload timeout (seconds)
+  upload: 300
+  
+  # Transcription timeout (seconds)
+  # Set based on maximum expected audio file length
+  transcription: 1800
+
+#-----------------------------------------------
+# Logging Configuration
+#-----------------------------------------------
+logging:
+  # Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+  level: "INFO"
+  
+  # Log file location
+  file: "worker.log"
+  
+  # Maximum log file size before rotation (bytes)
+  max_size: 10485760  # 10MB
+  
+  # Number of backup log files to keep
+  backup_count: 5
+  
+  # Whether to also log to console
+  console_output: true
