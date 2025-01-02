@@ -25,8 +25,8 @@ def create_seed_secrets(region, secrets_key):
     """Create secrets with seed values in AWS Secrets Manager"""
     # Initial seed values for secrets - based on original code requirements
     seed_values = {
-        "api_token": "initial-secure-token-to-be-changed",  # This should match orchestrator's token
-        "orchestrator_url": "http://localhost:5000",        # Default development orchestrator URL
+        "api_token": "initial-secure-token-to-be-changed-to-same-as-api-token-in-orchestrator",  # This should match orchestrator's token
+        "orchestrator_url": "http://localhost:6000",        # Default development orchestrator URL
         "input_bucket": "2024-09-23-audiotranscribe-input-bucket",
         "output_bucket": "2024-09-23-audiotranscribe-output-bucket"
     }
