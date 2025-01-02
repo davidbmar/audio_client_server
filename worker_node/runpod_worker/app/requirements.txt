@@ -1,0 +1,8 @@
+boto3
+requests
+pyyaml
+faster-whisper
+torch
+# Dependencies from error logs
+urllib3
+botocore
