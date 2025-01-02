@@ -23,22 +23,12 @@ def load_yaml_config(file_path='config.yaml'):
 
 def create_seed_secrets(region, secrets_key):
     """Create secrets with seed values in AWS Secrets Manager"""
-    # Initial seed values for secrets
+    # Initial seed values for secrets - based on original code requirements
     seed_values = {
-        "api_token": "initial-secure-token-to-be-changed",
-        "orchestrator_url": "https://test-orchestrator.example.com",
-        "health_check_endpoint": "https://health.example.com",
-        "webhook_url": "https://webhook.example.com",
-        "input_bucket": "test-input-bucket",
-        "output_bucket": "test-output-bucket",
-        "external_api_keys": {
-            "service1": "test-api-key-1",
-            "service2": "test-api-key-2"
-        },
-        "auth_config": {
-            "token_expiry": 3600,
-            "token_refresh_url": "https://refresh.example.com"
-        }
+        "api_token": "initial-secure-token-to-be-changed",  # This should match orchestrator's token
+        "orchestrator_url": "http://localhost:5000",        # Default development orchestrator URL
+        "input_bucket": "2024-09-23-audiotranscribe-input-bucket",
+        "output_bucket": "2024-09-23-audiotranscribe-output-bucket"
     }
     
     try:
@@ -52,7 +42,7 @@ def create_seed_secrets(region, secrets_key):
         try:
             response = client.create_secret(
                 Name=secrets_key,
-                Description='Worker Node Configuration Secrets',
+                Description='Audio Transcription Worker Configuration',
                 SecretString=json.dumps(seed_values, indent=2)
             )
             logger.info("Successfully created secret with seed values")
@@ -80,10 +70,13 @@ def main():
         region = config['aws']['region']
         secrets_key = config['aws']['secrets_key']
         
+        logger.info(f"Using region {region} and secrets key {secrets_key} from YAML")
+        
         # Create or update secrets
         result = create_seed_secrets(region, secrets_key)
         
         logger.info("Setup completed successfully")
+        logger.info("Note: Remember to update the api_token value after setup")
         
     except Exception as e:
         logger.error(f"Setup failed: {e}")
