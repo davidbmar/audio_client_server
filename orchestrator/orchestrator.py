@@ -7,12 +7,15 @@ import uuid
 import time
 import logging
 import threading
+import sys  # Add this
+import traceback  # Add this
 from urllib.parse import quote, unquote
-import psycopg2  
-from url_utils import PathHandler  # Add this import
+import psycopg2
+from url_utils import PathHandler
 from flask import Flask, request, jsonify
 from functools import wraps
 from botocore.exceptions import ClientError
+
 
 # Configuration
 REGION_NAME = 'us-east-2'
@@ -123,6 +126,8 @@ DB_PASSWORD = config['db_password']
 INPUT_BUCKET = config['input_bucket']      # Using the input bucket from secrets
 OUTPUT_BUCKET = config['output_bucket']    # Using the output bucket from secrets
 
+
+
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
     try:
@@ -142,6 +147,44 @@ def get_db_connection():
     except Exception as e:
         logging.error(f"Error connecting to the database: {e}")
         raise
+
+def verify_db_connection():
+    """
+    Verify database connection and exit if connection fails
+    Returns connection if successful
+    """
+    logger = logging.getLogger(__name__)
+    max_retries = 3
+    retry_delay = 5  # seconds
+    connect_timeout = 5  # shorter timeout to fail faster
+
+    logger.info("Verifying database connection...")
+    logger.info("Checking if RDS instance is running...")
+
+    try:
+        connection = psycopg2.connect(
+            host=DB_HOST.split(':')[0],
+            port=int(DB_HOST.split(':')[1]) if ':' in DB_HOST else 5432,
+            database=DB_NAME,
+            user=DB_USER,
+            password=DB_PASSWORD,
+            connect_timeout=connect_timeout
+        )
+        connection.close()
+        return True
+
+    except psycopg2.OperationalError as e:
+        logger.error("=" * 50)
+        logger.error("ORCHESTRATOR DATABASE IS NOT RUNNING")
+        logger.error("=" * 50)
+        logger.error(f"Database endpoint: {DB_HOST}")
+        logger.error("Please start the RDS instance using:")
+        logger.error("  aws rds start-db-instance --db-instance-identifier terraform-20241016044926222400000001")
+        logger.error("=" * 50)
+        sys.exit(1)
+
+
+
 
 def init_db():
     """Initialize database with encoded keys."""
@@ -633,38 +676,60 @@ def reset_stuck_tasks():
     finally:
         conn.close()
 
-
-
 if __name__ == '__main__':
     try:
+        # Setup logging first
+        logging.basicConfig(
+            level=logging.DEBUG,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+            handlers=[
+                logging.FileHandler('orchestrator.log'),
+                logging.StreamHandler()
+            ]
+        )
+        logger = logging.getLogger(__name__)
+        logger.info("Starting Audio Transcription Orchestrator")
 
-        # Clean up database first
+        try:
+            # Verify database connection before anything else
+            logger.info("Verifying database connection...")
+            verify_db_connection()
+        except Exception as e:
+            logger.critical("========================================")
+            logger.critical("Database connection failed!")
+            logger.critical("Please ensure RDS instance is running.")
+            logger.critical("Current RDS endpoint: %s", DB_HOST)
+            logger.critical("Error: %s", str(e))
+            logger.critical("========================================")
+            sys.exit(1)
+
+        # Only proceed with these if database connection succeeded
         cleanup_database()
-        
-        # Reset any stuck tasks
         reset_stuck_tasks()
-
-        # Initialize the database
         init_db()
         logger.info("Database initialized successfully")
 
-
-        # Start the S3 event polling in a background thread
+        # Start background threads
         logger.info("Starting S3 event polling thread")
         s3_event_thread = threading.Thread(target=poll_s3_events, daemon=True)
         s3_event_thread.start()
 
-        # After S3 objects have been uploaded to S3, and the event is there, then start the processing.
+        logger.info("Starting task processor thread")
         task_processor_thread = threading.Thread(target=periodic_task_processor, daemon=True)
         task_processor_thread.start()
 
         # Start the Flask app
-        logger.info("Starting Flask application")
+        logger.info("Starting Flask application on port 6000")
         app.run(host='0.0.0.0', port=6000, threaded=True)
 
+    except KeyboardInterrupt:
+        logger.info("Received keyboard interrupt. Shutting down...")
     except Exception as e:
-        logger.critical("Application failed to start: %s", str(e), exc_info=True)
-        raise
+        logger.critical("Critical error: %s", str(e))
+        logger.critical(traceback.format_exc())
+        sys.exit(1)
+
+
 
 
 
