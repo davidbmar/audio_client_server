@@ -16,11 +16,34 @@ from flask import Flask, request, jsonify
 from functools import wraps
 from botocore.exceptions import ClientError
 
-
 # Configuration
 REGION_NAME = 'us-east-2'
 POLL_INTERVAL = 5  # Seconds
 PRESIGNED_URL_EXPIRATION = 3600  # Seconds
+
+class GlobalConfig:
+    """Global configuration singleton to store all config values"""
+    _instance = None
+    
+    def __init__(self):
+        # Get configuration once at startup
+        config = get_config()
+        self.API_TOKEN = config['api_token']
+        self.TASK_QUEUE_URL = config['task_queue_url']
+        self.STATUS_UPDATE_QUEUE_URL = config['status_update_queue_url']
+        self.DB_HOST = config['db_host']
+        self.DB_NAME = config['db_name']
+        self.DB_USER = config['db_user']
+        self.DB_PASSWORD = config['db_password']
+        self.INPUT_BUCKET = config['input_bucket']
+        self.OUTPUT_BUCKET = config['output_bucket']
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = GlobalConfig()
+        return cls._instance
+
 
 #logging.basicConfig(level=logging.INFO)
 # Enhanced logging configuration
@@ -107,13 +130,9 @@ def mark_task_as_failed(task_id, failure_reason, retry_interval_minutes=30):
     finally:
         conn.close()
 
-# Fetch configuration from Secrets Manager
-config = get_config()
+# Initialize global configuration
+CONFIG = GlobalConfig.get_instance()
 
-API_TOKEN = config['api_token']  # Store token for use in decorator
-
-# AWS SQS Queue URLs
-TASK_QUEUE_URL = config['task_queue_url']
 STATUS_UPDATE_QUEUE_URL = config['status_update_queue_url']
 
 # Database Configuration
@@ -126,22 +145,19 @@ DB_PASSWORD = config['db_password']
 INPUT_BUCKET = config['input_bucket']      # Using the input bucket from secrets
 OUTPUT_BUCKET = config['output_bucket']    # Using the output bucket from secrets
 
-
-
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
     try:
-        # Split host and port
-        host_port = DB_HOST.split(':')
+        host_port = CONFIG.DB_HOST.split(':')
         host = host_port[0]
         port = int(host_port[1]) if len(host_port) > 1 else 5432
         
         connection = psycopg2.connect(
             host=host,
             port=port,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
+            database=CONFIG.DB_NAME,
+            user=CONFIG.DB_USER,
+            password=CONFIG.DB_PASSWORD
         )
         return connection
     except Exception as e:
@@ -251,17 +267,13 @@ def send_task_to_queue(task_id, object_key, config):
         return False
 
 
-
-
 def process_pending_tasks():
     """Process pending tasks and queue them for workers."""
     logging.info("Starting to process pending tasks")
-    config = get_config()
     conn = get_db_connection()
     
     try:
         with conn.cursor() as cursor:
-            # Get pending tasks that aren't already queued
             cursor.execute("""
                 SELECT task_id, object_key 
                 FROM tasks 
@@ -282,8 +294,8 @@ def process_pending_tasks():
                 logging.info(f"Processing task {task_id} with key: {decoded_key}")
                 
                 try:
-                    if send_task_to_queue(task_id, decoded_key, config):
-                        # Update task status to 'Queued'
+                    # Use CONFIG instead of getting new config
+                    if send_task_to_queue(task_id, decoded_key, CONFIG):
                         cursor.execute("""
                             UPDATE tasks 
                             SET status = 'Queued', 
@@ -317,6 +329,7 @@ def process_pending_tasks():
         logging.error(f"Error in process_pending_tasks: {str(e)}")
     finally:
         conn.close()
+
 
 # add to main function to run periodic processing
 def periodic_task_processor():
