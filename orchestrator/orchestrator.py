@@ -21,6 +21,23 @@ REGION_NAME = 'us-east-2'
 POLL_INTERVAL = 5  # Seconds
 PRESIGNED_URL_EXPIRATION = 3600  # Seconds
 
+# After imports, before GlobalConfig class
+logging.basicConfig(
+    level=logging.INFO,  # Change from DEBUG to INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('orchestrator.log'),
+        logging.StreamHandler()
+    ]
+)
+# Add specific loggers configuration
+logging.getLogger('botocore').setLevel(logging.WARNING)
+logging.getLogger('urllib3').setLevel(logging.WARNING)
+logging.getLogger('boto3').setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
+
+
 # At the top of orchestrator.py, after imports
 class GlobalConfig:
     _instance = None
@@ -162,17 +179,19 @@ def mark_task_as_failed(task_id, failure_reason, retry_interval_minutes=30):
 # Initialize global configuration
 CONFIG = GlobalConfig.get_instance()
 
-STATUS_UPDATE_QUEUE_URL = config['status_update_queue_url']
-
-# Database Configuration
-DB_HOST = config['db_host']
-DB_NAME = config['db_name']
-DB_USER = config['db_user']
-DB_PASSWORD = config['db_password']
+# Initialize global configuration at startup
+config = GlobalConfig.get_instance()
+STATUS_UPDATE_QUEUE_URL = config.STATUS_UPDATE_QUEUE_URL
+DB_HOST = config.DB_HOST
+DB_NAME = config.DB_NAME
+DB_USER = config.DB_USER
+DB_PASSWORD = config.DB_PASSWORD
+INPUT_BUCKET = config.INPUT_BUCKET
+OUTPUT_BUCKET = config.OUTPUT_BUCKET
 
 # S3 Buckets
-INPUT_BUCKET = config['input_bucket']      # Using the input bucket from secrets
-OUTPUT_BUCKET = config['output_bucket']    # Using the output bucket from secrets
+INPUT_BUCKET = config.INPUT_BUCKET      # Using the input bucket from secrets
+OUTPUT_BUCKET = config.OUTPUT_BUCKET    # Using the output bucket from secrets
 
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
