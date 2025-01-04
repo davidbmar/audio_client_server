@@ -378,15 +378,36 @@ def process_pending_tasks():
     finally:
         conn.close()
 
-
-# add to main function to run periodic processing
 def periodic_task_processor():
+    last_log_time = time.time()
     while True:
         try:
-            process_pending_tasks()
+            conn = get_db_connection()
+            try:
+                with conn.cursor() as cursor:
+                    # Check if there are any pending tasks
+                    cursor.execute("""
+                        SELECT COUNT(*) 
+                        FROM tasks 
+                        WHERE status = 'Pending'
+                        AND (retry_at IS NULL OR retry_at <= NOW())
+                    """)
+                    pending_count = cursor.fetchone()[0]
+                    
+                    # Only log if there are pending tasks or if it's been a while
+                    current_time = time.time()
+                    if pending_count > 0:
+                        logger.info(f"Processing {pending_count} pending tasks")
+                        process_pending_tasks()
+                    elif current_time - last_log_time >= 300:  # Log every 5 minutes if no tasks
+                        logger.debug("No pending tasks to process")
+                        last_log_time = current_time
+                    
+            finally:
+                conn.close()
         except Exception as e:
-            logging.error(f"Error in periodic task processor: {e}")
-        time.sleep(5)  # Process every 5 seconds
+            logger.error(f"Error in periodic task processor: {e}")
+        time.sleep(5)  # Still check every 5 seconds
 
 def poll_s3_events():
     """Poll for S3 upload events and create transcription tasks."""
@@ -492,6 +513,7 @@ status_update_thread.start()
 # Set up the Flask app
 app = Flask(__name__)
 
+
 def authenticate(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -500,17 +522,21 @@ def authenticate(f):
             return jsonify({'error': 'No authorization header'}), 401
         
         try:
+            # Get config instance
+            config = GlobalConfig.get_instance()
+            
             # Expected format: "Bearer <token>"
             scheme, token = auth_header.split()
             if scheme.lower() != 'bearer':
                 return jsonify({'error': 'Invalid authentication scheme'}), 401
-            if token != API_TOKEN:
+            if token != config.API_TOKEN:  # Use config.API_TOKEN instead of API_TOKEN
                 return jsonify({'error': 'Invalid token'}), 401
         except ValueError:
             return jsonify({'error': 'Invalid authorization header format'}), 401
             
         return f(*args, **kwargs)
     return decorated
+
 
 @app.route('/get-task', methods=['GET'])
 @authenticate
