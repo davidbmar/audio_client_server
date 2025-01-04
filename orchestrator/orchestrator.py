@@ -21,28 +21,57 @@ REGION_NAME = 'us-east-2'
 POLL_INTERVAL = 5  # Seconds
 PRESIGNED_URL_EXPIRATION = 3600  # Seconds
 
+# At the top of orchestrator.py, after imports
 class GlobalConfig:
-    """Global configuration singleton to store all config values"""
     _instance = None
+    _initialized = False
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(GlobalConfig, cls).__new__(cls)
+        return cls._instance
     
     def __init__(self):
-        # Get configuration once at startup
-        config = get_config()
-        self.API_TOKEN = config['api_token']
-        self.TASK_QUEUE_URL = config['task_queue_url']
-        self.STATUS_UPDATE_QUEUE_URL = config['status_update_queue_url']
-        self.DB_HOST = config['db_host']
-        self.DB_NAME = config['db_name']
-        self.DB_USER = config['db_user']
-        self.DB_PASSWORD = config['db_password']
-        self.INPUT_BUCKET = config['input_bucket']
-        self.OUTPUT_BUCKET = config['output_bucket']
-
+        if not self._initialized:
+            # Get configuration once at startup
+            try:
+                secrets_client = boto3.client('secretsmanager', region_name=REGION_NAME)
+                secret_name = "/DEV/audioClientServer/Orchestrator/v2"
+                
+                secret_value = secrets_client.get_secret_value(SecretId=secret_name)
+                secret = json.loads(secret_value['SecretString'])
+                
+                # Store all config values as attributes
+                self.API_TOKEN = secret['api_token']
+                self.TASK_QUEUE_URL = secret['task_queue_url']
+                self.STATUS_UPDATE_QUEUE_URL = secret['status_update_queue_url']
+                self.DB_HOST = secret['db_host']
+                self.DB_NAME = secret['db_name']
+                self.DB_USER = secret['db_username']
+                self.DB_PASSWORD = secret['db_password']
+                self.INPUT_BUCKET = secret['input_bucket']
+                self.OUTPUT_BUCKET = secret['output_bucket']
+                
+                self._initialized = True
+                logger.info("Configuration loaded successfully")
+            except Exception as e:
+                logger.critical(f"Failed to load configuration: {str(e)}")
+                raise SystemExit("Cannot start application without configuration")
+    
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
             cls._instance = GlobalConfig()
         return cls._instance
+
+# Initialize configuration at startup
+try:
+    config = GlobalConfig.get_instance()
+    logger.info("Global configuration initialized successfully")
+except Exception as e:
+    logger.critical("Failed to initialize global configuration")
+    raise
+
 
 
 #logging.basicConfig(level=logging.INFO)
