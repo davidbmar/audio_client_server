@@ -660,7 +660,7 @@ if __name__ == '__main__':
 
         # Start the Flask app
         logger.info("Starting Flask application")
-        app.run(host='0.0.0.0', port=5000, threaded=True)
+        app.run(host='0.0.0.0', port=6000, threaded=True)
 
     except Exception as e:
         logger.critical("Application failed to start: %s", str(e), exc_info=True)
