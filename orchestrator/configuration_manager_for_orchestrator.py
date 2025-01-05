@@ -56,4 +56,24 @@ class GlobalConfig:
 
             except Exception as e:
                 self.logger.critical(f"Failed to load configuration: {str(e)}")
-                raise SystemExit("Cannot start application without c
+                raise SystemExit("Cannot start application without configuration")
+    
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = GlobalConfig()
+        return cls._instance
+
+    def _validate_yaml_config(self, config: Dict[str, Any]) -> None:
+        """Validate required YAML configuration fields"""
+        required_fields = {
+            'aws': ['region', 'secrets_key'],
+            'performance': ['poll_interval', 'presigned_url_expiration']
+        }
+
+        for section, fields in required_fields.items():
+            if section not in config:
+                raise ValueError(f"Missing required section: {section}")
+            for field in fields:
+                if field not in config[section]:
+                    raise ValueError(f"Missing required field: {section}.{field}")

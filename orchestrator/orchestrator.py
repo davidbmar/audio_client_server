@@ -44,9 +44,9 @@ logging.getLogger('boto3').setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # AWS Clients
-sqs = boto3.client('sqs', region_name=REGION_NAME)
-s3 = boto3.client('s3', region_name=REGION_NAME)
-secrets_client = boto3.client('secretsmanager', region_name=REGION_NAME)
+sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
+s3 = boto3.client('s3', region_name=CONFIG.REGION_NAME)
+secrets_client = boto3.client('secretsmanager', region_name=CONFIG.REGION_NAME)
 
 def get_config():
     """Retrieve configuration from AWS Secrets Manager."""
@@ -207,23 +207,23 @@ def init_db():
 def send_task_to_queue(task_id, object_key, config):
     """Send task details to the SQS Task Queue."""
     try:
-        sqs = boto3.client('sqs', region_name=REGION_NAME)
+        sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
         
         # Create a fully encoded version of the key
         encoded_key = requests.utils.quote(object_key, safe='')
         
         # Generate pre-signed URLs
-        s3 = boto3.client('s3', region_name=REGION_NAME)
+        s3 = boto3.client('s3', region_name=CONFIG.REGION_NAME)
         presigned_get_url = s3.generate_presigned_url(
             'get_object',
             Params={'Bucket': config.INPUT_BUCKET, 'Key': encoded_key},  # Fixed to use attribute
-            ExpiresIn=PRESIGNED_URL_EXPIRATION
+            ExpiresIn=CONFIG.PRESIGNED_URL_EXPIRATION
         )
         
         presigned_put_url = s3.generate_presigned_url(
             'put_object',
             Params={'Bucket': config.OUTPUT_BUCKET, 'Key': f"transcriptions/{encoded_key}.txt"},  # Fixed
-            ExpiresIn=PRESIGNED_URL_EXPIRATION
+            ExpiresIn=CONFIG.PRESIGNED_URL_EXPIRATION
         )
 
         # Prepare the message
@@ -344,7 +344,7 @@ def periodic_task_processor():
 
 def poll_s3_events():
     """Poll for S3 upload events and create transcription tasks."""
-    sqs = boto3.client('sqs', region_name=REGION_NAME)
+    sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
     queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue"
     
     while True:
