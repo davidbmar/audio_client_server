@@ -1,0 +1,7 @@
+aws:
+  region: 'us-east-2'
+  secrets_key: '/DEV/audioClientServer/Orchestrator/v2'
+
+performance:
+  poll_interval: 5  # Seconds
+  presigned_url_expiration: 3600  # Seconds
