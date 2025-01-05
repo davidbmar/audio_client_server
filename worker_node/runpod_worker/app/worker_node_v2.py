@@ -52,7 +52,7 @@ class GlobalConfig:
                 self.FALLBACK_DEVICE = "cpu"
                 
                 # Storage configuration
-                self.DOWNLOAD_FOLDER = "/tmp/worker"
+                self.DOWNLOAD_FOLDER = "./downloads"
                 self.CHUNK_SIZE = 8192
                 
                 # Performance settings
