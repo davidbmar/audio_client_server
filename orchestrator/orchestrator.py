@@ -7,29 +7,35 @@ import uuid
 import time
 import logging
 import threading
-import sys  # Add this
-import traceback  # Add this
+import sys
+import traceback
 from urllib.parse import quote, unquote
 import psycopg2
 from url_utils import PathHandler
 from flask import Flask, request, jsonify
 from functools import wraps
 from botocore.exceptions import ClientError
+from configuration_manager_for_orchestrator import GlobalConfig  # Add this import
 
-# Configuration
-REGION_NAME = 'us-east-2'
-POLL_INTERVAL = 5  # Seconds
-PRESIGNED_URL_EXPIRATION = 3600  # Seconds
-
-# After imports, before GlobalConfig class
+# Initialize logging
 logging.basicConfig(
-    level=logging.INFO,  # Change from DEBUG to INFO
+    level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.FileHandler('orchestrator.log'),
         logging.StreamHandler()
     ]
 )
+logger = logging.getLogger(__name__)
+
+# Initialize global configuration
+try:
+    CONFIG = GlobalConfig.get_instance()
+    logger.info("Global configuration initialized successfully")
+except Exception as e:
+    logger.critical("Failed to initialize global configuration")
+    raise
+
 # Add specific loggers configuration
 logging.getLogger('botocore').setLevel(logging.WARNING)
 logging.getLogger('urllib3').setLevel(logging.WARNING)
@@ -37,76 +43,10 @@ logging.getLogger('boto3').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 
-
-# At the top of orchestrator.py, after imports
-class GlobalConfig:
-    _instance = None
-    _initialized = False
-    
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(GlobalConfig, cls).__new__(cls)
-        return cls._instance
-    
-    def __init__(self):
-        if not self._initialized:
-            # Get configuration once at startup
-            try:
-                secrets_client = boto3.client('secretsmanager', region_name=REGION_NAME)
-                secret_name = "/DEV/audioClientServer/Orchestrator/v2"
-                
-                secret_value = secrets_client.get_secret_value(SecretId=secret_name)
-                secret = json.loads(secret_value['SecretString'])
-                
-                # Store all config values as attributes
-                self.API_TOKEN = secret['api_token']
-                self.TASK_QUEUE_URL = secret['task_queue_url']
-                self.STATUS_UPDATE_QUEUE_URL = secret['status_update_queue_url']
-                self.DB_HOST = secret['db_host']
-                self.DB_NAME = secret['db_name']
-                self.DB_USER = secret['db_username']
-                self.DB_PASSWORD = secret['db_password']
-                self.INPUT_BUCKET = secret['input_bucket']
-                self.OUTPUT_BUCKET = secret['output_bucket']
-                
-                self._initialized = True
-                logger.info("Configuration loaded successfully")
-            except Exception as e:
-                logger.critical(f"Failed to load configuration: {str(e)}")
-                raise SystemExit("Cannot start application without configuration")
-    
-    @classmethod
-    def get_instance(cls):
-        if cls._instance is None:
-            cls._instance = GlobalConfig()
-        return cls._instance
-
-# Initialize configuration at startup
-try:
-    config = GlobalConfig.get_instance()
-    logger.info("Global configuration initialized successfully")
-except Exception as e:
-    logger.critical("Failed to initialize global configuration")
-    raise
-
-
-
-#logging.basicConfig(level=logging.INFO)
-# Enhanced logging configuration
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('orchestrator.log'),  # Make sure this directory is writable
-        logging.StreamHandler()  # Also output to console
-    ]
-)
-logger = logging.getLogger(__name__)
-
 # AWS Clients
-sqs = boto3.client('sqs', region_name=REGION_NAME)
-s3 = boto3.client('s3', region_name=REGION_NAME)
-secrets_client = boto3.client('secretsmanager', region_name=REGION_NAME)
+sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
+s3 = boto3.client('s3', region_name=CONFIG.REGION_NAME)
+secrets_client = boto3.client('secretsmanager', region_name=CONFIG.REGION_NAME)
 
 def get_config():
     """Retrieve configuration from AWS Secrets Manager."""
@@ -179,19 +119,14 @@ def mark_task_as_failed(task_id, failure_reason, retry_interval_minutes=30):
 # Initialize global configuration
 CONFIG = GlobalConfig.get_instance()
 
-# Initialize global configuration at startup
-config = GlobalConfig.get_instance()
-STATUS_UPDATE_QUEUE_URL = config.STATUS_UPDATE_QUEUE_URL
-DB_HOST = config.DB_HOST
-DB_NAME = config.DB_NAME
-DB_USER = config.DB_USER
-DB_PASSWORD = config.DB_PASSWORD
-INPUT_BUCKET = config.INPUT_BUCKET
-OUTPUT_BUCKET = config.OUTPUT_BUCKET
-
-# S3 Buckets
-INPUT_BUCKET = config.INPUT_BUCKET      # Using the input bucket from secrets
-OUTPUT_BUCKET = config.OUTPUT_BUCKET    # Using the output bucket from secrets
+# Use attribute access instead of dictionary access
+STATUS_UPDATE_QUEUE_URL = CONFIG.STATUS_UPDATE_QUEUE_URL
+DB_HOST = CONFIG.DB_HOST
+DB_NAME = CONFIG.DB_NAME
+DB_USER = CONFIG.DB_USER
+DB_PASSWORD = CONFIG.DB_PASSWORD
+INPUT_BUCKET = CONFIG.INPUT_BUCKET
+OUTPUT_BUCKET = CONFIG.OUTPUT_BUCKET
 
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
@@ -227,15 +162,13 @@ def verify_db_connection():
 
     try:
         connection = psycopg2.connect(
-            host=DB_HOST.split(':')[0],
-            port=int(DB_HOST.split(':')[1]) if ':' in DB_HOST else 5432,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD,
+            host=CONFIG.DB_HOST.split(':')[0],
+            port=int(CONFIG.DB_HOST.split(':')[1]) if ':' in CONFIG.DB_HOST else 5432,
+            database=CONFIG.DB_NAME,
+            user=CONFIG.DB_USER,
+            password=CONFIG.DB_PASSWORD,
             connect_timeout=connect_timeout
         )
-        connection.close()
-        return True
 
     except psycopg2.OperationalError as e:
         logger.error("=" * 50)
@@ -274,23 +207,23 @@ def init_db():
 def send_task_to_queue(task_id, object_key, config):
     """Send task details to the SQS Task Queue."""
     try:
-        sqs = boto3.client('sqs', region_name=REGION_NAME)
+        sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
         
         # Create a fully encoded version of the key
         encoded_key = requests.utils.quote(object_key, safe='')
         
         # Generate pre-signed URLs
-        s3 = boto3.client('s3', region_name=REGION_NAME)
+        s3 = boto3.client('s3', region_name=CONFIG.REGION_NAME)
         presigned_get_url = s3.generate_presigned_url(
             'get_object',
-            Params={'Bucket': config['input_bucket'], 'Key': encoded_key},
-            ExpiresIn=PRESIGNED_URL_EXPIRATION
+            Params={'Bucket': config.INPUT_BUCKET, 'Key': encoded_key},  # Fixed to use attribute
+            ExpiresIn=CONFIG.PRESIGNED_URL_EXPIRATION
         )
         
         presigned_put_url = s3.generate_presigned_url(
             'put_object',
-            Params={'Bucket': config['output_bucket'], 'Key': f"transcriptions/{encoded_key}.txt"},
-            ExpiresIn=PRESIGNED_URL_EXPIRATION
+            Params={'Bucket': config.OUTPUT_BUCKET, 'Key': f"transcriptions/{encoded_key}.txt"},  # Fixed
+            ExpiresIn=CONFIG.PRESIGNED_URL_EXPIRATION
         )
 
         # Prepare the message
@@ -302,9 +235,9 @@ def send_task_to_queue(task_id, object_key, config):
         }
 
         # Send to SQS
-        logging.info(f"Sending task {task_id} to queue: {config['task_queue_url']}")
+        logging.info(f"Sending task {task_id} to queue: {config.TASK_QUEUE_URL}")  # Fixed
         response = sqs.send_message(
-            QueueUrl=config['task_queue_url'],
+            QueueUrl=config.TASK_QUEUE_URL,  # Fixed
             MessageBody=json.dumps(message_body)
         )
         
@@ -411,7 +344,7 @@ def periodic_task_processor():
 
 def poll_s3_events():
     """Poll for S3 upload events and create transcription tasks."""
-    sqs = boto3.client('sqs', region_name=REGION_NAME)
+    sqs = boto3.client('sqs', region_name=CONFIG.REGION_NAME)
     queue_url = "https://sqs.us-east-2.amazonaws.com/635071011057/2024-09-23-audiotranscribe-my-application-queue"
     
     while True:
@@ -558,17 +491,15 @@ def get_task():
 
             task_id, encoded_key = task
             
-            # Decode for AWS operations
             decoded_key = PathHandler.decode_for_use(encoded_key)
             logger.info(f"Task {task_id} - Encoded key: {encoded_key}")
             logger.info(f"Task {task_id} - Decoded key: {decoded_key}")
 
             try:
-                # Use decoded key for S3 operations
                 get_url = s3.generate_presigned_url(
                     'get_object',
                     Params={
-                        'Bucket': INPUT_BUCKET,
+                        'Bucket': CONFIG.INPUT_BUCKET,  # Fixed
                         'Key': decoded_key
                     },
                     ExpiresIn=3600
@@ -578,7 +509,7 @@ def get_task():
                 put_url = s3.generate_presigned_url(
                     'put_object',
                     Params={
-                        'Bucket': OUTPUT_BUCKET,
+                        'Bucket': CONFIG.OUTPUT_BUCKET,  # Fixed
                         'Key': output_key,
                         'ContentType': 'text/plain'
                     },
@@ -609,6 +540,7 @@ def get_task():
         return jsonify({'error': str(e)}), 500
     finally:
         conn.close()
+
 
 # Add a new endpoint to verify token (useful for testing)
 @app.route('/verify-token', methods=['POST'])
