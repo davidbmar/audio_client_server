@@ -2,124 +2,90 @@ import boto3
 import yaml
 import json
 import logging
-from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
+from typing import Dict, Any
 
 class ConfigurationManager:
-    """Manages configuration from both YAML and AWS Secrets Manager"""
+    """Simple, one-time configuration loader for both YAML and AWS Secrets"""
     
     def __init__(self, yaml_path: str):
         """
-        Initialize the configuration manager
+        Initialize configuration - loads everything once and never reloads
         
         Args:
             yaml_path (str): Path to YAML configuration file
         """
         self.logger = logging.getLogger(__name__)
-        self._yaml_config = self._load_yaml(yaml_path)
-        self._secrets_client = None
-        self._cached_secrets = None
-        self._secrets_last_updated = None
-        self._secrets_cache_ttl = timedelta(minutes=15)  # Cache secrets for 15 minutes
         
-        # Initialize AWS client
-        self._init_aws_client()
+        # Load both configs immediately
+        self._config = {}
+        
+        try:
+            # 1. Load YAML first
+            self._load_yaml(yaml_path)
+            
+            # 2. Load AWS secrets and merge
+            self._load_and_merge_secrets()
+            
+            self.logger.info("Configuration loaded successfully")
+        except Exception as e:
+            self.logger.critical(f"Failed to load configuration: {e}")
+            raise SystemExit("Cannot start application without configuration")
 
-    def _load_yaml(self, yaml_path: str) -> dict:
+    def _load_yaml(self, yaml_path: str) -> None:
         """Load and validate YAML configuration"""
         try:
             with open(yaml_path, 'r') as file:
-                config = yaml.safe_load(file)
-                self._validate_yaml_config(config)
-                return config
+                self._config = yaml.safe_load(file)
+                self._validate_yaml_config()
         except Exception as e:
             self.logger.error(f"Failed to load YAML configuration: {e}")
             raise
 
-    def _validate_yaml_config(self, config: dict) -> None:
+    def _validate_yaml_config(self) -> None:
         """Validate required YAML configuration fields"""
         required_fields = {
             'aws': ['region', 'secrets_key'],
             'storage': ['download_folder'],
             'model': ['size', 'compute_type'],
-            'performance': ['poll_interval', 'max_retries'],
-            'timeouts': ['api', 'download', 'upload']
+            'performance': ['poll_interval']
         }
 
         for section, fields in required_fields.items():
-            if section not in config:
+            if section not in self._config:
                 raise ValueError(f"Missing required section: {section}")
             for field in fields:
-                if field not in config[section]:
+                if field not in self._config[section]:
                     raise ValueError(f"Missing required field: {section}.{field}")
 
-    def _init_aws_client(self) -> None:
-        """Initialize AWS Secrets Manager client"""
+    def _load_and_merge_secrets(self) -> None:
+        """Load secrets from AWS Secrets Manager and merge with YAML config"""
         try:
-            self._secrets_client = boto3.client(
+            secrets_client = boto3.client(
                 'secretsmanager',
-                region_name=self._yaml_config['aws']['region']
+                region_name=self._config['aws']['region']
             )
+            
+            response = secrets_client.get_secret_value(
+                SecretId=self._config['aws']['secrets_key']
+            )
+            
+            secrets = json.loads(response['SecretString'])
+            
+            # Merge secrets into config under 'secrets' key
+            self._config['secrets'] = secrets
+            
         except Exception as e:
-            self.logger.error(f"Failed to initialize AWS Secrets Manager client: {e}")
+            self.logger.error(f"Failed to load secrets: {e}")
             raise
 
-    def _fetch_secrets(self) -> dict:
-        """Fetch secrets from AWS Secrets Manager"""
-        try:
-            response = self._secrets_client.get_secret_value(
-                SecretId=self._yaml_config['aws']['secrets_key']
-            )
-            return json.loads(response['SecretString'])
-        except Exception as e:
-            self.logger.error(f"Failed to fetch secrets: {e}")
-            raise
-
-    def _get_cached_secrets(self) -> dict:
-        """Get secrets with caching"""
-        now = datetime.now()
-        
-        # If no cache or cache expired, refresh
-        if (self._cached_secrets is None or 
-            self._secrets_last_updated is None or 
-            now - self._secrets_last_updated > self._secrets_cache_ttl):
-            
-            self._cached_secrets = self._fetch_secrets()
-            self._secrets_last_updated = now
-            
-        return self._cached_secrets
-
-    def get_yaml_config(self) -> dict:
-        """Get the YAML configuration"""
-        return self._yaml_config
+    def get_config(self) -> Dict[str, Any]:
+        """Get the complete configuration including secrets"""
+        return self._config
 
     def get_secret(self, key: str) -> Any:
-        """
-        Get a specific secret value
-        
-        Args:
-            key (str): The secret key to retrieve
-            
-        Returns:
-            The secret value
-        """
-        secrets = self._get_cached_secrets()
-        if key not in secrets:
+        """Get a specific secret value"""
+        if 'secrets' not in self._config:
+            raise KeyError("Secrets not loaded")
+        if key not in self._config['secrets']:
             raise KeyError(f"Secret key not found: {key}")
-        return secrets[key]
-
-    def get_all_config(self) -> dict:
-        """
-        Get combined configuration from both YAML and Secrets
-        
-        Returns:
-            dict: Combined configuration
-        """
-        config = self._yaml_config.copy()
-        config['secrets'] = self._get_cached_secrets()
-        return config
-
-    def refresh_secrets(self) -> None:
-        """Force refresh of secrets cache"""
-        self._cached_secrets = self._fetch_secrets()
-        self._secrets_last_updated = datetime.now()
+        return self._config['secrets'][key]

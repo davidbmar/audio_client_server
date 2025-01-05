@@ -1,1 +1,1 @@
-source ~/faster-whisper-env/bin/activate
+python worker_node_v2.py
