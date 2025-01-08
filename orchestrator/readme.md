@@ -1,4 +1,5 @@
 ```mermaid
+
 sequenceDiagram
     participant IB as S3_INPUT_BUCKET
     participant OB as S3_OUTPUT_BUCKET
@@ -31,6 +32,8 @@ sequenceDiagram
     
     %% Status update
     PSU->>DB: Update task to Completed
+```
+
 
 ### Database Schema Using RDS for Task Tracking
 
