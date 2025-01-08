@@ -72,8 +72,6 @@ sequenceDiagram
     TP->>DB: Reset to PENDING if older than 10 minutes
     end
 ```
-Here's the raw text you can use in markdown:
-
 # Audio Transcription System Sequence Step Details
 
 ### Initial Upload Flow
