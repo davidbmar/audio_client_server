@@ -1,37 +1,68 @@
 ```mermaid
-
 sequenceDiagram
-    participant IB as S3_INPUT_BUCKET
-    participant OB as S3_OUTPUT_BUCKET
-    participant SEP as poll_s3_events
-    participant PTP as periodic_task_processor
-    participant PSU as poll_status_update_queue
-    participant DB as POSTGRES_RDS
-    participant ATW as AudioTranscriptionWorker
+    autonumber
     
-    %% Initial upload and task creation
-    IB->>SEP: New audio upload event
-    SEP->>DB: Create Pending task
+    %% Define participants with clear groupings
+    box Storage Layer LightGray
+        participant S3 as S3 Storage
+        participant EQ as Event Queue (SQS)
+        participant SQ as Status Queue (SQS)
+    end
     
-    %% Task processing initialization
-    PTP->>DB: Poll for Pending tasks
-    DB->>PTP: Return Pending task
+    box Orchestrator System LightBlue
+        participant EP as Event Poller
+        participant TP as Task Processor
+        participant SP as Status Poller
+        participant DB as PostgreSQL DB
+    end
     
-    %% Generate presigned URLs and queue task
-    PTP->>IB: Generate presigned GET URL
-    PTP->>OB: Generate presigned PUT URL
-    PTP->>DB: Update task to Queued
-    PTP->>ATW: Queue task with presigned URLs
+    box Worker System Green
+        participant W as Worker Node
+    end
+
+    %% File Upload Flow
+    Note over S3,EQ: Audio File Upload Flow
+    S3->>+EQ: 1. Audio File Upload Event
+    EP->>EQ: 2. Poll for Upload Events
+    EQ-->>EP: 3. Return Upload Event
+    EP->>DB: 4. Create PENDING Task
     
-    %% Worker processing
-    ATW->>DB: Update task to In-Progress
-    ATW->>IB: Download audio file (presigned URL)
-    Note right of ATW: Transcribe audio
-    ATW->>OB: Upload transcript (presigned URL)
-    ATW->>PSU: Send completion status
+    %% Task Processing Flow
+    Note over TP,W: Task Processing Flow
+    loop Every 5 seconds
+        TP->>DB: 5. Query for PENDING Tasks
+        DB-->>TP: 6. Return PENDING Tasks
+        
+        alt Tasks Found
+            TP->>DB: 7. Update to QUEUED
+            TP->>W: 8. Send Task to Worker
+            Note right of W: Includes pre-signed URLs
+            
+            %% Worker Processing
+            W->>S3: 9. Download Audio File
+            W->>SQ: 10. Send IN-PROGRESS Status
+            SP->>SQ: 11. Poll Status Updates
+            SP->>DB: 12. Update to IN-PROGRESS
+            
+            alt Successful Transcription
+                W->>S3: 13a. Upload Transcript
+                W->>SQ: 14a. Send COMPLETED Status
+                SP->>SQ: 15a. Poll Status
+                SP->>DB: 16a. Update to COMPLETED
+            else Failed Transcription
+                W->>SQ: 13b. Send FAILED Status
+                SP->>SQ: 14b. Poll Status
+                SP->>DB: 15b. Update to FAILED
+                Note over DB,TP: Task becomes PENDING again for retry
+            end
+        end
+    end
     
-    %% Status update
-    PSU->>DB: Update task to Completed
+    %% Error Recovery
+    Note over DB,TP: Error Recovery (runs every 10 minutes)
+    TP->>DB: Check for stuck IN-PROGRESS tasks
+    DB-->>TP: Return stuck tasks
+    TP->>DB: Reset to PENDING if older than 10 minutes
 ```
 
 
