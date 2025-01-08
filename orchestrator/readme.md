@@ -1,68 +1,76 @@
 ```mermaid
+%%{init: {
+    'theme': 'base',
+    'themeVariables': { 
+        'lineColor': '#000000',
+        'actorLineColor': '#000000',
+        'activationBackground': '#f4f4f4',
+        'altSectionBkgColor': '#f0f8ff',
+        'noteBackgroundColor': '#fff3bf'
+    }
+}}%%
 sequenceDiagram
-    autonumber
-    
-    %% Define participants with clear groupings
-    box Storage Layer LightGray
-        participant S3 as S3 Storage
-        participant EQ as Event Queue (SQS)
-        participant SQ as Status Queue (SQS)
+    box rgb(238, 238, 238) Storage Layer
+    participant IB as S3 INPUT_BUCKET
+    participant OB as S3 OUTPUT_BUCKET
+    participant EQ as Event Queue (SQS)
+    participant SQ as Status Queue (SQS)
     end
     
-    box Orchestrator System LightBlue
-        participant EP as Event Poller
-        participant TP as Task Processor
-        participant SP as Status Poller
-        participant DB as PostgreSQL DB
+    box rgb(176, 224, 230) Orchestrator System
+    participant EP as Event Poller
+    participant TP as Task Processor
+    participant SP as Status Poller
+    participant DB as PostgreSQL DB
     end
     
-    box Worker System Green
-        participant W as Worker Node
+    box rgb(144, 238, 144) Worker System
+    participant W as Worker Node
     end
 
-    %% File Upload Flow
-    Note over S3,EQ: Audio File Upload Flow
-    S3->>+EQ: 1. Audio File Upload Event
-    EP->>EQ: 2. Poll for Upload Events
-    EQ-->>EP: 3. Return Upload Event
+    rect rgb(255, 250, 205)
+    Note over IB,EQ: Audio File Upload Flow
+    IB->>+EQ: 1. Audio File Upload Event
+    EQ-->>-EP: 2. Poll for Upload Events
+    EP->>EP: 3. Return Upload Event
     EP->>DB: 4. Create PENDING Task
-    
-    %% Task Processing Flow
-    Note over TP,W: Task Processing Flow
-    loop Every 5 seconds
-        TP->>DB: 5. Query for PENDING Tasks
-        DB-->>TP: 6. Return PENDING Tasks
-        
-        alt Tasks Found
-            TP->>DB: 7. Update to QUEUED
-            TP->>W: 8. Send Task to Worker
-            Note right of W: Includes pre-signed URLs
-            
-            %% Worker Processing
-            W->>S3: 9. Download Audio File
-            W->>SQ: 10. Send IN-PROGRESS Status
-            SP->>SQ: 11. Poll Status Updates
-            SP->>DB: 12. Update to IN-PROGRESS
-            
-            alt Successful Transcription
-                W->>S3: 13a. Upload Transcript
-                W->>SQ: 14a. Send COMPLETED Status
-                SP->>SQ: 15a. Poll Status
-                SP->>DB: 16a. Update to COMPLETED
-            else Failed Transcription
-                W->>SQ: 13b. Send FAILED Status
-                SP->>SQ: 14b. Poll Status
-                SP->>DB: 15b. Update to FAILED
-                Note over DB,TP: Task becomes PENDING again for retry
-            end
-        end
     end
-    
-    %% Error Recovery
-    Note over DB,TP: Error Recovery (runs every 10 minutes)
-    TP->>DB: Check for stuck IN-PROGRESS tasks
-    DB-->>TP: Return stuck tasks
+
+    rect rgb(255, 250, 205)
+    Note over EP,W: Task Processing Flow [Every 5 seconds]
+    TP->>+DB: 5. Query for PENDING Tasks
+    DB-->>-TP: 6. Return PENDING Tasks
+    TP->>DB: 7. Update to QUEUED
+    TP->>W: 8. Send Task to Worker
+    Note right of W: Includes pre-signed URLs
+    end
+
+    W->>IB: 9. Download Audio File
+    W->>SQ: 10. Send IN-PROGRESS Status
+    SP->>SQ: 11. Poll Status Updates
+    SP->>DB: 12. Update to IN-PROGRESS
+
+    rect rgb(240, 248, 255)
+    Note over W,DB: Successful Transcription Path
+    W->>OB: 13a. Upload Transcript
+    W->>SQ: 14a. Send COMPLETED Status
+    SP->>SQ: 15a. Poll Status
+    SP->>DB: 16a. Update to COMPLETED
+    end
+
+    rect rgb(255, 240, 245)
+    Note over W,DB: Failed Transcription Path
+    W->>SQ: 13b. Send FAILED Status
+    SP->>SQ: 14b. Poll Status
+    SP->>DB: 15b. Update to FAILED
+    end
+
+    rect rgb(255, 250, 205)
+    Note over TP,DB: Error Recovery [Every 10 minutes]
+    TP->>+DB: Check for stuck IN-PROGRESS tasks
+    DB-->>-TP: Return stuck tasks
     TP->>DB: Reset to PENDING if older than 10 minutes
+    end
 ```
 
 
