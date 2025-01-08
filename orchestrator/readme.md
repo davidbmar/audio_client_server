@@ -1,3 +1,38 @@
+
+sequenceDiagram
+    participant IB as S3_INPUT_BUCKET
+    participant OB as S3_OUTPUT_BUCKET
+    participant SEP as poll_s3_events
+    participant PTP as periodic_task_processor
+    participant PSU as poll_status_update_queue
+    participant DB as POSTGRES_RDS
+    participant ATW as AudioTranscriptionWorker
+    
+    %% Initial upload and task creation
+    IB->>SEP: New audio upload event
+    SEP->>DB: Create Pending task
+    
+    %% Task processing initialization
+    PTP->>DB: Poll for Pending tasks
+    DB->>PTP: Return Pending task
+    
+    %% Generate presigned URLs and queue task
+    PTP->>IB: Generate presigned GET URL
+    PTP->>OB: Generate presigned PUT URL
+    PTP->>DB: Update task to Queued
+    PTP->>ATW: Queue task with presigned URLs
+    
+    %% Worker processing
+    ATW->>DB: Update task to In-Progress
+    ATW->>IB: Download audio file (presigned URL)
+    Note right of ATW: Transcribe audio
+    ATW->>OB: Upload transcript (presigned URL)
+    ATW->>PSU: Send completion status
+    
+    %% Status update
+    PSU->>DB: Update task to Completed
+
+
 ### Database Schema Using RDS for Task Tracking
 
 To replace the SQS DLQ with a relational database (such as RDS using PostgreSQL or MySQL), we'll implement a schema that stores and manages task data, failure states, retries, and more. Below is an explanation of the schema and how it maps to the orchestration system you’re building.
