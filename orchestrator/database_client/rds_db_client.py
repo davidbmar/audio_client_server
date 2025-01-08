@@ -31,7 +31,7 @@ try:
 
     # Print out the results
     for row in result:
-        print(f"Task ID: {row[0]}, Status: {row[3]}, Created At: {row[4]}")
+        print(f"Task ID: {row[0]:<36} Status: {row[3]:<10} Created At: {row[4]}")
 
 except (Exception, psycopg2.DatabaseError) as error:
     print(f"Error fetching data from PostgreSQL: {error}")
