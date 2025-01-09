@@ -22,6 +22,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+
 class GlobalConfig:
     _instance = None
     _initialized = False
@@ -30,7 +31,7 @@ class GlobalConfig:
         if cls._instance is None:
             cls._instance = super(GlobalConfig, cls).__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         if not self._initialized:
             try:
@@ -41,34 +42,33 @@ class GlobalConfig:
                 secret_value = secrets_client.get_secret_value(SecretId=secret_name)
                 secret = json.loads(secret_value['SecretString'])
                 
+                # Load YAML configuration
+                yaml_path = os.path.join(os.path.dirname(__file__), 'worker_config.yaml')
+                with open(yaml_path, 'r') as file:
+                    yaml_config = yaml.safe_load(file)
+                
                 # Store all config values as attributes
                 self.API_TOKEN = secret['api_token']
                 self.ORCHESTRATOR_URL = secret['orchestrator_url']
                 
-                # Model configuration (these would typically come from YAML)
-                self.MODEL_SIZE = "medium"
-                self.COMPUTE_TYPE = "float16"
-                self.PREFER_CUDA = True
-                self.FALLBACK_DEVICE = "cpu"
+                # Get worker node name from YAML and append unique identifier
+                base_name = yaml_config.get('worker', {}).get('name', 'worker')
+                self.WORKER_ID = f"{base_name}{get_node_identifier()}"
                 
-                # Storage configuration
-                self.DOWNLOAD_FOLDER = "./downloads"
-                self.CHUNK_SIZE = 8192
+                # Model configuration
+                self.MODEL_SIZE = yaml_config.get('model', {}).get('size', "medium")
+                self.COMPUTE_TYPE = yaml_config.get('model', {}).get('compute_type', "float16")
+                self.PREFER_CUDA = yaml_config.get('model', {}).get('prefer_cuda', True)
+                self.FALLBACK_DEVICE = yaml_config.get('model', {}).get('fallback_device', "cpu")
                 
-                # Performance settings
-                self.POLL_INTERVAL = 5
-                self.MAX_RETRIES = 3
-                
-                # Timeouts
-                self.API_TIMEOUT = 30
-                self.DOWNLOAD_TIMEOUT = 120
-                self.UPLOAD_TIMEOUT = 120
+                # Other existing configurations...
                 
                 self._initialized = True
-                logger.info("Configuration loaded successfully")
+                logger.info(f"Configuration loaded successfully. Worker ID: {self.WORKER_ID}")
             except Exception as e:
                 logger.critical(f"Failed to load configuration: {str(e)}")
                 raise SystemExit("Cannot start application without configuration")
+
     
     @classmethod
     def get_instance(cls):
