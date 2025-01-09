@@ -1,12 +1,14 @@
+import boto3
 import json
 import logging
 import os
+import requests
 import sys
 import signal
 import time
-import boto3
-import requests
 import traceback
+import uuid
+import yaml
 from datetime import datetime
 from typing import Dict, Any, Optional
 from urllib.parse import unquote
@@ -21,6 +23,29 @@ logging.basicConfig(
     ]
 )
 logger = logging.getLogger(__name__)
+
+def get_node_identifier():
+    """Get a unique identifier for this worker node."""
+    try:
+        # Try EC2 first
+        response = requests.get(
+            "http://169.254.169.254/latest/meta-data/instance-id",
+            timeout=1
+        )
+        if response.status_code == 200:
+            return f"-ec2-{response.text}"
+    except:
+        pass
+
+    # Try RunPod
+    pod_id = os.environ.get('RUNPOD_POD_ID')
+    if pod_id:
+        return f"-pod-{pod_id}"
+
+    # Fallback to UUID
+    return f"-unknown-{str(uuid.uuid4())[:8]}"
+
+
 
 
 class GlobalConfig:
@@ -41,28 +66,41 @@ class GlobalConfig:
                 
                 secret_value = secrets_client.get_secret_value(SecretId=secret_name)
                 secret = json.loads(secret_value['SecretString'])
-                
+
                 # Load YAML configuration
-                yaml_path = os.path.join(os.path.dirname(__file__), 'worker_config.yaml')
+                yaml_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
                 with open(yaml_path, 'r') as file:
                     yaml_config = yaml.safe_load(file)
-                
+
                 # Store all config values as attributes
                 self.API_TOKEN = secret['api_token']
                 self.ORCHESTRATOR_URL = secret['orchestrator_url']
-                
-                # Get worker node name from YAML and append unique identifier
+              
+                # Get worker name from config and append unique identifier
                 base_name = yaml_config.get('worker', {}).get('name', 'worker')
                 self.WORKER_ID = f"{base_name}{get_node_identifier()}"
-                
+
+                # Get performance settings
+                performance = yaml_config.get('performance', {})
+                self.POLL_INTERVAL = performance.get('poll_interval', 5)
+
                 # Model configuration
                 self.MODEL_SIZE = yaml_config.get('model', {}).get('size', "medium")
                 self.COMPUTE_TYPE = yaml_config.get('model', {}).get('compute_type', "float16")
                 self.PREFER_CUDA = yaml_config.get('model', {}).get('prefer_cuda', True)
                 self.FALLBACK_DEVICE = yaml_config.get('model', {}).get('fallback_device', "cpu")
-                
-                # Other existing configurations...
-                
+               
+                # Set timeout settings from existing config
+                timeouts = yaml_config.get('timeouts', {})
+                self.API_TIMEOUT = timeouts.get('api', 10)
+                self.DOWNLOAD_TIMEOUT = timeouts.get('download', 300)
+                self.UPLOAD_TIMEOUT = timeouts.get('upload', 300)
+                self.TRANSCRIPTION_TIMEOUT = timeouts.get('transcription', 1800) 
+               
+                # Set storage settings
+                storage = yaml_config.get('storage', {})
+                self.DOWNLOAD_FOLDER = storage.get('download_folder', './downloads')
+ 
                 self._initialized = True
                 logger.info(f"Configuration loaded successfully. Worker ID: {self.WORKER_ID}")
             except Exception as e:
