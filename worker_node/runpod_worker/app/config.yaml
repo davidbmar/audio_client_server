@@ -7,6 +7,8 @@
 #
 # Worker Node Configuration
 # This file contains non-sensitive configuration settings for the worker node
+worker: 
+  name: "workernode1"  # Base name for the worker
 
 #-----------------------------------------------
 # AWS Infrastructure Settings
@@ -59,13 +61,14 @@ model:
 #-----------------------------------------------
 performance:
   # Time to wait between polling for new tasks (seconds)
-  poll_interval: 10
+  poll_interval: 5
   
   # Maximum number of retries for failed operations
   max_retries: 3
   
   # Delay between retries (seconds)
   retry_delay: 5
+
 
 #-----------------------------------------------
 # Timeout Settings
