@@ -68,7 +68,7 @@ class GlobalConfig:
                 secret = json.loads(secret_value['SecretString'])
 
                 # Load YAML configuration
-                yaml_path = os.path.join(os.path.dirname(__file__), 'config.yaml')
+                yaml_path = os.path.join(os.path.dirname(__file__), 'worker.config.yaml')
                 with open(yaml_path, 'r') as file:
                     yaml_config = yaml.safe_load(file)
 
