@@ -30,7 +30,7 @@ storage:
   # CHECK THIS, this seems odd!!!
   # CHECK THIS, this seems odd!!!
   # CHECK THIS, this seems odd!!!
-  chunk_size: 8192
+  chunk_size: 4194304
 
 #-----------------------------------------------
 # Transcription Model Settings

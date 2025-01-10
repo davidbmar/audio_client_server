@@ -1,1 +1,5 @@
+source ~/miniconda3/etc/profile.d/conda.sh
+conda activate whisperenv
+
+
 python worker_node_v2.py

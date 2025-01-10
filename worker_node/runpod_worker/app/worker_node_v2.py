@@ -96,11 +96,12 @@ class GlobalConfig:
                 self.DOWNLOAD_TIMEOUT = timeouts.get('download', 300)
                 self.UPLOAD_TIMEOUT = timeouts.get('upload', 300)
                 self.TRANSCRIPTION_TIMEOUT = timeouts.get('transcription', 1800) 
-               
+             
                 # Set storage settings
                 storage = yaml_config.get('storage', {})
                 self.DOWNLOAD_FOLDER = storage.get('download_folder', './downloads')
- 
+                self.CHUNK_SIZE = storage.get('chunk_size', 4194304)  # Default to 4MB if not specified
+
                 self._initialized = True
                 logger.info(f"Configuration loaded successfully. Worker ID: {self.WORKER_ID}")
             except Exception as e:
@@ -273,7 +274,9 @@ class AudioTranscriptionWorker:
         try:
             from faster_whisper import WhisperModel
             import torch
-
+    
+            self.logger.info(f"Starting transcription of file: {os.path.basename(local_audio_path)}")
+            
             device = "cuda" if self.config.PREFER_CUDA and torch.cuda.is_available() else self.config.FALLBACK_DEVICE
             
             model = WhisperModel(
@@ -281,23 +284,31 @@ class AudioTranscriptionWorker:
                 device=device,
                 compute_type=self.config.COMPUTE_TYPE
             )
-
+    
             if not os.path.exists(local_audio_path):
                 raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
-
-            segments, info = model.transcribe(local_audio_path)
+    
+            # Set language to English
+            segments, info = model.transcribe(
+                local_audio_path,
+                language="en"  # Force English
+            )
+            
             transcription = "".join([segment.text for segment in segments])
-
+    
             if not transcription:
                 self.logger.warning("Transcription resulted in empty text")
                 return None
-
+                
+            self.logger.info(f"Transcription completed for {os.path.basename(local_audio_path)}")
+            self.logger.info(f"Transcribed text: {transcription}")
+    
             return transcription
-            
+                
         except Exception as e:
             self.logger.error(f"Error transcribing file: {str(e)}")
             return None
-
+    
     def download_file(self, presigned_url: str, local_path: str) -> bool:
         """Download file using pre-signed URL."""
         try:
