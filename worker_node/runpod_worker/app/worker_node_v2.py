@@ -7,6 +7,8 @@ import sys
 import signal
 import time
 import traceback
+import torch
+import time
 import uuid
 import yaml
 from datetime import datetime
@@ -45,6 +47,99 @@ def get_node_identifier():
     # Fallback to UUID
     return f"-unknown-{str(uuid.uuid4())[:8]}"
 
+### ADD NEW CLASS AFTER IMPORTS, BEFORE AudioTranscriptionWorker ###
+class WorkerStatusManager:
+    def __init__(self, worker_id: str, orchestrator_url: str, api_token: str):
+        self.worker_id = worker_id
+        self.orchestrator_url = orchestrator_url
+        self.headers = {
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json'
+        }
+        self.current_task = None
+        self.heartbeat_interval = 30  # Default interval
+        self._last_heartbeat = 0
+        
+    def register(self) -> bool:
+        """Register worker with orchestrator."""
+        try:
+            capabilities = {
+                'compute_type': self.config.COMPUTE_TYPE,
+                'model_size': self.config.MODEL_SIZE,
+                'device': 'cuda' if torch.cuda.is_available() else 'cpu'
+            }
+            
+            response = requests.post(
+                f"{self.orchestrator_url}/worker/register",
+                headers=self.headers,
+                json={
+                    'worker_id': self.worker_id,
+                    'capabilities': capabilities
+                },
+                timeout=10
+            )
+            
+            return response.status_code == 200
+            
+        except Exception as e:
+            logger.error(f"Registration failed: {e}")
+            return False
+
+    def start_task(self, task_id: str, file_duration: float) -> None:
+        """Update status when starting a task."""
+        self.current_task = {
+            'task_id': task_id,
+            'started_at': time.time()
+        }
+        # Set heartbeat interval based on file duration
+        self.heartbeat_interval = 5 if file_duration < 10 else 30
+        self._send_heartbeat()
+        
+    def end_task(self) -> None:
+        """Clear current task and reset heartbeat interval."""
+        self.current_task = None
+        self.heartbeat_interval = 30
+        self._send_heartbeat()
+        
+    def check_heartbeat(self) -> None:
+        """Check if heartbeat is needed and send if necessary."""
+        if time.time() - self._last_heartbeat >= self.heartbeat_interval:
+            self._send_heartbeat()
+            
+    def disconnect(self) -> None:
+        """Gracefully disconnect worker."""
+        try:
+            requests.post(
+                f"{self.orchestrator_url}/worker/disconnect",
+                headers=self.headers,
+                json={'worker_id': self.worker_id},
+                timeout=10
+            )
+        except Exception as e:
+            logger.error(f"Error during disconnect: {e}")
+            
+    def _send_heartbeat(self) -> None:
+        """Send heartbeat to orchestrator."""
+        try:
+            status_data = {
+                'worker_id': self.worker_id,
+                'task_status': self.current_task
+            }
+            
+            response = requests.post(
+                f"{self.orchestrator_url}/worker/heartbeat",
+                headers=self.headers,
+                json=status_data,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                self._last_heartbeat = time.time()
+            else:
+                logger.error(f"Heartbeat failed: {response.status_code}")
+                
+        except Exception as e:
+            logger.error(f"Error sending heartbeat: {e}")
 
 
 
@@ -124,6 +219,16 @@ class AudioTranscriptionWorker:
         try:
             self.config = GlobalConfig.get_instance()
             self.logger.info("Worker initialized with configuration")
+
+            # ADD NEW: Initialize status manager
+            self.status_manager = WorkerStatusManager(
+                self.config.WORKER_ID,
+                self.config.ORCHESTRATOR_URL,
+                self.config.API_TOKEN
+            )
+            if not self.status_manager.register():
+                raise SystemExit("Failed to register worker")
+
         except Exception as e:
             self.logger.error(f"Failed to initialize configuration: {e}")
             raise
@@ -241,6 +346,11 @@ class AudioTranscriptionWorker:
             if not self.download_file(presigned_get_url, local_audio_path):
                 self.update_task_status(task_id, "Failed", "Failed to download audio file")
                 return False
+
+            # Get audio duration and start task
+            duration = self.get_audio_duration(local_audio_path)  # You'll need to implement this
+            self.status_manager.start_task(task_id, duration)
+
 
             # Transcribe audio
             transcription = self.transcribe_audio(local_audio_path)
@@ -368,6 +478,9 @@ class AudioTranscriptionWorker:
                 try:
                     task = self.get_task()
                     if not task:
+
+                        # Still need to send heartbeat when idle
+                        self.status_manager.check_heartbeat()
                         time.sleep(self.config.POLL_INTERVAL)
                         continue
 
@@ -379,6 +492,7 @@ class AudioTranscriptionWorker:
 
         finally:
             self.logger.info("Cleaning up before shutdown...")
+            self.status_manager.disconnect()
             self.cleanup_files(
                 [f for f in os.listdir(self.config.DOWNLOAD_FOLDER)]
             )
