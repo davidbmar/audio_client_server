@@ -20,6 +20,9 @@ set -e
 echo "Updating package list..."
 apt-get update
 
+echo "Installing vim for user editing..."
+apt-get install vim
+
 echo "Installing required packages: curl, wget, unzip..."
 apt-get install -y curl wget unzip
 
