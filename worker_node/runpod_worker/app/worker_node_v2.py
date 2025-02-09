@@ -47,9 +47,8 @@ def get_node_identifier():
     # Fallback to UUID
     return f"-unknown-{str(uuid.uuid4())[:8]}"
 
-### ADD NEW CLASS AFTER IMPORTS, BEFORE AudioTranscriptionWorker ###
 class WorkerStatusManager:
-    def __init__(self, worker_id: str, orchestrator_url: str, api_token: str):
+    def __init__(self, worker_id: str, orchestrator_url: str, api_token: str, config):
         self.worker_id = worker_id
         self.orchestrator_url = orchestrator_url
         self.headers = {
@@ -59,7 +58,8 @@ class WorkerStatusManager:
         self.current_task = None
         self.heartbeat_interval = 30  # Default interval
         self._last_heartbeat = 0
-        
+        self.config = config  # Store the configuration for later use
+
     def register(self) -> bool:
         """Register worker with orchestrator."""
         try:
@@ -220,12 +220,13 @@ class AudioTranscriptionWorker:
             self.config = GlobalConfig.get_instance()
             self.logger.info("Worker initialized with configuration")
 
-            # ADD NEW: Initialize status manager
             self.status_manager = WorkerStatusManager(
                 self.config.WORKER_ID,
                 self.config.ORCHESTRATOR_URL,
-                self.config.API_TOKEN
+                self.config.API_TOKEN,
+                self.config  # Pass the config object so it is available in WorkerStatusManager
             )
+            
             if not self.status_manager.register():
                 raise SystemExit("Failed to register worker")
 
