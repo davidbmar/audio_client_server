@@ -278,7 +278,7 @@ class AudioTranscriptionWorker:
         try:
             headers = {
                 'Authorization': f"Bearer {self.config.API_TOKEN}",
-                'Worker-ID': self.config.WORKER_ID  # Include the worker ID here
+                'X-Worker-ID': self.config.WORKER_ID  # Use lowercase key as expected by the orchestrator
             }
             
             response = requests.get(
