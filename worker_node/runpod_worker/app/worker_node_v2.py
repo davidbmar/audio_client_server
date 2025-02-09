@@ -277,7 +277,8 @@ class AudioTranscriptionWorker:
         """Get task from orchestrator."""
         try:
             headers = {
-                'Authorization': f"Bearer {self.config.API_TOKEN}"
+                'Authorization': f"Bearer {self.config.API_TOKEN}",
+                'Worker-ID': self.config.WORKER_ID  # Include the worker ID here
             }
             
             response = requests.get(
@@ -285,7 +286,7 @@ class AudioTranscriptionWorker:
                 headers=headers,
                 timeout=self.config.API_TIMEOUT
             )
-
+    
             if response.status_code == 200:
                 return response.json()
             elif response.status_code == 204:
@@ -293,7 +294,7 @@ class AudioTranscriptionWorker:
             else:
                 self.logger.error(f"Failed to get task: {response.status_code}")
                 return None
-                
+    
         except Exception as e:
             self.logger.error(f"Error requesting task: {str(e)}")
             return None
