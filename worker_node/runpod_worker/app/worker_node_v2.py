@@ -368,11 +368,14 @@ class AudioTranscriptionWorker:
                 presigned_put_url
             ):
                 self.update_task_status(task_id, "Failed", "Failed to upload transcription")
-                self.cleanup_files([local_audio_path, local_transcript_path])
+                
+                # Comment out cleanup to preserve all files
+                #self.cleanup_files([local_audio_path, local_transcript_path])
                 return False
 
             self.update_task_status(task_id, "Completed")
-            self.cleanup_files([local_audio_path, local_transcript_path])
+            # Comment out cleanup to preserve all files
+            #self.cleanup_files([local_audio_path, local_transcript_path])
             return True
 
         except Exception as e:
@@ -495,9 +498,11 @@ class AudioTranscriptionWorker:
         finally:
             self.logger.info("Cleaning up before shutdown...")
             self.status_manager.disconnect()
-            self.cleanup_files(
-                [f for f in os.listdir(self.config.DOWNLOAD_FOLDER)]
-            )
+
+            # Comment out global cleanup to preserve all files for debugging
+            #self.cleanup_files(
+            #    [f for f in os.listdir(self.config.DOWNLOAD_FOLDER)]
+            #)
 
     def setup_signal_handlers(self):
         """Setup graceful shutdown handlers."""
