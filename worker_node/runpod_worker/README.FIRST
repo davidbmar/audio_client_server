@@ -1,0 +1,16 @@
+
+1. First deploy a runpod worker.  Generally add some more storage to this.
+2. install git - You will need this to pull down the repo.
+   sudo apt-get update && sudo apt-get install git
+3. git clone https://github.com/davidbmar/audio_client_server.git
+4. In the repo, then go to the runpod_worker dir.
+     cd audio_client_server/worker_node/runpod_worker
+5. run ./setup.sh
+6. run aws configure and put the keys in.  The permissions should be for the worker
+7. if your checking in do get rmote set-url orgin ....
+
+
+
+
+
+
