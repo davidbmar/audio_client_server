@@ -58,6 +58,10 @@ pip3 install boto3
 echo "Cleaning up temporary AWS CLI files..."
 rm -rf awscliv2.zip aws
 
+echo "setting up torch.  Note could do pip3 install -r requirements.txt"
+pip3 install torch
+
+
 echo "Setup complete!"
 
 # ----------------------------------------------------------------------
