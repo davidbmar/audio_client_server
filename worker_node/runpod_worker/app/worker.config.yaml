@@ -1,4 +1,4 @@
-# config.yaml
+#worker.config.yaml 
 #
 # Worker Node Configuration
 # This file contains non-sensitive configuration settings for the worker node
@@ -24,12 +24,6 @@ storage:
   download_folder: "./downloads"
   
   # Maximum size for file chunks during download (in bytes)
-  # Adjust based on memory constraints
-  # CHECK THIS, this seems odd!!!
-  # CHECK THIS, this seems odd!!!
-  # CHECK THIS, this seems odd!!!
-  # CHECK THIS, this seems odd!!!
-  # CHECK THIS, this seems odd!!!
   chunk_size: 4194304
 
 #-----------------------------------------------
@@ -63,7 +57,6 @@ performance:
   
   # Delay between retries (seconds)
   retry_delay: 5
-
 
 #-----------------------------------------------
 # Timeout Settings
@@ -100,3 +93,17 @@ logging:
   
   # Whether to also log to console
   console_output: true
+
+#-----------------------------------------------
+# Transcription Service Settings
+#-----------------------------------------------
+transcription:
+  # Flag to indicate whether to use the local API method for transcription.
+  # If true, the worker will send the audio file to the local Faster-Whisper server's API.
+  # If false, it will use the direct faster-whisper library call.
+  use_api: true
+
+  # The URL where the local Faster-Whisper server is accessible.
+  # For example, if your server is running on localhost on port 8000, set:
+  local_api_url: "http://localhost:8000"
+

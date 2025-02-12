@@ -371,6 +371,16 @@ class GlobalConfig:
                 self.DOWNLOAD_FOLDER = storage.get('download_folder', './downloads')
                 self.CHUNK_SIZE = storage.get('chunk_size', 4194304)  # Default to 4MB if not specified
 
+
+                #use_api: A boolean  whether to use the local API transcription method (true) or the direct faster-whisper call (false).
+                #local_api_url: The base URL where the Faster-Whisper-Server API is accessible. In this case, it's set to http://localhost:8000.
+                # The following is in the worker.config.yaml file
+                # transcription:
+                #   use_api: true
+                #   local_api_url: "http://localhost:8000"
+                self.LOCAL_API_URL = yaml_config.get('transcription', {}).get('local_api_url', "http://localhost:8000")
+                self.USE_API_FOR_TRANSCRIPTION = yaml_config.get('transcription', {}).get('use_api', False)
+
                 self._initialized = True
                 logger.info(f"Configuration loaded successfully. Worker ID: {self.WORKER_ID}")
             except Exception as e:
@@ -545,7 +555,16 @@ class AudioTranscriptionWorker:
 
 
             # Transcribe audio
-            transcription = self.transcribe_audio(local_audio_path)
+            # Choose transcription method based on configuration
+            # either based on API or based on direct transcription locally.
+            use_api = self.config.USE_API_FOR_TRANSCRIPTION
+            if use_api:
+                self.logger.info("Using API-based transcription method")
+                transcription = self.transcribe_audio_via_api(local_audio_path)
+            else:
+                self.logger.info("Using direct local transcription method")
+                transcription = self.transcribe_audio(local_audio_path)
+            
             if not transcription:
                 self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
                 self.cleanup_files([local_audio_path])
@@ -621,6 +640,106 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error transcribing file: {str(e)}")
             traceback.print_exc()  # Add this to get more detailed error info
             return None
+
+    def transcribe_audio_via_api(self, local_audio_path: str) -> Optional[str]:
+        """
+        Transcribe the audio file by sending it to the local Faster-Whisper API server.
+        Returns the transcription as a string if successful, or None on failure.
+        """
+        try:
+            # Build the endpoint URL using the configuration value
+            api_url = f"{self.config.LOCAL_API_URL}/v1/audio/transcriptions"
+            self.logger.info(f"Sending file {os.path.basename(local_audio_path)} to API at {api_url}")
+            
+            with open(local_audio_path, "rb") as f:
+                # 'file' is the form field expected by the API; note the removal of "stream" for now.
+                files = {"file": f}
+                data = {"language": "en"}  # Removed "stream": "true" for testing a non-streaming response
+                
+                # Post the file to the API; use the transcription timeout from config
+                response = requests.post(api_url, files=files, data=data, timeout=self.config.TRANSCRIPTION_TIMEOUT)
+            
+            # Log response status and text for debugging
+            self.logger.info(f"Response status: {response.status_code}")
+            self.logger.info(f"Response text: {response.text}")
+    
+            if response.status_code == 200:
+                # Check if response body is empty
+                if not response.text.strip():
+                    self.logger.error("API returned empty response.")
+                    return None
+                
+                try:
+                    result = response.json()
+                except Exception as e:
+                    self.logger.error(f"Failed to decode JSON: {e}")
+                    return None
+                
+                transcription = result.get("text", "")
+                self.logger.info("API transcription succeeded")
+                return transcription
+            else:
+                self.logger.error(f"API transcription failed: {response.status_code} {response.text}")
+                return None
+        except Exception as e:
+            self.logger.error(f"Exception during API transcription: {e}")
+            traceback.print_exc()
+            return None
+
+    def transcribe_audio_via_api(self, local_audio_path: str) -> Optional[str]:
+        """
+        Transcribe the audio file by sending it to the local Faster-Whisper API server.
+        Returns the transcription as a string if successful, or None on failure.
+        """
+        try:
+            # Build the endpoint URL using the configuration value
+            api_url = f"{self.config.LOCAL_API_URL}/v1/audio/transcriptions"
+            self.logger.info(f"Sending file {os.path.basename(local_audio_path)} to API at {api_url}")
+    
+            # Open the file in binary mode for upload
+            with open(local_audio_path, "rb") as f:
+                files = {"file": f}
+                data = {"language": "en"}  # Use "language" (make sure it's spelled correctly)
+                # Add an Accept header to request JSON response
+                headers = {"Accept": "application/json"}
+                
+                # Post the file to the API using a timeout from configuration
+                response = requests.post(
+                    api_url,
+                    files=files,
+                    data=data,
+                    headers=headers,
+                    timeout=self.config.TRANSCRIPTION_TIMEOUT
+                )
+            
+            # Log full response details for debugging
+            self.logger.info(f"Response status: {response.status_code}")
+            self.logger.info(f"Response headers: {response.headers}")
+            self.logger.info(f"Response text: {response.text}")
+    
+            if response.status_code == 200:
+                # Check if response body is empty
+                if not response.text.strip():
+                    self.logger.error("API returned an empty response.")
+                    return None
+                
+                try:
+                    result = response.json()
+                except Exception as e:
+                    self.logger.error(f"Failed to decode JSON: {e}")
+                    return None
+                
+                transcription = result.get("text", "")
+                self.logger.info("API transcription succeeded")
+                return transcription
+            else:
+                self.logger.error(f"API transcription failed: {response.status_code} {response.text}")
+                return None
+        except Exception as e:
+            self.logger.error(f"Exception during API transcription: {e}")
+            traceback.print_exc()
+            return None
+
     
     def download_file(self, presigned_url: str, local_path: str) -> bool:
         """Download file using pre-signed URL."""
