@@ -5,6 +5,8 @@ import os
 import requests
 import sys
 import signal
+import subprocess
+import threading
 import time
 import traceback
 import torch
@@ -14,6 +16,7 @@ import yaml
 from datetime import datetime
 from typing import Dict, Any, Optional
 from urllib.parse import unquote
+from functools import lru_cache
 
 # Enhanced logging configuration
 logging.basicConfig(
@@ -46,6 +49,177 @@ def get_node_identifier():
 
     # Fallback to UUID
     return f"-unknown-{str(uuid.uuid4())[:8]}"
+
+
+class AudioTranscriptionWorker:
+    def __init__(self):
+        """Initialize the Audio Transcription Worker"""
+        self.logger = logging.getLogger(__name__)
+        
+        # Initialize configuration
+        try:
+            self.config = GlobalConfig.get_instance()
+            self.logger.info("Worker initialized with configuration")
+
+            self.status_manager = WorkerStatusManager(
+                self.config.WORKER_ID,
+                self.config.ORCHESTRATOR_URL,
+                self.config.API_TOKEN,
+                self.config
+            )
+            
+            if not self.status_manager.register():
+                raise SystemExit("Failed to register worker")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize configuration: {e}")
+            raise
+
+        self.keep_running = True
+        
+        # Check dependencies before proceeding
+        if not self.check_dependencies():
+            raise SystemExit("Required dependencies not met")
+
+        self.setup_signal_handlers()
+
+    def check_dependencies(self) -> bool:
+        """Check all required dependencies."""
+        try:
+            self.logger.info("Checking dependencies...")
+
+            # Check for faster-whisper
+            try:
+                import faster_whisper
+                self.logger.info("✓ faster-whisper found")
+            except ImportError:
+                self.logger.error("✗ faster-whisper not found")
+                return False
+
+            # Check for torch
+            try:
+                import torch
+                if self.config.PREFER_CUDA and torch.cuda.is_available():
+                    self.logger.info(f"✓ CUDA available: {torch.cuda.get_device_name(0)}")
+                elif self.config.PREFER_CUDA:
+                    self.logger.warning("! CUDA not available - will use CPU")
+
+            except ImportError:
+                self.logger.error("✗ torch not found")
+                return False
+
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Error checking dependencies: {str(e)}")
+            return False
+
+    # ... rest of the class ...
+
+# ===== AFTER =====
+
+from typing import Optional
+import subprocess
+import json
+import threading
+from functools import lru_cache
+
+class AudioDurationHandler:
+    """Thread-safe handler for getting audio durations."""
+    
+    def __init__(self, logger):
+        self.logger = logger
+        self._lock = threading.Lock()
+        self._ffprobe_path = None
+        self._init_ffprobe()
+
+    def _init_ffprobe(self) -> None:
+        """Initialize ffprobe path once."""
+        try:
+            # Check if ffprobe is available
+            result = subprocess.run(['which', 'ffprobe'], 
+                                 capture_output=True, 
+                                 text=True)
+            if result.returncode == 0:
+                self._ffprobe_path = result.stdout.strip()
+                self.logger.info("✓ ffprobe found and initialized")
+            else:
+                self.logger.warning("! ffprobe not found in PATH")
+        except Exception as e:
+            self.logger.error(f"Error initializing ffprobe: {str(e)}")
+
+    @lru_cache(maxsize=128)
+    def _get_duration_ffprobe(self, audio_path: str) -> Optional[float]:
+        """Get audio duration using ffprobe with caching."""
+        if not self._ffprobe_path:
+            return None
+            
+        try:
+            cmd = [
+                self._ffprobe_path,
+                '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-of', 'json',
+                audio_path
+            ]
+            
+            result = subprocess.run(cmd, 
+                                 capture_output=True, 
+                                 text=True, 
+                                 timeout=10)
+                                 
+            if result.returncode == 0:
+                data = json.loads(result.stdout)
+                duration = float(data['format']['duration'])
+                self.logger.info(f"Got duration via ffprobe: {duration:.2f}s")
+                return duration
+                
+        except (subprocess.TimeoutExpired, json.JSONDecodeError, KeyError) as e:
+            self.logger.error(f"ffprobe error for {audio_path}: {str(e)}")
+        return None
+
+    def get_duration(self, audio_path: str, default_duration: float = 30.0) -> float:
+        """Thread-safe method to get audio duration with fallbacks."""
+        with self._lock:
+            # Try ffprobe first
+            duration = self._get_duration_ffprobe(audio_path)
+            if duration is not None:
+                return duration
+
+            # Fallback to soundfile
+            try:
+                import soundfile as sf
+                with sf.SoundFile(audio_path) as audio_file:
+                    duration = float(len(audio_file)) / float(audio_file.samplerate)
+                    self.logger.info(f"Got duration via soundfile: {duration:.2f}s")
+                    return duration
+            except ImportError:
+                self.logger.debug("soundfile not available")
+            except Exception as e:
+                self.logger.warning(f"soundfile error: {str(e)}")
+
+            # Final fallback to wave
+            try:
+                import wave
+                with wave.open(audio_path, 'rb') as audio_file:
+                    frames = audio_file.getnframes()
+                    rate = audio_file.getframerate()
+                    duration = float(frames) / float(rate)
+                    self.logger.info(f"Got duration via wave: {duration:.2f}s")
+                    return duration
+            except ImportError:
+                self.logger.debug("wave module not available")
+            except Exception as e:
+                self.logger.warning(f"wave error: {str(e)}")
+
+            self.logger.warning(
+                f"Could not determine duration for {audio_path}, "
+                f"using default: {default_duration}s"
+            )
+            return default_duration
+
+
+
 
 class WorkerStatusManager:
     def __init__(self, worker_id: str, orchestrator_url: str, api_token: str, config):
@@ -210,6 +384,7 @@ class GlobalConfig:
             cls._instance = GlobalConfig()
         return cls._instance
 
+
 class AudioTranscriptionWorker:
     def __init__(self):
         """Initialize the Audio Transcription Worker"""
@@ -224,11 +399,14 @@ class AudioTranscriptionWorker:
                 self.config.WORKER_ID,
                 self.config.ORCHESTRATOR_URL,
                 self.config.API_TOKEN,
-                self.config  # Pass the config object so it is available in WorkerStatusManager
+                self.config
             )
             
             if not self.status_manager.register():
                 raise SystemExit("Failed to register worker")
+
+            # Initialize audio duration handler
+            self.duration_handler = AudioDurationHandler(self.logger)
 
         except Exception as e:
             self.logger.error(f"Failed to initialize configuration: {e}")
@@ -262,16 +440,28 @@ class AudioTranscriptionWorker:
                     self.logger.info(f"✓ CUDA available: {torch.cuda.get_device_name(0)}")
                 elif self.config.PREFER_CUDA:
                     self.logger.warning("! CUDA not available - will use CPU")
-
             except ImportError:
                 self.logger.error("✗ torch not found")
                 return False
+
+            # Check for ffprobe
+            result = subprocess.run(['which', 'ffprobe'], 
+                                capture_output=True, 
+                                text=True)
+            if result.returncode == 0:
+                self.logger.info("✓ ffprobe found")
+            else:
+                self.logger.warning("! ffprobe not found - will use fallback methods")
 
             return True
 
         except Exception as e:
             self.logger.error(f"Error checking dependencies: {str(e)}")
             return False
+
+    def get_audio_duration(self, audio_path: str) -> float:
+        """Get audio file duration in seconds."""
+        return self.duration_handler.get_duration(audio_path)
 
     def get_task(self) -> Optional[Dict[str, Any]]:
         """Get task from orchestrator."""
@@ -389,39 +579,47 @@ class AudioTranscriptionWorker:
         try:
             from faster_whisper import WhisperModel
             import torch
-    
+        
             self.logger.info(f"Starting transcription of file: {os.path.basename(local_audio_path)}")
             
-            device = "cuda" if self.config.PREFER_CUDA and torch.cuda.is_available() else self.config.FALLBACK_DEVICE
-            
-            model = WhisperModel(
-                self.config.MODEL_SIZE,
-                device=device,
-                compute_type=self.config.COMPUTE_TYPE
-            )
-    
+            try:
+                device = "cuda" if self.config.PREFER_CUDA and torch.cuda.is_available() else self.config.FALLBACK_DEVICE
+                # Start with float16 compute type
+                model = WhisperModel(
+                    self.config.MODEL_SIZE,
+                    device=device,
+                    compute_type="float16"  # Use float16 instead of auto
+                )
+            except RuntimeError as e:
+                self.logger.error(f"CUDA error: {e}. Falling back to CPU.")
+                device = "cpu"
+                model = WhisperModel(
+                    self.config.MODEL_SIZE,
+                    device=device,
+                    compute_type="int8"  # Use int8 for CPU to save memory
+                )
+        
             if not os.path.exists(local_audio_path):
                 raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
-    
-            # Set language to English
+        
             segments, info = model.transcribe(
                 local_audio_path,
-                language="en"  # Force English
+                language="en",
+                beam_size=1  # Reduce beam size for better memory usage
             )
             
             transcription = "".join([segment.text for segment in segments])
-    
+        
             if not transcription:
                 self.logger.warning("Transcription resulted in empty text")
                 return None
-                
+                    
             self.logger.info(f"Transcription completed for {os.path.basename(local_audio_path)}")
-            self.logger.info(f"Transcribed text: {transcription}")
-    
             return transcription
-                
+                    
         except Exception as e:
             self.logger.error(f"Error transcribing file: {str(e)}")
+            traceback.print_exc()  # Add this to get more detailed error info
             return None
     
     def download_file(self, presigned_url: str, local_path: str) -> bool:

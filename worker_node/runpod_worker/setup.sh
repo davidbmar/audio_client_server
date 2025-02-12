@@ -61,6 +61,9 @@ rm -rf awscliv2.zip aws
 echo "setting up torch.  Note could do pip3 install -r requirements.txt"
 pip3 install torch
 
+echo "setting up ffmpeg to get audio duration."
+apt-get update && apt-get install -y ffmpeg
+pip install soundfile
 
 echo "Setup complete!"
 
