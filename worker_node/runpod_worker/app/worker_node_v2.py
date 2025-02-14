@@ -533,65 +533,40 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error updating status: {str(e)}")
 
     def process_task(self, task: Dict[str, Any]) -> bool:
-        """Process a single transcription task."""
         task_id = task['task_id']
         encoded_key = task['object_key']
         presigned_get_url = task['presigned_get_url']
-        presigned_put_url = task['presigned_put_url']
-
+        presigned_put_url = task['presigned_put_url']  # For storing results
+    
         filename = os.path.basename(encoded_key)
         local_audio_path = os.path.join(self.config.DOWNLOAD_FOLDER, filename)
         local_transcript_path = os.path.join(self.config.DOWNLOAD_FOLDER, f"{filename}.txt")
-
+    
         try:
-            # Download audio file
+            # Step 1: Download the audio file
             if not self.download_file(presigned_get_url, local_audio_path):
                 self.update_task_status(task_id, "Failed", "Failed to download audio file")
                 return False
-
-            # Get audio duration and start task
-            duration = self.get_audio_duration(local_audio_path)  # You'll need to implement this
-            self.status_manager.start_task(task_id, duration)
-
-
-            # Transcribe audio
-            # Choose transcription method based on configuration
-            # either based on API or based on direct transcription locally.
-            use_api = self.config.USE_API_FOR_TRANSCRIPTION
-            if use_api:
-                self.logger.info("Using API-based transcription method")
-                transcription = self.transcribe_audio_via_api(local_audio_path)
-            else:
-                self.logger.info("Using direct local transcription method")
-                transcription = self.transcribe_audio(local_audio_path)
-            
+    
+            # Step 2: Transcribe the audio file
+            transcription = self.transcribe_audio_via_api(local_audio_path)
             if not transcription:
                 self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
-                self.cleanup_files([local_audio_path])
                 return False
-
-            # Save and upload transcription
-            if not self.save_and_upload_transcription(
-                transcription,
-                local_transcript_path,
-                presigned_put_url
-            ):
-                self.update_task_status(task_id, "Failed", "Failed to upload transcription")
-                
-                # Comment out cleanup to preserve all files
-                #self.cleanup_files([local_audio_path, local_transcript_path])
-                return False
-
+    
+            # Step 3: Save transcription result to S3
+            self.logger.info(f"Uploading transcription for {task_id}")
+            self.upload_transcription_to_s3(presigned_put_url, transcription)
+    
+            # Step 4: Mark task as completed
             self.update_task_status(task_id, "Completed")
-            # Comment out cleanup to preserve all files
-            #self.cleanup_files([local_audio_path, local_transcript_path])
             return True
-
+    
         except Exception as e:
             self.logger.error(f"Error processing task {task_id}: {str(e)}")
             self.update_task_status(task_id, "Failed", str(e))
-            self.cleanup_files([local_audio_path, local_transcript_path])
             return False
+    
 
     def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
         """Transcribe the audio file."""
@@ -764,34 +739,23 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Download error: {str(e)}")
             return False
 
-    def save_and_upload_transcription(
-        self,
-        transcription: str,
-        local_path: str,
-        presigned_url: str
-    ) -> bool:
-        """Save transcription locally and upload to S3."""
+    def upload_transcription_to_s3(self, presigned_url, transcription):
+        """Upload transcription text to S3."""
         try:
-            with open(local_path, 'w', encoding='utf-8') as f:
-                f.write(transcription)
-
-            with open(local_path, 'rb') as f:
-                response = requests.put(
-                    presigned_url,
-                    data=f,
-                    headers={'Content-Type': 'text/plain'},
-                    timeout=self.config.UPLOAD_TIMEOUT
-                )
-
-            if response.status_code in [200, 204]:
-                return True
+            response = requests.put(
+                presigned_url,
+                data=transcription.encode('utf-8'),
+                headers={'Content-Type': 'text/plain'}
+            )
+    
+            if response.status_code == 200:
+                self.logger.info("Successfully uploaded transcription to S3.")
             else:
-                self.logger.error(f"Upload failed: {response.status_code}")
-                return False
-
+                self.logger.error(f"Failed to upload transcription: {response.status_code} - {response.text}")
+    
         except Exception as e:
-            self.logger.error(f"Error saving/uploading transcription: {str(e)}")
-            return False
+            self.logger.error(f"Error uploading transcription: {str(e)}")
+    
 
     def run(self):
         """Main processing loop."""
