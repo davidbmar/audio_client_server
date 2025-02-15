@@ -114,9 +114,6 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error checking dependencies: {str(e)}")
             return False
 
-    # ... rest of the class ...
-
-# ===== AFTER =====
 
 from typing import Optional
 import subprocess
@@ -536,11 +533,10 @@ class AudioTranscriptionWorker:
         task_id = task['task_id']
         encoded_key = task['object_key']
         presigned_get_url = task['presigned_get_url']
-        presigned_put_url = task['presigned_put_url']  # For storing results
+        presigned_put_url = task['presigned_put_url']
     
         filename = os.path.basename(encoded_key)
         local_audio_path = os.path.join(self.config.DOWNLOAD_FOLDER, filename)
-        local_transcript_path = os.path.join(self.config.DOWNLOAD_FOLDER, f"{filename}.txt")
     
         try:
             # Step 1: Download the audio file
@@ -558,16 +554,18 @@ class AudioTranscriptionWorker:
             self.logger.info(f"Uploading transcription for {task_id}")
             self.upload_transcription_to_s3(presigned_put_url, transcription)
     
-            # Step 4: Mark task as completed
+            # Step 4: Send Transcription to Orchestrator
+            self.send_transcription_to_orchestrator(task_id, transcription)  # ✅ NEW STEP
+    
+            # Step 5: Mark task as completed
             self.update_task_status(task_id, "Completed")
             return True
-    
+        
         except Exception as e:
             self.logger.error(f"Error processing task {task_id}: {str(e)}")
             self.update_task_status(task_id, "Failed", str(e))
             return False
     
-
     def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
         """Transcribe the audio file."""
         try:
