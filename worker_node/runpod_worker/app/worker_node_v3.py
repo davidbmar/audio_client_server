@@ -203,15 +203,61 @@ class AudioTranscriptionWorker:
         except Exception as e:
             self.logger.error(f"Error sending transcription to Orchestrator: {str(e)}")
 
+    def register_worker(self):
+        """Register the worker with the Orchestrator."""
+        try:
+            response = requests.post(
+                f"{self.config.ORCHESTRATOR_URL}/worker/register",
+                json={"worker_id": self.config.WORKER_ID, "capabilities": []},
+                headers={"Authorization": f"Bearer {self.config.API_TOKEN}"},
+                timeout=10,
+            )
+            if response.status_code == 200:
+                logger.info(f"Worker {self.config.WORKER_ID} registered successfully.")
+            else:
+                logger.error(f"Worker registration failed: {response.status_code} {response.text}")
+        except Exception as e:
+            logger.error(f"Error registering worker: {str(e)}")
+    
+    def send_heartbeat(self):
+        """Send a heartbeat signal to the orchestrator."""
+        try:
+            response = requests.post(
+                f"{self.config.ORCHESTRATOR_URL}/worker/heartbeat",
+                json={"worker_id": self.config.WORKER_ID},
+                headers={"Authorization": f"Bearer {self.config.API_TOKEN}"},
+                timeout=5,
+            )
+            if response.status_code == 200:
+                logger.info(f"Worker {self.config.WORKER_ID} heartbeat sent.")
+            else:
+                logger.error(f"Heartbeat failed: {response.status_code} {response.text}")
+        except Exception as e:
+            logger.error(f"Error sending heartbeat: {str(e)}")
+    
+    def start_heartbeat_thread(self):
+        """Start a background thread to send heartbeats every 30 seconds."""
+        def heartbeat_loop():
+            while self.keep_running:
+                self.send_heartbeat()
+                time.sleep(30)
+    
+        thread = threading.Thread(target=heartbeat_loop, daemon=True)
+        thread.start()
+
+
     def run(self):
         """Main processing loop."""
+        self.register_worker()  # Ensure worker is registered before fetching tasks
+        self.start_heartbeat_thread()  # Start sending heartbeats
+    
         while self.keep_running:
             task = self.get_task()
             if task:
                 self.process_task(task)
             else:
                 time.sleep(5)
-
+    
     def setup_signal_handlers(self):
         """Setup signal handlers for graceful shutdown."""
         signal.signal(signal.SIGINT, self.signal_handler)
