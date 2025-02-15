@@ -565,7 +565,7 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error processing task {task_id}: {str(e)}")
             self.update_task_status(task_id, "Failed", str(e))
             return False
-    
+       
     def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
         """Transcribe the audio file."""
         try:
@@ -659,60 +659,23 @@ class AudioTranscriptionWorker:
             traceback.print_exc()
             return None
 
-    def transcribe_audio_via_api(self, local_audio_path: str) -> Optional[str]:
-        """
-        Transcribe the audio file by sending it to the local Faster-Whisper API server.
-        Returns the transcription as a string if successful, or None on failure.
-        """
+    def send_transcription_to_orchestrator(self, task_id, transcription):
+        """Send transcription result to the Orchestrator."""
         try:
-            # Build the endpoint URL using the configuration value
-            api_url = f"{self.config.LOCAL_API_URL}/v1/audio/transcriptions"
-            self.logger.info(f"Sending file {os.path.basename(local_audio_path)} to API at {api_url}")
-    
-            # Open the file in binary mode for upload
-            with open(local_audio_path, "rb") as f:
-                files = {"file": f}
-                data = {"language": "en"}  # Use "language" (make sure it's spelled correctly)
-                # Add an Accept header to request JSON response
-                headers = {"Accept": "application/json"}
-                
-                # Post the file to the API using a timeout from configuration
-                response = requests.post(
-                    api_url,
-                    files=files,
-                    data=data,
-                    headers=headers,
-                    timeout=self.config.TRANSCRIPTION_TIMEOUT
-                )
-            
-            # Log full response details for debugging
-            self.logger.info(f"Response status: {response.status_code}")
-            self.logger.info(f"Response headers: {response.headers}")
-            self.logger.info(f"Response text: {response.text}")
+            response = requests.post(
+                f"{self.config.ORCHESTRATOR_URL}/worker/transcription-result",
+                json={"task_id": task_id, "transcription": transcription},
+                headers={"Authorization": f"Bearer {self.config.API_TOKEN}"},
+                timeout=10,
+            )
     
             if response.status_code == 200:
-                # Check if response body is empty
-                if not response.text.strip():
-                    self.logger.error("API returned an empty response.")
-                    return None
-                
-                try:
-                    result = response.json()
-                except Exception as e:
-                    self.logger.error(f"Failed to decode JSON: {e}")
-                    return None
-                
-                transcription = result.get("text", "")
-                self.logger.info("API transcription succeeded")
-                return transcription
+                self.logger.info(f"Successfully sent transcription for {task_id} to Orchestrator")
             else:
-                self.logger.error(f"API transcription failed: {response.status_code} {response.text}")
-                return None
+                self.logger.error(f"Failed to send transcription: {response.status_code} {response.text}")
         except Exception as e:
-            self.logger.error(f"Exception during API transcription: {e}")
-            traceback.print_exc()
-            return None
-
+            self.logger.error(f"Error sending transcription to Orchestrator: {str(e)}")
+    
     
     def download_file(self, presigned_url: str, local_path: str) -> bool:
         """Download file using pre-signed URL."""
