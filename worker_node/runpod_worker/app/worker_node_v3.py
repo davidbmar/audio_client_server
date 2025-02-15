@@ -131,6 +131,33 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error calling Faster-Whisper API: {str(e)}")
             return None
 
+    def get_task(self) -> Optional[Dict[str, Any]]:
+        """Get a new transcription task from the Orchestrator."""
+        try:
+            headers = {
+                "Authorization": f"Bearer {self.config.API_TOKEN}",
+                "X-Worker-ID": self.config.WORKER_ID
+            }
+    
+            response = requests.get(
+                f"{self.config.ORCHESTRATOR_URL}/get-task",
+                headers=headers,
+                timeout=self.config.TRANSCRIPTION_TIMEOUT
+            )
+    
+            if response.status_code == 200:
+                return response.json()
+            elif response.status_code == 204:
+                return None  # No available tasks
+            else:
+                self.logger.error(f"Failed to fetch task: {response.status_code} - {response.text}")
+                return None
+    
+        except Exception as e:
+            self.logger.error(f"Error getting task: {str(e)}")
+            return None
+    
+    
     def process_task(self, task: Dict[str, Any]):
         """Handle transcription for a given task."""
         task_id, presigned_get_url, presigned_put_url = task["task_id"], task["presigned_get_url"], task["presigned_put_url"]
