@@ -555,20 +555,33 @@ class AudioTranscriptionWorker:
     
             # Step 3: Save transcription result to S3
             self.logger.info(f"Uploading transcription for {task_id}")
-            self.upload_transcription_to_s3(presigned_put_url, transcription)
+            if not self.upload_transcription_to_s3(presigned_put_url, transcription):
+                self.update_task_status(task_id, "Failed", "Failed to upload transcription to S3")
+                return False
     
             # Step 4: Send Transcription to Orchestrator
-            self.send_transcription_to_orchestrator(task_id, transcription)  # ✅ NEW STEP
+            if not self.send_transcription_to_orchestrator(task_id, transcription):
+                self.logger.warning(f"Failed to send transcription to orchestrator for task {task_id}")
+                # Don't fail the task just because we couldn't send to orchestrator
+                # The transcription is still in S3
     
             # Step 5: Mark task as completed
             self.update_task_status(task_id, "Completed")
             return True
         
         except Exception as e:
-            self.logger.error(f"Error processing task {task_id}: {str(e)}")
-            self.update_task_status(task_id, "Failed", str(e))
+            error_msg = str(e)
+            self.logger.error(f"Error processing task {task_id}: {error_msg}")
+            self.update_task_status(task_id, "Failed", error_msg)
             return False
-       
+        finally:
+            # Clean up the local audio file
+            try:
+                if os.path.exists(local_audio_path):
+                    os.remove(local_audio_path)
+            except Exception as e:
+                self.logger.warning(f"Failed to clean up file {local_audio_path}: {str(e)}")
+    
     def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
         """Transcribe the audio file."""
         try:
@@ -665,20 +678,64 @@ class AudioTranscriptionWorker:
     def send_transcription_to_orchestrator(self, task_id, transcription):
         """Send transcription result to the Orchestrator."""
         try:
+            # Prepare request data
+            payload = {
+                "task_id": task_id,
+                "transcription": transcription,
+                "worker_id": self.config.WORKER_ID  # Add worker ID to payload
+            }
+
+            # Set up headers
+            headers = {
+                "Authorization": f"Bearer {self.config.API_TOKEN}",
+                "Content-Type": "application/json",
+                "X-Worker-ID": self.config.WORKER_ID
+            }
+
+            # Log request data for debugging (excluding sensitive info)
+            self.logger.debug(f"Sending transcription for task {task_id} to orchestrator")
+            
             response = requests.post(
                 f"{self.config.ORCHESTRATOR_URL}/worker/transcription-result",
-                json={"task_id": task_id, "transcription": transcription},
-                headers={"Authorization": f"Bearer {self.config.API_TOKEN}"},
-                timeout=10,
+                json=payload,
+                headers=headers,
+                timeout=self.config.API_TIMEOUT  # Use configured timeout
             )
-    
+
+            # Check response
+            try:
+                response_data = response.json()
+            except ValueError:
+                response_data = response.text
+
             if response.status_code == 200:
-                self.logger.info(f"Successfully sent transcription for {task_id} to Orchestrator")
+                self.logger.info(f"Successfully sent transcription for task {task_id} to Orchestrator")
+                return True
             else:
-                self.logger.error(f"Failed to send transcription: {response.status_code} {response.text}")
+                error_msg = f"Failed to send transcription: Status {response.status_code}"
+                if response_data:
+                    error_msg += f" - Response: {response_data}"
+                self.logger.error(error_msg)
+                
+                # If we get a 500 error, add more detailed logging
+                if response.status_code == 500:
+                    self.logger.error(f"Orchestrator internal error. Task ID: {task_id}")
+                    self.logger.error(f"Response headers: {dict(response.headers)}")
+                    
+                return False
+
+        except requests.exceptions.Timeout:
+            self.logger.error(f"Timeout sending transcription for task {task_id}")
+            return False
+        except requests.exceptions.RequestException as e:
+            self.logger.error(f"Network error sending transcription for task {task_id}: {str(e)}")
+            return False
         except Exception as e:
-            self.logger.error(f"Error sending transcription to Orchestrator: {str(e)}")
-    
+            self.logger.error(f"Unexpected error sending transcription for task {task_id}: {str(e)}")
+            traceback.print_exc()
+            return False
+
+
     
     def download_file(self, presigned_url: str, local_path: str) -> bool:
         """Download file using pre-signed URL."""
