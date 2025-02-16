@@ -60,29 +60,48 @@ class AudioTranscriptionWorker:
         try:
             self.config = GlobalConfig.get_instance()
             self.logger.info("Worker initialized with configuration")
-
+    
+            # Ensure download directory exists
+            self.ensure_download_directory()
+    
             self.status_manager = WorkerStatusManager(
                 self.config.WORKER_ID,
                 self.config.ORCHESTRATOR_URL,
                 self.config.API_TOKEN,
                 self.config
             )
-            
+        
             if not self.status_manager.register():
                 raise SystemExit("Failed to register worker")
-
+    
+            # Initialize audio duration handler
+            self.duration_handler = AudioDurationHandler(self.logger)
+    
         except Exception as e:
             self.logger.error(f"Failed to initialize configuration: {e}")
             raise
-
+    
         self.keep_running = True
-        
+    
         # Check dependencies before proceeding
         if not self.check_dependencies():
             raise SystemExit("Required dependencies not met")
-
+        
         self.setup_signal_handlers()
 
+    def ensure_download_directory(self):
+        """Ensure the download directory exists, creating it if necessary."""
+        try:
+            download_path = self.config.DOWNLOAD_FOLDER
+            if not os.path.exists(download_path):
+                self.logger.info(f"Creating download directory: {download_path}")
+                os.makedirs(download_path, exist_ok=True)
+            else:
+                self.logger.info(f"Download directory exists: {download_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to create/verify download directory: {str(e)}")
+            raise SystemExit("Cannot start without valid download directory")
+    
     def check_dependencies(self) -> bool:
         """Check all required dependencies."""
         try:
