@@ -61,9 +61,6 @@ class AudioTranscriptionWorker:
             self.config = GlobalConfig.get_instance()
             self.logger.info("Worker initialized with configuration")
     
-            # Ensure download directory exists
-            self.ensure_download_directory()
-    
             self.status_manager = WorkerStatusManager(
                 self.config.WORKER_ID,
                 self.config.ORCHESTRATOR_URL,
@@ -89,19 +86,6 @@ class AudioTranscriptionWorker:
         
         self.setup_signal_handlers()
 
-    def ensure_download_directory(self):
-        """Ensure the download directory exists, creating it if necessary."""
-        try:
-            download_path = self.config.DOWNLOAD_FOLDER
-            if not os.path.exists(download_path):
-                self.logger.info(f"Creating download directory: {download_path}")
-                os.makedirs(download_path, exist_ok=True)
-            else:
-                self.logger.info(f"Download directory exists: {download_path}")
-        except Exception as e:
-            self.logger.error(f"Failed to create/verify download directory: {str(e)}")
-            raise SystemExit("Cannot start without valid download directory")
-    
     def check_dependencies(self) -> bool:
         """Check all required dependencies."""
         try:
@@ -784,11 +768,58 @@ class AudioTranscriptionWorker:
             except Exception as e:
                 self.logger.warning(f"Failed to clean up {file_path}: {str(e)}")
 
+####### ####### ####### ####### ####### ####### ####### #######
+# This is global should do things like setup application.
+####### ####### ####### ####### ####### ####### ####### #######
+
+
+def ensure_directories(config):
+    """Ensure required directories exist."""
+    try:
+        download_path = config.DOWNLOAD_FOLDER
+        
+        # Convert relative path to absolute if needed
+        if download_path.startswith('./'):
+            current_dir = os.getcwd()
+            download_path = os.path.join(current_dir, download_path[2:])
+            config.DOWNLOAD_FOLDER = download_path
+        
+        logger.info(f"Setting up download directory at: {download_path}")
+        
+        if not os.path.exists(download_path):
+            logger.info(f"Creating download directory: {download_path}")
+            os.makedirs(download_path, mode=0o755, exist_ok=True)
+            
+        if not os.access(download_path, os.W_OK):
+            raise Exception(f"Directory exists but is not writable: {download_path}")
+            
+        logger.info(f"Download directory ready at: {download_path}")
+        return True
+            
+    except Exception as e:
+        logger.error(f"Failed to create/verify download directory: {str(e)}")
+        raise
+
 def main():
     """Application entry point."""
     try:
         logger.info("Starting Audio Transcription Worker")
 
+        # Get configuration first
+        try:
+            config = GlobalConfig.get_instance()
+        except Exception as e:
+            logger.error(f"Failed to load configuration: {str(e)}")
+            sys.exit(1)
+
+        # Ensure required directories exist
+        try:
+            ensure_directories(config)
+        except Exception as e:
+            logger.error(f"Failed to create required directories: {str(e)}")
+            sys.exit(1)
+
+        # Initialize worker
         try:
             worker = AudioTranscriptionWorker()
         except SystemExit as e:
