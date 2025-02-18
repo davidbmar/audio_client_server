@@ -67,6 +67,9 @@ pip install soundfile
 
 echo "Setup complete!"
 
+echo "Ok now testing and prewarming the download."
+test_fastwhisperAPI.sh
+
 # ----------------------------------------------------------------------
 # EXAMPLE USAGE:
 #

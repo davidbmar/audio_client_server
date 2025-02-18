@@ -50,41 +50,107 @@ def get_node_identifier():
     # Fallback to UUID
     return f"-unknown-{str(uuid.uuid4())[:8]}"
 
-
 class AudioTranscriptionWorker:
     def __init__(self):
         """Initialize the Audio Transcription Worker"""
         self.logger = logging.getLogger(__name__)
-        
+        self.model = None  # Initialize model variable
+
         # Initialize configuration
         try:
             self.config = GlobalConfig.get_instance()
             self.logger.info("Worker initialized with configuration")
-    
+
             self.status_manager = WorkerStatusManager(
                 self.config.WORKER_ID,
                 self.config.ORCHESTRATOR_URL,
                 self.config.API_TOKEN,
                 self.config
             )
-        
+
             if not self.status_manager.register():
                 raise SystemExit("Failed to register worker")
-    
+
             # Initialize audio duration handler
             self.duration_handler = AudioDurationHandler(self.logger)
-    
+
         except Exception as e:
             self.logger.error(f"Failed to initialize configuration: {e}")
             raise
-    
+
         self.keep_running = True
-    
+
         # Check dependencies before proceeding
         if not self.check_dependencies():
             raise SystemExit("Required dependencies not met")
-        
+
         self.setup_signal_handlers()
+
+        # Pre-load the model during worker initialization
+        self._initialize_model()
+        
+        # Perform model warm-up
+        self._warmup_model()
+
+    def _initialize_model(self):
+        """Initialize the Whisper model with proper error handling."""
+        try:
+            from faster_whisper import WhisperModel
+            import torch
+
+            # First try CUDA if preferred
+            if self.config.PREFER_CUDA and torch.cuda.is_available():
+                try:
+                    self.model = WhisperModel(
+                        self.config.MODEL_SIZE,
+                        device="cuda",
+                        compute_type="float16"
+                    )
+                    self.logger.info(f"Successfully pre-loaded Whisper model on CUDA")
+                    return
+                except RuntimeError as e:
+                    self.logger.error(f"CUDA initialization failed: {e}. Falling back to CPU.")
+
+            # Fall back to CPU if CUDA fails or isn't preferred
+            self.model = WhisperModel(
+                self.config.MODEL_SIZE,
+                device="cpu",
+                compute_type="int8"
+            )
+            self.logger.info("Successfully pre-loaded Whisper model on CPU")
+
+        except Exception as e:
+            self.logger.error(f"Failed to initialize Whisper model: {str(e)}")
+            raise SystemExit("Cannot start worker without functioning model")
+
+    def _warmup_model(self):
+        """Perform model warm-up with a small test transcription."""
+        try:
+            # Create a small test audio file or use a pre-existing one
+            test_audio = os.path.join(self.config.DOWNLOAD_FOLDER, "test.wav")
+            
+            # Generate a simple test audio file if it doesn't exist
+            if not os.path.exists(test_audio):
+                import numpy as np
+                import soundfile as sf
+                
+                # Generate 1 second of silence
+                sample_rate = 16000
+                audio_data = np.zeros(sample_rate)
+                sf.write(test_audio, audio_data, sample_rate)
+
+            # Perform warm-up transcription
+            self.logger.info("Performing model warm-up...")
+            _, _ = self.model.transcribe(test_audio)
+            self.logger.info("Model warm-up completed successfully")
+
+            # Clean up test file
+            if os.path.exists(test_audio):
+                os.remove(test_audio)
+
+        except Exception as e:
+            self.logger.error(f"Model warm-up failed: {str(e)}")
+            # Don't raise SystemExit here as warm-up failure isn't critical
 
     def check_dependencies(self) -> bool:
         """Check all required dependencies."""
@@ -395,435 +461,6 @@ class GlobalConfig:
         return cls._instance
 
 
-class AudioTranscriptionWorker:
-    def __init__(self):
-        """Initialize the Audio Transcription Worker"""
-        self.logger = logging.getLogger(__name__)
-        
-        # Initialize configuration
-        try:
-            self.config = GlobalConfig.get_instance()
-            self.logger.info("Worker initialized with configuration")
-
-            self.status_manager = WorkerStatusManager(
-                self.config.WORKER_ID,
-                self.config.ORCHESTRATOR_URL,
-                self.config.API_TOKEN,
-                self.config
-            )
-            
-            if not self.status_manager.register():
-                raise SystemExit("Failed to register worker")
-
-            # Initialize audio duration handler
-            self.duration_handler = AudioDurationHandler(self.logger)
-
-        except Exception as e:
-            self.logger.error(f"Failed to initialize configuration: {e}")
-            raise
-
-        self.keep_running = True
-        
-        # Check dependencies before proceeding
-        if not self.check_dependencies():
-            raise SystemExit("Required dependencies not met")
-
-        self.setup_signal_handlers()
-
-    def check_dependencies(self) -> bool:
-        """Check all required dependencies."""
-        try:
-            self.logger.info("Checking dependencies...")
-
-            # Check for faster-whisper
-            try:
-                import faster_whisper
-                self.logger.info("✓ faster-whisper found")
-            except ImportError:
-                self.logger.error("✗ faster-whisper not found")
-                return False
-
-            # Check for torch
-            try:
-                import torch
-                if self.config.PREFER_CUDA and torch.cuda.is_available():
-                    self.logger.info(f"✓ CUDA available: {torch.cuda.get_device_name(0)}")
-                elif self.config.PREFER_CUDA:
-                    self.logger.warning("! CUDA not available - will use CPU")
-            except ImportError:
-                self.logger.error("✗ torch not found")
-                return False
-
-            # Check for ffprobe
-            result = subprocess.run(['which', 'ffprobe'], 
-                                capture_output=True, 
-                                text=True)
-            if result.returncode == 0:
-                self.logger.info("✓ ffprobe found")
-            else:
-                self.logger.warning("! ffprobe not found - will use fallback methods")
-
-            return True
-
-        except Exception as e:
-            self.logger.error(f"Error checking dependencies: {str(e)}")
-            return False
-
-    def get_audio_duration(self, audio_path: str) -> float:
-        """Get audio file duration in seconds."""
-        return self.duration_handler.get_duration(audio_path)
-
-    def get_task(self) -> Optional[Dict[str, Any]]:
-        """Get task from orchestrator."""
-        try:
-            headers = {
-                'Authorization': f"Bearer {self.config.API_TOKEN}",
-                'X-Worker-ID': self.config.WORKER_ID  # Use lowercase key as expected by the orchestrator
-            }
-            
-            response = requests.get(
-                f"{self.config.ORCHESTRATOR_URL}/get-task",
-                headers=headers,
-                timeout=self.config.API_TIMEOUT
-            )
-    
-            if response.status_code == 200:
-                return response.json()
-            elif response.status_code == 204:
-                return None
-            else:
-                self.logger.error(f"Failed to get task: {response.status_code}")
-                return None
-    
-        except Exception as e:
-            self.logger.error(f"Error requesting task: {str(e)}")
-            return None
-
-    def update_task_status(
-        self,
-        task_id: str,
-        status: str,
-        failure_reason: Optional[str] = None
-    ):
-        """Update task status via orchestrator API."""
-        try:
-            data = {
-                'task_id': task_id,
-                'status': status
-            }
-            if failure_reason:
-                data['failure_reason'] = failure_reason
-
-            headers = {
-                'Authorization': f"Bearer {self.config.API_TOKEN}",
-                'Content-Type': 'application/json'
-            }
-
-            response = requests.post(
-                f"{self.config.ORCHESTRATOR_URL}/update-task-status",
-                headers=headers,
-                json=data,
-                timeout=self.config.API_TIMEOUT
-            )
-
-            if response.status_code != 200:
-                self.logger.error(f"Failed to update status: {response.status_code}")
-                
-        except Exception as e:
-            self.logger.error(f"Error updating status: {str(e)}")
-
-    def process_task(self, task: Dict[str, Any]) -> bool:
-        task_id = task['task_id']
-        encoded_key = task['object_key']
-        presigned_get_url = task['presigned_get_url']
-        presigned_put_url = task['presigned_put_url']
-    
-        filename = os.path.basename(encoded_key)
-        local_audio_path = os.path.join(self.config.DOWNLOAD_FOLDER, filename)
-    
-        try:
-            # Step 1: Download the audio file
-            if not self.download_file(presigned_get_url, local_audio_path):
-                self.update_task_status(task_id, "Failed", "Failed to download audio file")
-                return False
-    
-            # Step 2: Transcribe the audio file
-            transcription = self.transcribe_audio_via_api(local_audio_path)
-            if not transcription:
-                self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
-                return False
-    
-            # Step 3: Save transcription result to S3
-            self.logger.info(f"Uploading transcription for {task_id}")
-            if not self.upload_transcription_to_s3(presigned_put_url, transcription):
-                self.update_task_status(task_id, "Failed", "Failed to upload transcription to S3")
-                return False
-    
-            # Step 4: Send Transcription to Orchestrator
-            if not self.send_transcription_to_orchestrator(task_id, transcription):
-                self.logger.warning(f"Failed to send transcription to orchestrator for task {task_id}")
-                # Don't fail the task just because we couldn't send to orchestrator
-                # The transcription is still in S3
-    
-            # Step 5: Mark task as completed
-            self.update_task_status(task_id, "Completed")
-            return True
-        
-        except Exception as e:
-            error_msg = str(e)
-            self.logger.error(f"Error processing task {task_id}: {error_msg}")
-            self.update_task_status(task_id, "Failed", error_msg)
-            return False
-        finally:
-            # Clean up the local audio file
-            try:
-                if os.path.exists(local_audio_path):
-                    os.remove(local_audio_path)
-            except Exception as e:
-                self.logger.warning(f"Failed to clean up file {local_audio_path}: {str(e)}")
-    
-    def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
-        """Transcribe the audio file."""
-        try:
-            from faster_whisper import WhisperModel
-            import torch
-        
-            self.logger.info(f"Starting transcription of file: {os.path.basename(local_audio_path)}")
-            
-            try:
-                device = "cuda" if self.config.PREFER_CUDA and torch.cuda.is_available() else self.config.FALLBACK_DEVICE
-                # Start with float16 compute type
-                model = WhisperModel(
-                    self.config.MODEL_SIZE,
-                    device=device,
-                    compute_type="float16"  # Use float16 instead of auto
-                )
-            except RuntimeError as e:
-                self.logger.error(f"CUDA error: {e}. Falling back to CPU.")
-                device = "cpu"
-                model = WhisperModel(
-                    self.config.MODEL_SIZE,
-                    device=device,
-                    compute_type="int8"  # Use int8 for CPU to save memory
-                )
-        
-            if not os.path.exists(local_audio_path):
-                raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
-        
-            segments, info = model.transcribe(
-                local_audio_path,
-                language="en",
-                beam_size=1  # Reduce beam size for better memory usage
-            )
-            
-            transcription = "".join([segment.text for segment in segments])
-        
-            if not transcription:
-                self.logger.warning("Transcription resulted in empty text")
-                return None
-                    
-            self.logger.info(f"Transcription completed for {os.path.basename(local_audio_path)}")
-            return transcription
-                    
-        except Exception as e:
-            self.logger.error(f"Error transcribing file: {str(e)}")
-            traceback.print_exc()  # Add this to get more detailed error info
-            return None
-
-    def transcribe_audio_via_api(self, local_audio_path: str) -> Optional[str]:
-        """
-        Transcribe the audio file by sending it to the local Faster-Whisper API server.
-        Returns the transcription as a string if successful, or None on failure.
-        """
-        try:
-            # Build the endpoint URL using the configuration value
-            api_url = f"{self.config.LOCAL_API_URL}/v1/audio/transcriptions"
-            self.logger.info(f"Sending file {os.path.basename(local_audio_path)} to API at {api_url}")
-            
-            with open(local_audio_path, "rb") as f:
-                # 'file' is the form field expected by the API; note the removal of "stream" for now.
-                files = {"file": f}
-                data = {"language": "en"}  # Removed "stream": "true" for testing a non-streaming response
-                
-                # Post the file to the API; use the transcription timeout from config
-                response = requests.post(api_url, files=files, data=data, timeout=self.config.TRANSCRIPTION_TIMEOUT)
-            
-            # Log response status and text for debugging
-            self.logger.info(f"Response status: {response.status_code}")
-            self.logger.info(f"Response text: {response.text}")
-    
-            if response.status_code == 200:
-                # Check if response body is empty
-                if not response.text.strip():
-                    self.logger.error("API returned empty response.")
-                    return None
-                
-                try:
-                    result = response.json()
-                except Exception as e:
-                    self.logger.error(f"Failed to decode JSON: {e}")
-                    return None
-                
-                transcription = result.get("text", "")
-                self.logger.info("API transcription succeeded")
-                return transcription
-            else:
-                self.logger.error(f"API transcription failed: {response.status_code} {response.text}")
-                return None
-        except Exception as e:
-            self.logger.error(f"Exception during API transcription: {e}")
-            traceback.print_exc()
-            return None
-
-    def send_transcription_to_orchestrator(self, task_id, transcription):
-        """Send transcription result to the Orchestrator."""
-        try:
-            # Prepare request data
-            payload = {
-                "task_id": task_id,
-                "transcription": transcription,
-                "worker_id": self.config.WORKER_ID  # Add worker ID to payload
-            }
-
-            # Set up headers
-            headers = {
-                "Authorization": f"Bearer {self.config.API_TOKEN}",
-                "Content-Type": "application/json",
-                "X-Worker-ID": self.config.WORKER_ID
-            }
-
-            # Log request data for debugging (excluding sensitive info)
-            self.logger.debug(f"Sending transcription for task {task_id} to orchestrator")
-            
-            response = requests.post(
-                f"{self.config.ORCHESTRATOR_URL}/worker/transcription-result",
-                json=payload,
-                headers=headers,
-                timeout=self.config.API_TIMEOUT  # Use configured timeout
-            )
-
-            # Check response
-            try:
-                response_data = response.json()
-            except ValueError:
-                response_data = response.text
-
-            if response.status_code == 200:
-                self.logger.info(f"Successfully sent transcription for task {task_id} to Orchestrator")
-                return True
-            else:
-                error_msg = f"Failed to send transcription: Status {response.status_code}"
-                if response_data:
-                    error_msg += f" - Response: {response_data}"
-                self.logger.error(error_msg)
-                
-                # If we get a 500 error, add more detailed logging
-                if response.status_code == 500:
-                    self.logger.error(f"Orchestrator internal error. Task ID: {task_id}")
-                    self.logger.error(f"Response headers: {dict(response.headers)}")
-                    
-                return False
-
-        except requests.exceptions.Timeout:
-            self.logger.error(f"Timeout sending transcription for task {task_id}")
-            return False
-        except requests.exceptions.RequestException as e:
-            self.logger.error(f"Network error sending transcription for task {task_id}: {str(e)}")
-            return False
-        except Exception as e:
-            self.logger.error(f"Unexpected error sending transcription for task {task_id}: {str(e)}")
-            traceback.print_exc()
-            return False
-
-
-    
-    def download_file(self, presigned_url: str, local_path: str) -> bool:
-        """Download file using pre-signed URL."""
-        try:
-            response = requests.get(
-                presigned_url,
-                stream=True,
-                timeout=self.config.DOWNLOAD_TIMEOUT
-            )
-
-            if response.status_code == 200:
-                with open(local_path, 'wb') as f:
-                    for chunk in response.iter_content(chunk_size=self.config.CHUNK_SIZE):
-                        if chunk:
-                            f.write(chunk)
-                return True
-            else:
-                self.logger.error(f"Download failed: {response.status_code}")
-                return False
-
-        except Exception as e:
-            self.logger.error(f"Download error: {str(e)}")
-            return False
-
-    def upload_transcription_to_s3(self, presigned_url, transcription):
-        """Upload transcription text to S3."""
-        try:
-            response = requests.put(
-                presigned_url,
-                data=transcription.encode('utf-8'),
-                headers={'Content-Type': 'text/plain'}
-            )
-    
-            if response.status_code == 200:
-                self.logger.info("Successfully uploaded transcription to S3.")
-            else:
-                self.logger.error(f"Failed to upload transcription: {response.status_code} - {response.text}")
-    
-        except Exception as e:
-            self.logger.error(f"Error uploading transcription: {str(e)}")
-    
-
-    def run(self):
-        """Main processing loop."""
-        try:
-            while self.keep_running:
-                try:
-                    task = self.get_task()
-                    if not task:
-
-                        # Still need to send heartbeat when idle
-                        self.status_manager.check_heartbeat()
-                        time.sleep(self.config.POLL_INTERVAL)
-                        continue
-
-                    self.process_task(task)
-
-                except Exception as e:
-                    self.logger.error(f"Error in processing loop: {str(e)}")
-                    time.sleep(self.config.POLL_INTERVAL)
-
-        finally:
-            self.logger.info("Cleaning up before shutdown...")
-            self.status_manager.disconnect()
-
-            # Comment out global cleanup to preserve all files for debugging
-            #self.cleanup_files(
-            #    [f for f in os.listdir(self.config.DOWNLOAD_FOLDER)]
-            #)
-
-    def setup_signal_handlers(self):
-        """Setup graceful shutdown handlers."""
-        signal.signal(signal.SIGINT, self.signal_handler)
-        signal.signal(signal.SIGTERM, self.signal_handler)
-
-    def signal_handler(self, signum, frame):
-        """Handle shutdown signals."""
-        self.logger.info(f"Received shutdown signal {signum}")
-        self.keep_running = False
-
-    def cleanup_files(self, file_paths: list):
-        """Clean up local files."""
-        for file_path in file_paths:
-            try:
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            except Exception as e:
-                self.logger.warning(f"Failed to clean up {file_path}: {str(e)}")
 
 ####### ####### ####### ####### ####### ####### ####### #######
 # This is global should do things like setup application.
