@@ -416,6 +416,245 @@ class AudioTranscriptionWorker:
             self.logger.error(f"Error uploading transcription: {str(e)}")
             return False
 
+    def update_task_status(
+        self,
+        task_id: str,
+        status: str,
+        failure_reason: Optional[str] = None
+    ):
+        """Update task status via orchestrator API."""
+        try:
+            data = {
+                'task_id': task_id,
+                'status': status
+            }
+            if failure_reason:
+                data['failure_reason'] = failure_reason
+
+            headers = {
+                'Authorization': f"Bearer {self.config.API_TOKEN}",
+                'Content-Type': 'application/json'
+            }
+
+            response = requests.post(
+                f"{self.config.ORCHESTRATOR_URL}/update-task-status",
+                headers=headers,
+                json=data,
+                timeout=self.config.API_TIMEOUT
+            )
+
+            if response.status_code != 200:
+                self.logger.error(f"Failed to update status: {response.status_code}")
+                
+        except Exception as e:
+            self.logger.error(f"Error updating status: {str(e)}")
+
+    def process_task(self, task: Dict[str, Any]) -> bool:
+        task_id = task['task_id']
+        encoded_key = task['object_key']
+        presigned_get_url = task['presigned_get_url']
+        presigned_put_url = task['presigned_put_url']
+    
+        filename = os.path.basename(encoded_key)
+        local_audio_path = os.path.join(self.config.DOWNLOAD_FOLDER, filename)
+    
+        try:
+            # Step 1: Download the audio file
+            if not self.download_file(presigned_get_url, local_audio_path):
+                self.update_task_status(task_id, "Failed", "Failed to download audio file")
+                return False
+    
+            # Step 2: Transcribe the audio file
+            if self.config.USE_API_FOR_TRANSCRIPTION:
+                transcription = self.transcribe_audio_via_api(local_audio_path)
+            else:
+                transcription = self.transcribe_audio(local_audio_path)
+                
+            if not transcription:
+                self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
+                return False
+    
+            # Step 3: Save transcription result to S3
+            self.logger.info(f"Uploading transcription for {task_id}")
+            if not self.upload_transcription_to_s3(presigned_put_url, transcription):
+                self.update_task_status(task_id, "Failed", "Failed to upload transcription to S3")
+                return False
+    
+            # Step 4: Mark task as completed
+            self.update_task_status(task_id, "Completed")
+            return True
+        
+        except Exception as e:
+            error_msg = str(e)
+            self.logger.error(f"Error processing task {task_id}: {error_msg}")
+            self.update_task_status(task_id, "Failed", error_msg)
+            return False
+        finally:
+            # Clean up the local audio file
+            try:
+                if os.path.exists(local_audio_path):
+                    os.remove(local_audio_path)
+            except Exception as e:
+                self.logger.warning(f"Failed to clean up file {local_audio_path}: {str(e)}")
+
+    def transcribe_audio(self, local_audio_path: str) -> Optional[str]:
+        """Transcribe the audio file using pre-loaded model."""
+        try:
+            self.logger.info(f"Starting transcription of file: {os.path.basename(local_audio_path)}")
+            
+            if not os.path.exists(local_audio_path):
+                raise FileNotFoundError(f"Audio file not found: {local_audio_path}")
+        
+            # Use the pre-loaded model
+            segments, info = self.model.transcribe(
+                local_audio_path,
+                language="en",
+                beam_size=1
+            )
+            
+            transcription = "".join([segment.text for segment in segments])
+        
+            if not transcription:
+                self.logger.warning("Transcription resulted in empty text")
+                return None
+                    
+            self.logger.info(f"Transcription completed for {os.path.basename(local_audio_path)}")
+            return transcription
+                    
+        except Exception as e:
+            self.logger.error(f"Error transcribing file: {str(e)}")
+            traceback.print_exc()
+            return None
+
+    def transcribe_audio_via_api(self, local_audio_path: str) -> Optional[str]:
+        """Transcribe using local Faster-Whisper API server."""
+        try:
+            api_url = f"{self.config.LOCAL_API_URL}/v1/audio/transcriptions"
+            self.logger.info(f"Sending file {os.path.basename(local_audio_path)} to API at {api_url}")
+            
+            with open(local_audio_path, "rb") as f:
+                files = {"file": f}
+                data = {"language": "en"}
+                
+                response = requests.post(
+                    api_url, 
+                    files=files, 
+                    data=data, 
+                    timeout=self.config.TRANSCRIPTION_TIMEOUT
+                )
+            
+            self.logger.info(f"Response status: {response.status_code}")
+            self.logger.info(f"Response text: {response.text}")
+    
+            if response.status_code == 200:
+                if not response.text.strip():
+                    self.logger.error("API returned empty response.")
+                    return None
+                
+                try:
+                    result = response.json()
+                except Exception as e:
+                    self.logger.error(f"Failed to decode JSON: {e}")
+                    return None
+                
+                transcription = result.get("text", "")
+                self.logger.info("API transcription succeeded")
+                return transcription
+            else:
+                self.logger.error(f"API transcription failed: {response.status_code} {response.text}")
+                return None
+        except Exception as e:
+            self.logger.error(f"Exception during API transcription: {e}")
+            traceback.print_exc()
+            return None
+
+    def download_file(self, presigned_url: str, local_path: str) -> bool:
+        """Download file using pre-signed URL."""
+        try:
+            response = requests.get(
+                presigned_url,
+                stream=True,
+                timeout=self.config.DOWNLOAD_TIMEOUT
+            )
+
+            if response.status_code == 200:
+                with open(local_path, 'wb') as f:
+                    for chunk in response.iter_content(chunk_size=self.config.CHUNK_SIZE):
+                        if chunk:
+                            f.write(chunk)
+                return True
+            else:
+                self.logger.error(f"Download failed: {response.status_code}")
+                return False
+
+        except Exception as e:
+            self.logger.error(f"Download error: {str(e)}")
+            return False
+
+    def upload_transcription_to_s3(self, presigned_url: str, transcription: str) -> bool:
+        """Upload transcription text to S3."""
+        try:
+            response = requests.put(
+                presigned_url,
+                data=transcription.encode('utf-8'),
+                headers={'Content-Type': 'text/plain'},
+                timeout=self.config.UPLOAD_TIMEOUT
+            )
+    
+            if response.status_code == 200:
+                self.logger.info("Successfully uploaded transcription to S3.")
+                return True
+            else:
+                self.logger.error(f"Failed to upload transcription: {response.status_code} - {response.text}")
+                return False
+    
+        except Exception as e:
+            self.logger.error(f"Error uploading transcription: {str(e)}")
+            return False
+
+    def run(self):
+        """Main processing loop."""
+        try:
+            while self.keep_running:
+                try:
+                    task = self.get_task()
+                    if not task:
+                        # Still need to send heartbeat when idle
+                        self.status_manager.check_heartbeat()
+                        time.sleep(self.config.POLL_INTERVAL)
+                        continue
+
+                    self.process_task(task)
+
+                except Exception as e:
+                    self.logger.error(f"Error in processing loop: {str(e)}")
+                    time.sleep(self.config.POLL_INTERVAL)
+
+        finally:
+            self.logger.info("Cleaning up before shutdown...")
+            self.status_manager.disconnect()
+
+    def setup_signal_handlers(self):
+        """Setup graceful shutdown handlers."""
+        signal.signal(signal.SIGINT, self.signal_handler)
+        signal.signal(signal.SIGTERM, self.signal_handler)
+
+    def signal_handler(self, signum, frame):
+        """Handle shutdown signals."""
+        self.logger.info(f"Received shutdown signal {signum}")
+        self.keep_running = False
+
+    def cleanup_files(self, file_paths: list):
+        """Clean up local files."""
+        for file_path in file_paths:
+            try:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            except Exception as e:
+                self.logger.warning(f"Failed to clean up {file_path}: {str(e)}")
+
+
+
     def run(self):
         """Main processing loop."""
         try:
