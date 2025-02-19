@@ -1,39 +1,46 @@
 // New file: socket_manager.js
 class SocketManager {
     constructor() {
-        this.socket = io();
+        // Connect to the same host but on port 6000 where your orchestrator runs
+        this.socket = io('http://localhost:6000', {
+            transports: ['websocket'],
+            autoConnect: true,
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5
+        });
+        
         this.taskCallbacks = new Map();
         this.initialize();
     }
 
     initialize() {
-
         // Connection handlers
         this.socket.on('connect', () => {
             document.getElementById('socketStatus').textContent = 'WebSocket: Connected';
             window.statusManager.setStatus('success', 'Real-time updates connected');
+            window.debugManager.info('WebSocket connected');
+        });
+
+        this.socket.on('connect_error', (error) => {
+            document.getElementById('socketStatus').textContent = 'WebSocket: Connection Error';
+            window.statusManager.setStatus('error', 'Connection failed', {
+                label: 'Retry',
+                action: () => this.socket.connect()
+            });
+            window.debugManager.error('WebSocket connection error', { error: error.message });
         });
 
         this.socket.on('disconnect', () => {
             document.getElementById('socketStatus').textContent = 'WebSocket: Disconnected';
             window.statusManager.setStatus('warning', 'Real-time updates disconnected');
+            window.debugManager.warn('WebSocket disconnected');
         });
 
-        // Test function - you can remove this later
-        this.socket.on('test_transcription', (data) => {
-            console.log('Received test transcription:', data);
-            const { task_id, transcription } = data;
-            window.debugManager.info('Received transcription', { task_id, transcription });
-            
-            // Display it in the UI
-            const testDiv = document.createElement('div');
-            testDiv.className = 'test-transcription';
-            testDiv.textContent = `Test Transcription: ${transcription}`;
-            document.body.appendChild(testDiv);
-        });
-
-        // Transcription update handler
+        // Transcription handlers
         this.socket.on('transcription_complete', (data) => {
+            window.debugManager.info('Received transcription', data);
             const { task_id, transcription } = data;
             const callback = this.taskCallbacks.get(task_id);
             if (callback) {
@@ -41,19 +48,28 @@ class SocketManager {
                 this.taskCallbacks.delete(task_id);
             }
         });
+
+        // Test handler
+        this.socket.on('test_transcription', (data) => {
+            window.debugManager.info('Received test transcription', data);
+            UIController.showNotification(`Test transcription received: ${data.transcription}`);
+        });
     }
 
     registerForUpdates(taskId, callback) {
+        window.debugManager.info('Registering for updates', { taskId });
         this.taskCallbacks.set(taskId, callback);
         this.socket.emit('register_for_updates', { task_id: taskId });
     }
 
-    // Test method to simulate receiving a transcription
-    testTranscription() {
+    // Test method to verify connection
+    testConnection() {
+        window.debugManager.info('Testing WebSocket connection');
         this.socket.emit('test_transcription_request', {
-            message: 'Requesting test transcription'
+            message: 'Testing connection'
         });
     }
+
 
 }
 
