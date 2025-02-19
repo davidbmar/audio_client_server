@@ -33,6 +33,19 @@ async function initialize() {
         });
 
         await audioController.initializeStorage();
+
+        // Initialize Socket Manager
+        window.socketManager = new SocketManager();
+        
+        // Initialize UI
+        UIController.initialize(UI);
+
+        // Add test button handler
+        UI.testSocket.addEventListener('click', () => {
+            window.socketManager.testConnection();
+        });
+
+
         syncService = new SyncService(audioController.dbStorage);
         window.syncService = syncService; // Make it globally available
         UIController.initialize(UI);
