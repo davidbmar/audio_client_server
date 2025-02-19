@@ -190,6 +190,18 @@ class AudioController {
             });
     
             if (uploadResponse.ok) {
+
+                const taskId = uploadResponse.headers.get('X-Task-ID');
+                
+                // Register for WebSocket updates
+                window.socketManager.registerForUpdates(taskId, (transcription) => {
+                    const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
+                    if (chunkIndex !== -1) {
+                        this.recordedChunks[chunkIndex].transcription = transcription;
+                        UIController.updateChunksList(this.recordedChunks, UI);
+                    }
+                });
+    
                 await this.dbStorage.updateChunkSyncStatus(id, 'synced');
                 // Update in-memory status
                 if (chunkIndex !== -1) {
