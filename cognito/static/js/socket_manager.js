@@ -1,9 +1,13 @@
 // New file: socket_manager.js
 class SocketManager {
     constructor() {
-        // Connect to the same host but on port 6000 where your orchestrator runs
-        this.socket = io('http://localhost:6000', {
+        // Use secure WebSocket and the correct domain
+        const socketUrl = `https://www.davidbmar.com`;  // No port needed since Apache handles proxying
+        this.socket = io(socketUrl, {
+            path: '/socket.io/',  // Match the proxy path
             transports: ['websocket'],
+            secure: true,
+            rejectUnauthorized: false,
             autoConnect: true,
             reconnection: true,
             reconnectionDelay: 1000,
