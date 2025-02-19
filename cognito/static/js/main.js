@@ -70,6 +70,13 @@ initialize().catch(error => {
 });
 
 function setupEventListeners() {
+
+    // For testing out the WebSocket Connection 
+    UI.testSocket.addEventListener('click', () => {
+        window.debugManager.info('Testing WebSocket connection');
+        window.socketManager.testTranscription();
+    });
+
     // Debug button handler
     UI.debugButton.addEventListener('click', () => {
         window.debugManager.openDebugWindow();
