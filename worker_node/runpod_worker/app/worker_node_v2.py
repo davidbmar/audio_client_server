@@ -277,7 +277,11 @@ class AudioTranscriptionWorker:
             if not transcription:
                 self.update_task_status(task_id, "Failed", "Failed to transcribe audio")
                 return False
-    
+   
+            # Step 2.5: Send transcription result to orchestrator for real-time update**
+            if not self.send_transcription_result(task_id, transcription):
+                self.logger.warning(f"Transcription sent to orchestrator failed for task {task_id}")
+
             # Step 3: Save transcription result to S3
             self.logger.info(f"Uploading transcription for {task_id}")
             if not self.upload_transcription_to_s3(presigned_put_url, transcription):
@@ -415,6 +419,32 @@ class AudioTranscriptionWorker:
         except Exception as e:
             self.logger.error(f"Error uploading transcription: {str(e)}")
             return False
+
+    def send_transcription_result(self, task_id: str, transcription: str) -> bool:
+        """
+        Sends the transcription result to the orchestrator's /worker/transcription-result endpoint.
+        """
+        try:
+            url = f"{self.config.ORCHESTRATOR_URL}/worker/transcription-result"
+            headers = {
+                'Authorization': f"Bearer {self.config.API_TOKEN}",
+                'Content-Type': 'application/json'
+            }
+            payload = {
+                "task_id": task_id,
+                "transcription": transcription
+            }
+            response = requests.post(url, headers=headers, json=payload, timeout=self.config.API_TIMEOUT)
+            if response.status_code == 200:
+                self.logger.info(f"Successfully sent transcription for task {task_id}")
+                return True
+            else:
+                self.logger.error(f"Failed to send transcription for task {task_id}: {response.status_code} {response.text}")
+                return False
+        except Exception as e:
+            self.logger.error(f"Exception while sending transcription: {str(e)}")
+            return False
+
 
 
     def run(self):
