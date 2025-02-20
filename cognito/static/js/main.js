@@ -15,6 +15,11 @@ const UI = {
     presetButtons: document.querySelectorAll('.preset-button'),
     chunksList: document.getElementById('chunksList'),
     testSocket: document.getElementById('testSocket') // Add this line
+
+    transcriptionContainer: document.getElementById('transcriptionContainer'),
+    testTranscriptionBtn: document.getElementById('testTranscriptionBtn'),
+
+
 };
 
 // Make UI globally available

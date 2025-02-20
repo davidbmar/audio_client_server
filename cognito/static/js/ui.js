@@ -229,64 +229,87 @@ const UIController = {
         return statusConfig[status] || statusConfig.pending;
     },
 
-    updateChunksList(chunks, ui) {
-        if (ui.chunksList) {
-            ui.chunksList.innerHTML = chunks.map((chunk) => {
-                const statusDetails = this.getSyncStatusDetails(chunk.syncStatus);
-                
-                return `
-                    <div class="chunk-item">
-                        <div class="chunk-info">
-                            <span class="chunk-number">Chunk ${chunk.number}</span>
-                            <span class="chunk-time">${chunk.timestamp} (${chunk.duration}s)</span>
-                            <span class="sync-status" title="${statusDetails.label}">
-                                ${statusDetails.icon}
-                            </span>
-                        </div>
-                        <div class="chunk-controls">
-                            <button class="chunk-button play" 
-                                    onclick="window.handleChunkPlay(${chunk.id})">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                                </svg>
-                                Play
-                            </button>
-                            <button class="chunk-button" 
-                                    onclick="window.handleChunkDownload(${chunk.id})">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                Download
-                            </button>
 
-                            <button class="chunk-button delete" 
-                                    onclick="window.handleChunkDelete(${chunk.id})">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M3 6h18"></path>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
-                                    <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                </svg>
-                                Delete
-                            </button>
-                            <button class="chunk-button upload" 
-                                    onclick="window.handleChunkUpload(${chunk.id})"
-                                    ${chunk.syncStatus === 'synced' ? 'disabled' : ''}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="12 15 12 3"></polyline>
-                                    <polyline points="7 8 12 3 17 8"></polyline>
-                                </svg>
-                                Upload
-                            </button>
+    // In ui.js
+    updateChunksList(chunks, ui) {
+        if (!ui.chunksList) return;
     
-                        </div>
+        // First, clean up any existing React roots
+        chunks.forEach(chunk => {
+            const container = document.getElementById(`transcription-${chunk.id}`);
+            if (container && container._reactRoot) {
+                container._reactRoot.unmount();
+            }
+        });
+    
+        // Update the HTML
+        ui.chunksList.innerHTML = chunks.map((chunk) => {
+            const statusDetails = this.getSyncStatusDetails(chunk.syncStatus);
+            
+            return `
+                <div class="chunk-item">
+                    <div class="chunk-info">
+                        <span class="chunk-number">Chunk ${chunk.number}</span>
+                        <span class="chunk-time">${chunk.timestamp} (${chunk.duration}s)</span>
+                        <span class="sync-status" title="${statusDetails.label}">
+                            ${statusDetails.icon}
+                        </span>
                     </div>
-                `;
-            }).join('');
-        }
+                    <div class="chunk-controls">
+                        <button class="chunk-button play" 
+                                onclick="window.handleChunkPlay(${chunk.id})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Play
+                        </button>
+                        <button class="chunk-button" 
+                                onclick="window.handleChunkDownload(${chunk.id})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Download
+                        </button>
+                        <button class="chunk-button delete" 
+                                onclick="window.handleChunkDelete(${chunk.id})">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 6h18"></path>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"></path>
+                                <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete
+                        </button>
+                        <button class="chunk-button upload" 
+                                onclick="window.handleChunkUpload(${chunk.id})"
+                                ${chunk.syncStatus === 'synced' ? 'disabled' : ''}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="12 15 12 3"></polyline>
+                                <polyline points="7 8 12 3 17 8"></polyline>
+                            </svg>
+                            Upload
+                        </button>
+                    </div>
+                    <!-- Add transcription container -->
+                    <div id="transcription-${chunk.id}" class="chunk-transcription"></div>
+                </div>
+            `;
+        }).join('');
+    
+        // Mount React components for transcriptions
+        chunks.forEach(chunk => {
+            const container = document.getElementById(`transcription-${chunk.id}`);
+            if (container) {
+                const root = ReactDOM.createRoot(container);
+                container._reactRoot = root; // Store reference for cleanup
+                root.render(React.createElement(window.TranscriptionDisplay, { chunkId: chunk.id }));
+            }
+        });
     }
+
+
     
 };
 
