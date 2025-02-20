@@ -1,23 +1,36 @@
 // New file: socket_manager.js
 class SocketManager {
+
     constructor() {
-        // Use secure WebSocket and the correct domain
-        const socketUrl = `https://www.davidbmar.com`;  // No port needed since Apache handles proxying
+        // Use the current domain for WebSocket connection
+        const socketUrl = `${window.location.protocol}//${window.location.hostname}`;
         this.socket = io(socketUrl, {
-            path: '/socket.io/',  // Match the proxy path
+            path: '/socket.io/',
             transports: ['websocket'],
             secure: true,
             rejectUnauthorized: false,
-            autoConnect: true,
-            reconnection: true,
-            reconnectionDelay: 1000,
-            reconnectionDelayMax: 5000,
-            reconnectionAttempts: 5
+            autoConnect: true
         });
-        
-        this.taskCallbacks = new Map();
-        this.initialize();
+
+        // Set up WebSocket event handlers
+        this.socket.on('connect', () => {
+            document.getElementById('socketStatus').textContent = 'WebSocket: Connected';
+            window.debugManager.info('WebSocket connected');
+        });
+
+        this.socket.on('disconnect', () => {
+            document.getElementById('socketStatus').textContent = 'WebSocket: Disconnected';
+            window.debugManager.warn('WebSocket disconnected');
+        });
     }
+
+
+    testConnection() {
+        this.socket.emit('test_transcription_request', {
+            message: 'Testing connection'
+        });
+    }
+
 
     initialize() {
         // Connection handlers
