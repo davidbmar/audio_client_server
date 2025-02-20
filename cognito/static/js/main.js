@@ -229,8 +229,8 @@ function setupEventListeners() {
     // For testing out the WebSocket Connection 
     UI.testSocket.addEventListener('click', () => {
         window.debugManager.info('Testing WebSocket connection');
-        window.socketManager.testTranscription();
-    });
+        window.socketManager.testConnection();  // Changed from testTranscription to testConnection
+    });    
 
     // Debug button handler
     UI.debugButton.addEventListener('click', () => {
