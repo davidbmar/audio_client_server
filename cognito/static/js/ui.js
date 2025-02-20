@@ -297,16 +297,27 @@ const UIController = {
                 </div>
             `;
         }).join('');
-    
+   
         // Mount React components
-        chunks.forEach(chunk => {
-            const container = document.getElementById(`transcription-${chunk.id}`);
-            if (container && window.TranscriptionDisplay) {
-                const root = ReactDOM.createRoot(container);
-                container._reactRoot = root;
-                root.render(React.createElement(window.TranscriptionDisplay, { chunkId: chunk.id }));
-            }
-        });
+        setTimeout(() => {
+            chunks.forEach(chunk => {
+                const container = document.getElementById(`transcription-${chunk.id}`);
+                if (container && window.TranscriptionDisplay) {
+                    try {
+                        const root = ReactDOM.createRoot(container);
+                        container._reactRoot = root;
+                        const element = React.createElement(window.TranscriptionDisplay, { 
+                            chunkId: chunk.id.toString()
+                        });
+                        root.render(element);
+                    } catch (err) {
+                        console.error('Error mounting transcription component:', err);
+                    }
+                }
+            });
+        }, 0);
+
+
     }
 
     
