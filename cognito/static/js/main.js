@@ -1,5 +1,6 @@
 // main.js
 // Initialize UI elements
+// In main.js, fix the UI object
 const UI = {
     recordButton: document.getElementById('recordButton'),
     debugButton: document.getElementById('debugButton'),
@@ -14,12 +15,9 @@ const UI = {
     durationValue: document.getElementById('durationValue'),
     presetButtons: document.querySelectorAll('.preset-button'),
     chunksList: document.getElementById('chunksList'),
-    testSocket: document.getElementById('testSocket') // Add this line
-
+    testSocket: document.getElementById('testSocket'),  // Added comma here
     transcriptionContainer: document.getElementById('transcriptionContainer'),
-    testTranscriptionBtn: document.getElementById('testTranscriptionBtn'),
-
-
+    testTranscriptionBtn: document.getElementById('testTranscriptionBtn')
 };
 
 // Make UI globally available

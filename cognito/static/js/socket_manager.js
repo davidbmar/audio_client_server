@@ -1,38 +1,30 @@
-// New file: socket_manager.js
+// socket_manager.js
 class SocketManager {
-
     constructor() {
-        // Use the current domain for WebSocket connection
+        this.taskCallbacks = new Map();
         const socketUrl = `${window.location.protocol}//${window.location.hostname}`;
+        
         this.socket = io(socketUrl, {
-            path: '/socket.io/',
+            path: '/socket.io/',  // Match the proxy path
             transports: ['websocket'],
             secure: true,
             rejectUnauthorized: false,
-            autoConnect: true
+            autoConnect: true,
+            reconnection: true,
+            reconnectionDelay: 1000,
+            reconnectionDelayMax: 5000,
+            reconnectionAttempts: 5,
+            cors: {
+                origin: socketUrl,
+                methods: ["GET", "POST"],
+                credentials: true
+            }
         });
 
-        // Set up WebSocket event handlers
-        this.socket.on('connect', () => {
-            document.getElementById('socketStatus').textContent = 'WebSocket: Connected';
-            window.debugManager.info('WebSocket connected');
-        });
-
-        this.socket.on('disconnect', () => {
-            document.getElementById('socketStatus').textContent = 'WebSocket: Disconnected';
-            window.debugManager.warn('WebSocket disconnected');
-        });
+        this.setupEventHandlers();
     }
 
-
-    testConnection() {
-        this.socket.emit('test_transcription_request', {
-            message: 'Testing connection'
-        });
-    }
-
-
-    initialize() {
+    setupEventHandlers() {
         // Connection handlers
         this.socket.on('connect', () => {
             document.getElementById('socketStatus').textContent = 'WebSocket: Connected';
@@ -69,7 +61,37 @@ class SocketManager {
         // Test handler
         this.socket.on('test_transcription', (data) => {
             window.debugManager.info('Received test transcription', data);
-            UIController.showNotification(`Test transcription received: ${data.transcription}`);
+            if (window.UIController && window.UIController.showNotification) {
+                window.UIController.showNotification(`Test transcription received: ${data.transcription}`);
+            }
+        });
+
+        // Handle errors
+        this.socket.on('error', (error) => {
+            window.debugManager.error('WebSocket error', { error: error.message });
+            window.statusManager.setStatus('error', 'WebSocket error occurred', {
+                label: 'Reconnect',
+                action: () => this.socket.connect()
+            });
+        });
+
+        // Handle reconnection events
+        this.socket.on('reconnect_attempt', () => {
+            window.debugManager.info('Attempting to reconnect...');
+            window.statusManager.setStatus('warning', 'Attempting to reconnect...');
+        });
+
+        this.socket.on('reconnect', (attemptNumber) => {
+            window.debugManager.info('Reconnected', { attemptNumber });
+            window.statusManager.setStatus('success', 'Connection restored');
+        });
+
+        this.socket.on('reconnect_failed', () => {
+            window.debugManager.error('Failed to reconnect');
+            window.statusManager.setStatus('error', 'Failed to reconnect', {
+                label: 'Try Again',
+                action: () => this.socket.connect()
+            });
         });
     }
 
@@ -79,7 +101,6 @@ class SocketManager {
         this.socket.emit('register_for_updates', { task_id: taskId });
     }
 
-    // Test method to verify connection
     testConnection() {
         window.debugManager.info('Testing WebSocket connection');
         this.socket.emit('test_transcription_request', {
@@ -87,7 +108,17 @@ class SocketManager {
         });
     }
 
+    disconnect() {
+        if (this.socket) {
+            this.socket.disconnect();
+        }
+    }
 
+    connect() {
+        if (this.socket) {
+            this.socket.connect();
+        }
+    }
 }
 
 // Create global instance
