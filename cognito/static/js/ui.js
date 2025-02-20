@@ -230,7 +230,7 @@ const UIController = {
     },
 
 
-    // In ui.js
+    // In ui.js, the complete merged updateChunksList method
     updateChunksList(chunks, ui) {
         if (!ui.chunksList) return;
     
@@ -298,17 +298,16 @@ const UIController = {
             `;
         }).join('');
     
-        // Mount React components for transcriptions
+        // Mount React components
         chunks.forEach(chunk => {
             const container = document.getElementById(`transcription-${chunk.id}`);
-            if (container) {
+            if (container && window.TranscriptionDisplay) {
                 const root = ReactDOM.createRoot(container);
-                container._reactRoot = root; // Store reference for cleanup
+                container._reactRoot = root;
                 root.render(React.createElement(window.TranscriptionDisplay, { chunkId: chunk.id }));
             }
         });
     }
-
 
     
 };
