@@ -40,8 +40,9 @@ class DBStorage {
             };
         });
     }
-   
-    // Update saveChunk to include UUID
+  
+
+    // In db.js - update the saveChunk method
     async saveChunk(chunkData) {
         return new Promise((resolve, reject) => {
             const transaction = this.db.transaction([this.storeName], 'readwrite');
@@ -58,7 +59,6 @@ class DBStorage {
                 syncStatus: 'pending',
                 clientUUID: clientUUID,
                 taskId: null,
-                transcription: null,
                 metadata: {}
             };
     
