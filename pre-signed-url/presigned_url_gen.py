@@ -1,10 +1,11 @@
-from fastapi import FastAPI, HTTPException, Header, Request  # Added Request here
+from fastapi import FastAPI, HTTPException, Header, Request  
 from fastapi.responses import JSONResponse
 import boto3
 from botocore.exceptions import ClientError
 from datetime import datetime
 import pytz
 import logging
+import uuid  # Add this import for UUID generation
 
 app = FastAPI()
 
@@ -26,16 +27,19 @@ def generate_file_name():
     now = datetime.now(pytz.timezone("UTC"))
     return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".webm"
 
-
 @app.get("/api/get-presigned-url")
 async def get_presigned_url(request: Request):
     """Endpoint to generate a pre-signed URL for uploading files to S3."""
     try:
-        # Get user info from headers with fallbacks
-        user_id = request.headers.get('X-User-Id', 'anonymous')
-        user_type = request.headers.get('X-User-Type', 'client')
-        provider = request.headers.get('X-Provider', 'system')
+        # Get user info from headers
+        user_id = request.headers.get('X-User-Id')
+        user_type = request.headers.get('X-User-Type', 'customer')
+        provider = request.headers.get('X-Provider', 'cognito')
         
+        if not user_id:
+            logger.error("Missing user information in request")
+            raise HTTPException(status_code=400, detail="Missing user information")
+
         # Get client UUID from header or generate one
         client_uuid = request.headers.get('X-Client-UUID')
         if not client_uuid:
@@ -44,7 +48,10 @@ async def get_presigned_url(request: Request):
 
         # Create user-specific path
         user_path = f"users/{user_type}/{provider}/{user_id}"
+        
+        # Generate timestamp for filename
         timestamp = datetime.now(pytz.timezone("UTC")).strftime("%Y-%m-%d-%H-%M-%S")
+        
         # Include client UUID in filename
         file_name = f"{client_uuid}-{timestamp}.webm"
         key = f"{user_path}/{file_name}"
@@ -76,8 +83,9 @@ async def get_presigned_url(request: Request):
             "clientUUID": client_uuid  # Return the UUID to the client
         })
     
-    except Exception as e:
+    except ClientError as e:
         logger.error(f"Failed to generate presigned URL: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating presigned URL: {str(e)}")
-
-
+        raise HTTPException(status_code=500, detail="Error generating presigned URL")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        raise HTTPException(status_code=500, detail="Internal server error")
