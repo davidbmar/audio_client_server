@@ -1,3 +1,5 @@
+import uuid  # For generating UUIDs
+
 // socket_manager.js
 class SocketManager {
     constructor() {
@@ -30,6 +32,16 @@ class SocketManager {
             document.getElementById('socketStatus').textContent = 'WebSocket: Connected';
             window.statusManager.setStatus('success', 'Real-time updates connected');
             window.debugManager.info('WebSocket connected');
+        });
+    
+        // Listen for the connection response from the server (includes UUID)
+        this.socket.on('connection_response', (data) => {
+            console.log("Connection response received:", data);
+            if (data.uuid) {
+                // Store the received UUID in localStorage for later use
+                localStorage.setItem('clientUUID', data.uuid);
+                console.log("UUID stored locally:", data.uuid);
+            }
         });
 
         this.socket.on('connect_error', (error) => {
