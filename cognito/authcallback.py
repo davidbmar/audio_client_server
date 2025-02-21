@@ -301,6 +301,10 @@ def audio_upload():
         if not user:
             return jsonify({"error": "User not found in session"}), 401
 
+        # Get client UUID from request header
+        client_uuid = request.headers.get('X-Client-UUID')
+        logger.info(f"Client UUID from request: {client_uuid}")
+
         # Forward the request to the FastAPI service
         presigned_url_service = 'http://localhost:8000/api/get-presigned-url'
         headers = {
@@ -308,6 +312,10 @@ def audio_upload():
             'X-User-Type': user.get('user_type', 'customer'),
             'X-Provider': user.get('provider', 'cognito'),
         }
+        
+        # Add client UUID to the forwarded headers if available
+        if client_uuid:
+            headers['X-Client-UUID'] = client_uuid
 
         response = requests.get(presigned_url_service, headers=headers)
         response.raise_for_status()  # Raise error if response is not 2xx
