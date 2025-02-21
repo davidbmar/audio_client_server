@@ -197,9 +197,7 @@ class AudioController {
                     method: 'PUT',
                     body: blob,
                     headers: {
-                        'Content-Type': 'audio/webm',
-                        'x-amz-acl': 'private'
-                        // Note: Metadata is already included in the presigned URL
+                        'Content-Type': 'audio/webm'
                     },
                     mode: 'cors',
                     credentials: 'omit'
