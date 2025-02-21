@@ -26,96 +26,70 @@ class SyncService {
 
     }
 
-
     async getPresignedUrl() {
-        // Use the correct endpoint path
-        const url = '/api/get-presigned-url';
-        
+        const url = '/auth/audio-upload';  
         const clientUUID = window.socketManager?.getClientUUID() || localStorage.getItem('clientUUID');
-        
-        console.log(`🔑 Attempting to request presigned URL from: ${url}`);
-        console.log(`🔑 Client UUID: ${clientUUID}`);
+            
+        console.log(`🔑 Requesting presigned URL from: ${url} with client UUID: ${clientUUID}`);
     
         try {
-            if (!clientUUID) {
-                console.log('No client UUID available - will rely on server to generate one');
-            }
-            
-            // Log the full request details
-            console.log('Request details:', {
-                url,
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-Client-UUID': clientUUID || '',
-                    'X-User-Id': 'anonymous'
-                }
-            });
-            
             const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-Client-UUID': clientUUID || '',
-                    'X-User-Id': 'anonymous'
+                    'X-Client-UUID': clientUUID || ''  // Send UUID in header (empty string if null)
                 }
             });
-            
-            console.log(`🔑 Response status: ${response.status}`);
-            
-            if (!response.ok) {
-                // Try to get the error text
-                let errorText = '';
-                try {
-                    errorText = await response.text();
-                } catch (err) {
-                    errorText = 'Could not read error text';
-                }
-                
-                console.error('Error response from server:', {
-                    status: response.status,
-                    statusText: response.statusText,
-                    body: errorText
+    
+            // Handle authentication errors
+            if (response.status === 401) {
+                window.statusManager.setStatus('error', 'Session expired - please refresh', {
+                    label: 'Refresh',
+                    action: () => window.location.reload()
                 });
-                
-                window.statusManager.setStatus('error', `Failed to get upload permission (${response.status})`);
-                throw new Error(`Failed to get presigned URL: ${response.status} - ${errorText}`);
+                throw new Error('Authentication failed');
             }
+    
+            if (!response.ok) {
+                window.statusManager.setStatus('error', 'Failed to get upload permission', {
+                    label: 'Retry',
+                    action: () => this.syncChunk(chunkId)
+                });
+                throw new Error(`HTTP Error: ${response.status}`);
+            }
+    
+            const data = await response.json();
             
-            const responseData = await response.json();
-            console.log('Presigned URL received successfully:', responseData);
-            
-            // The rest of the function remains the same
+            // Store the UUID if the server provided one
+            if (data.clientUUID) {
+                if (!clientUUID || clientUUID !== data.clientUUID) {
+                    localStorage.setItem('clientUUID', data.clientUUID);
+                    console.log(`📋 Stored client UUID: ${data.clientUUID}`);
+                    
+                    // If socket manager exists, also update it
+                    if (window.socketManager) {
+                        window.socketManager.clientUUID = data.clientUUID;
+                    }
+                }
+            }
+    
             window.statusManager.setStatus('success', 'Ready to upload');
-            return responseData;
+            return data;
+    
         } catch (error) {
-            console.error('Detailed presigned URL error:', error);
-            
-            if (error.message === 'NO_CLIENT_UUID') {
-                // Special case - throw it up to be handled by caller
-                throw error;
-            }
-            
-            if (error.message.includes('Failed to fetch') || !navigator.onLine) {
-                // Network connectivity issues
+            console.error('Presigned URL Error:', error);
+            if (!error.message.includes('Authentication failed')) {
                 window.statusManager.setStatus('error', 'Network error - check your connection', {
                     label: 'Retry',
                     action: () => window.location.reload()
                 });
-            } else {
-                // Other errors
-                window.statusManager.setStatus('error', `Presigned URL error: ${error.message}`, {
-                    label: 'Retry',
-                    action: () => window.location.reload()
-                });
             }
-            
             throw error;
         }
     }
+    
     
     async syncChunk(chunkId) {
         console.group(`📤 Syncing Chunk ${chunkId}`);
