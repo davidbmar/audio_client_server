@@ -166,6 +166,7 @@ class AudioController {
         }
     }
 
+
     // In audio.js - update uploadChunk method
     async uploadChunk(id, blob) {
         try {
@@ -198,15 +199,16 @@ class AudioController {
                     headers: {
                         'Content-Type': 'audio/webm',
                         'x-amz-acl': 'private'
-                        // Metadata is already in the presigned URL
+                        // Note: Metadata is already included in the presigned URL
                     },
                     mode: 'cors',
                     credentials: 'omit'
                 });
-        
+
                 if (uploadResponse.ok) {
-                    // Get task information from the response or generate one based on the key
-                    const taskId = presignedData.key.split('/').pop().split('.')[0];
+                    // Since we included the client UUID in the filename, we can extract the task ID
+                    // from the response or use the key returned by the presigned URL service
+                    const taskId = presignedData.clientUUID || presignedData.key.split('/').pop().split('-')[0];
                     
                     // Register for WebSocket updates
                     window.socketManager.registerForUpdates(taskId, (transcription) => {
@@ -216,13 +218,14 @@ class AudioController {
                             UIController.updateChunksList(this.recordedChunks, UI);
                         }
                     });
-        
+                
+                    // Update chunk status
                     await this.dbStorage.updateChunkSyncStatus(id, 'synced');
-                    // Update in-memory status
-                    if (chunkIndex !== -1) {
-                        this.recordedChunks[chunkIndex].syncStatus = 'synced';
-                    }
-                    
+                    await this.dbStorage.updateChunkMetadata(id, {
+                        taskId: taskId,
+                        clientUUID: presignedData.clientUUID
+                    });
+
                     // Rest of function remains the same...
                 }
                 
