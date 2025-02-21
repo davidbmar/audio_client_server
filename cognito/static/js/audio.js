@@ -14,6 +14,12 @@ class AudioController {
         this.chunkTimer = null;
         this.recordedChunks = [];
         this.dbStorage = new DBStorage();
+
+
+        // Listen for transcription updates
+        window.addEventListener('transcription-updated', (event) => {
+            this.handleTranscriptionUpdate(event.detail.chunkId, event.detail.transcription);
+        });
     }
 
     async initializeStorage() {
@@ -160,9 +166,12 @@ class AudioController {
         }
     }
 
+
+
+    // Update uploadChunk method
     async uploadChunk(id, blob) {
         try {
-            // First update status to syncing in DB and UI
+            // Update status to syncing
             await this.dbStorage.updateChunkSyncStatus(id, 'syncing');
             const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
             if (chunkIndex !== -1) {
@@ -181,6 +190,7 @@ class AudioController {
                 
                 // Store task information with the chunk
                 await this.dbStorage.updateChunkMetadata(id, {
+                    taskId: presignedData.taskId,
                     taskKey: presignedData.key,
                     clientUUID: window.socketManager.getClientUUID()
                 });
@@ -205,11 +215,7 @@ class AudioController {
                     // Register for WebSocket updates
                     if (taskId) {
                         window.socketManager.registerForUpdates(taskId, (transcription) => {
-                            const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
-                            if (chunkIndex !== -1) {
-                                this.recordedChunks[chunkIndex].transcription = transcription;
-                                UIController.updateChunksList(this.recordedChunks, UI);
-                            }
+                            this.dbStorage.updateChunkTranscription(id, transcription);
                         });
                     }
             
@@ -225,32 +231,27 @@ class AudioController {
                     if (this.hasFailedUploads()) {
                         window.statusManager.setStatus('warning', 'Upload successful - some uploads still pending', {
                             label: 'Retry All Failed',
-                            action: () => this.retryAllFailedUploads()
+                                action: () => this.retryAllFailedUploads()
                         });
                     } else {
                         window.statusManager.setStatus('success', 'All uploads completed');
                     }
                     UIController.updateChunksList(this.recordedChunks, UI);
-                    return true;
                 } else {
                     throw new Error(`Upload failed: ${uploadResponse.status}`);
                 }
-                
             } catch (error) {
-                // Special handling for missing UUID
                 if (error.message === 'NO_CLIENT_UUID') {
-                    console.log('No client UUID available yet, queuing chunk for later upload');
-                    window.statusManager.setStatus('warning', 'Waiting for client ID assignment...');
+                    // Queue for retry when UUID becomes available
                     window.syncService.queueChunkForSync(id);
-                    return false; // Exit without marking as failed - not a complete failure
-                }
-                
-                // For other errors, throw to be handled by the outer catch
-                throw error;
+                    window.statusManager.setStatus('warning', 'Waiting for client ID, upload queued');
+                    return; // Exit without marking as failed
+                    }
+                throw error; // Re-throw other errors
             }
     
         } catch (err) {
-            // Update status to failed in both DB and memory
+            // Update status to failed
             await this.dbStorage.updateChunkSyncStatus(id, 'failed');
             const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
             if (chunkIndex !== -1) {
