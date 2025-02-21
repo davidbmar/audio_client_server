@@ -88,17 +88,18 @@
     </div>
     <!-- Load scripts in correct order -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.js"></script>
-    <script type="module" src="js/socket_manager.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/socket_manager.js"></script>
-    <script type="module" src="js/main.js"></script>
-    <script type="module" src="js/debug.js"></script>
-    <script type="module" src="js/status.js"></script>
-    <script type="module" src="js/audio.js"></script>
-    <script type="module" src="js/ui.js"></script>
-    <script type="module" src="js/db.js"></script>
-    <script type="module" src="js/sync.js"></script>
-    <script type="module" src="js/TranscriptionDisplay.js" type="text/babel"></script>
+    <!-- Add these scripts in your HTML file before main.js -->
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/socket_manager.js"></script>
+    <script src="js/main.js"></script>
+
+    <script src="js/debug.js"></script>
+    <script src="js/status.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/db.js"></script>
+    <script src="js/TranscriptionDisplay.js" type="text/babel"></script>
 
 </body>
 </html>
