@@ -1,6 +1,5 @@
-import uuid  # For generating UUIDs
-
 // socket_manager.js
+import uuid
 class SocketManager {
     constructor() {
         this.taskCallbacks = new Map();
