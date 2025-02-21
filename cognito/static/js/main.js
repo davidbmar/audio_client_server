@@ -38,55 +38,55 @@ async function initialize() {
             userAgent: navigator.userAgent
         });
 
-    // Global chunk handlers
-    window.handleChunkPlay = (id) => {
-        window.debugManager.info('Playing chunk', { chunkId: id });
-        const chunk = audioController.recordedChunks.find(c => c.id === id);
-        if (chunk && chunk.blob) {
-            audioController.playChunk(chunk.blob);
-        } else {
-            window.debugManager.error('Chunk not found or invalid', { chunkId: id });
-        }
-    };
-
-    window.handleChunkDownload = (id) => {
-        window.debugManager.info('Downloading chunk', { chunkId: id });
-        const chunk = audioController.recordedChunks.find(c => c.id === id);
-        if (chunk && chunk.blob) {
-            audioController.downloadChunk(chunk.blob, chunk.number);
-        } else {
-            window.debugManager.error('Chunk not found or invalid', { chunkId: id });
-        }
-    };
-
-    window.handleChunkDelete = async (id) => {
-        if (confirm('Are you sure you want to delete this chunk?')) {
-            window.debugManager.info('Deleting chunk', { chunkId: id });
-            await audioController.deleteChunk(id);
-        }
-    };
-
-    window.handleChunkUpload = async (id) => {
-        window.debugManager.info('Manual upload triggered for chunk', { chunkId: id });
-        try {
+        // Global chunk handlers
+        window.handleChunkPlay = (id) => {
+            window.debugManager.info('Playing chunk', { chunkId: id });
             const chunk = audioController.recordedChunks.find(c => c.id === id);
-            if (!chunk) {
-                throw new Error('Chunk not found');
+            if (chunk && chunk.blob) {
+                audioController.playChunk(chunk.blob);
+            } else {
+                window.debugManager.error('Chunk not found or invalid', { chunkId: id });
             }
-            await audioController.uploadChunk(id, chunk.blob);
-        } catch (err) {
-            console.error('Manual upload failed:', err);
-        }
-    };
+        };
 
-    window.handleRetrySync = (id) => {
-        window.debugManager.info('Retrying chunk sync', { chunkId: id });
-        if (syncService) {
-            syncService.queueChunkForSync(id);
-        } else {
-            window.debugManager.error('Sync service not initialized');
-        }
-    };
+        window.handleChunkDownload = (id) => {
+            window.debugManager.info('Downloading chunk', { chunkId: id });
+            const chunk = audioController.recordedChunks.find(c => c.id === id);
+            if (chunk && chunk.blob) {
+                audioController.downloadChunk(chunk.blob, chunk.number);
+            } else {
+                window.debugManager.error('Chunk not found or invalid', { chunkId: id });
+            }
+        };
+
+        window.handleChunkDelete = async (id) => {
+            if (confirm('Are you sure you want to delete this chunk?')) {
+                window.debugManager.info('Deleting chunk', { chunkId: id });
+                await audioController.deleteChunk(id);
+            }
+        };
+
+        window.handleChunkUpload = async (id) => {
+            window.debugManager.info('Manual upload triggered for chunk', { chunkId: id });
+            try {
+                const chunk = audioController.recordedChunks.find(c => c.id === id);
+                if (!chunk) {
+                    throw new Error('Chunk not found');
+                }
+                await audioController.uploadChunk(id, chunk.blob);
+            } catch (err) {
+                console.error('Manual upload failed:', err);
+            }
+        };
+
+        window.handleRetrySync = (id) => {
+            window.debugManager.info('Retrying chunk sync', { chunkId: id });
+            if (syncService) {
+                syncService.queueChunkForSync(id);
+            } else {
+                window.debugManager.error('Sync service not initialized');
+            }
+        };
 
         // Initialize storage first
         await audioController.initializeStorage();
@@ -124,21 +124,29 @@ async function initialize() {
     }
 }
 
+// Combined setupEventListeners function with all event handlers
 function setupEventListeners() {
-    // Record button handler - moved to top for priority
+    // Record button handler with debug logging
     UI.recordButton.addEventListener('click', async () => {
         try {
+            console.log('Record button clicked, current state:', audioController.isRecording);
             window.debugManager.info('Record button clicked', {
-                currentState: audioController.isRecording
+                currentState: audioController.isRecording,
+                audioStream: audioController.audioStream ? 'exists' : 'null',
+                mediaRecorder: audioController.mediaRecorder ? 'exists' : 'null'
             });
 
             if (audioController.isRecording) {
+                window.debugManager.info('Attempting to stop recording');
                 await audioController.stopRecording();
+                console.log('After stopRecording call, state:', audioController.isRecording);
             } else {
+                window.debugManager.info('Starting recording');
                 const started = await audioController.startRecording();
                 if (!started) {
                     window.debugManager.error('Failed to start recording');
                 }
+                console.log('After startRecording call, state:', audioController.isRecording);
             }
         } catch (err) {
             window.debugManager.error('Recording error', {
@@ -226,145 +234,4 @@ initialize().catch(error => {
     window.statusManager.setStatus('error', 'Failed to initialize application');
 });
 
-function setupEventListeners() {
-
-    // For testing out the WebSocket Connection 
-    UI.testSocket.addEventListener('click', () => {
-        window.debugManager.info('Testing WebSocket connection');
-        window.socketManager.testConnection();  // Changed from testTranscription to testConnection
-    });    
-
-    // Debug button handler
-    UI.debugButton.addEventListener('click', () => {
-        window.debugManager.openDebugWindow();
-        UI.debugButton.classList.add('active');
-        
-        // Add window close listener to remove active state
-        if (window.debugManager.debugWindow) {
-            window.debugManager.debugWindow.addEventListener('unload', () => {
-                UI.debugButton.classList.remove('active');
-            });
-        }
-    });
-
-    UI.recordButton.addEventListener('click', async () => {
-        console.log('Record button clicked, current state:', audioController.isRecording);
-        window.debugManager.info('Record button clicked', {
-            currentState: audioController.isRecording,
-            audioStream: audioController.audioStream ? 'exists' : 'null',
-            mediaRecorder: audioController.mediaRecorder ? 'exists' : 'null'
-        });
-        
-        if (audioController.isRecording) {
-            window.debugManager.info('Attempting to stop recording');
-            audioController.stopRecording();
-            console.log('After stopRecording call, state:', audioController.isRecording);
-        } else {
-            window.debugManager.info('Starting recording');
-            const started = await audioController.startRecording();
-            if (!started) {
-                window.debugManager.error('Failed to start recording');
-            }
-            console.log('After startRecording call, state:', audioController.isRecording);
-        }
-    });
-    
-    // Threshold slider handler with debug logging
-    UI.thresholdSlider.addEventListener('input', (e) => {
-        const newValue = parseInt(e.target.value);
-        window.debugManager.info('Threshold changed', {
-            oldValue: CONFIG.SILENCE_THRESHOLD,
-            newValue: newValue
-        });
-        
-        CONFIG.SILENCE_THRESHOLD = newValue;
-        UI.thresholdValue.textContent = `${CONFIG.SILENCE_THRESHOLD} dB`;
-        UIController.updatePresetButtons(CONFIG.SILENCE_THRESHOLD, UI);
-    });
-
-    // Duration slider handler with debug logging
-    UI.durationSlider.addEventListener('input', (e) => {
-        const duration = parseInt(e.target.value);
-        window.debugManager.info('Duration changed', {
-            oldValue: audioController.currentChunkDuration,
-            newValue: duration
-        });
-        
-        audioController.currentChunkDuration = duration;
-        UI.durationValue.textContent = `${duration}s`;
-        CONFIG.DEFAULT_CHUNK_DURATION = duration;
-        
-        if (audioController.isRecording) {
-            audioController.startChunkTimer();
-        }
-    });
-
-    // Preset buttons handler with debug logging
-    UI.presetButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const value = parseInt(button.dataset.value);
-            window.debugManager.info('Preset selected', {
-                oldValue: CONFIG.SILENCE_THRESHOLD,
-                newValue: value,
-                preset: button.textContent
-            });
-            
-            CONFIG.SILENCE_THRESHOLD = value;
-            UI.thresholdSlider.value = value;
-            UI.thresholdValue.textContent = `${value} dB`;
-            UIController.updatePresetButtons(value, UI);
-        });
-    });
-}
-
-// Global handlers for chunk controls with debug logging
-window.handleChunkPlay = (id) => {
-    window.debugManager.info('Playing chunk', { chunkId: id });
-    const chunk = audioController.recordedChunks.find(c => c.id === id);
-    if (chunk && chunk.blob) {
-        audioController.playChunk(chunk.blob);
-    } else {
-        window.debugManager.error('Chunk not found or invalid', { chunkId: id });
-    }
-};
-
-window.handleChunkDownload = (id) => {
-    window.debugManager.info('Downloading chunk', { chunkId: id });
-    const chunk = audioController.recordedChunks.find(c => c.id === id);
-    if (chunk && chunk.blob) {
-        audioController.downloadChunk(chunk.blob, chunk.number);
-    } else {
-        window.debugManager.error('Chunk not found or invalid', { chunkId: id });
-    }
-};
-
-
-window.handleChunkDelete = async (id) => {
-    if (confirm('Are you sure you want to delete this chunk?')) {
-        window.debugManager.info('Deleting chunk', { chunkId: id });
-        await audioController.deleteChunk(id);
-    }
-};
-
-window.handleChunkUpload = async (id) => {
-    window.debugManager.info('Manual upload triggered for chunk', { chunkId: id });
-    try {
-        const chunk = audioController.recordedChunks.find(c => c.id === id);
-        if (!chunk) {
-            throw new Error('Chunk not found');
-        }
-        await audioController.uploadChunk(id, chunk.blob);
-    } catch (err) {
-        console.error('Manual upload failed:', err);
-    }
-};
-
-window.handleRetrySync = (id) => {
-    window.debugManager.info('Retrying chunk sync', { chunkId: id });
-    if (syncService) {
-        syncService.queueChunkForSync(id);
-    } else {
-        window.debugManager.error('Sync service not initialized');
-    }
-};
-
+// Global handlers for chunk controls are moved inside initialize() to avoid duplication
