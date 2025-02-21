@@ -135,3 +135,6 @@ class SocketManager {
 
 // Create global instance
 window.socketManager = new SocketManager();
+
+export default SocketManager;
+
