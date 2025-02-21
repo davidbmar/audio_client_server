@@ -26,7 +26,6 @@ def generate_file_name():
     now = datetime.now(pytz.timezone("UTC"))
     return now.strftime("%Y-%m-%d-%H-%M-%S-%f") + ".webm"
 
-
 @app.get("/api/get-presigned-url")
 async def get_presigned_url(request: Request):
     """Endpoint to generate a pre-signed URL for uploading files to S3."""
@@ -35,18 +34,26 @@ async def get_presigned_url(request: Request):
         user_id = request.headers.get('X-User-Id')
         user_type = request.headers.get('X-User-Type', 'customer')
         provider = request.headers.get('X-Provider', 'cognito')
-
+        
+        # Get client UUID from header
+        client_uuid = request.headers.get('X-Client-UUID')
+        
         if not user_id:
             logger.error("Missing user information in request")
             raise HTTPException(status_code=400, detail="Missing user information")
+            
+        if not client_uuid:
+            logger.error("Missing client UUID in request")
+            raise HTTPException(status_code=400, detail="Missing client UUID")
 
-        # Create user-specific path
+        # Create user-specific path with client UUID
         user_path = f"users/{user_type}/{provider}/{user_id}"
-        file_name = generate_file_name()
+        # Use client UUID as part of filename instead of generating timestamps
+        file_name = f"{client_uuid}-{generate_file_name()}"
         key = f"{user_path}/{file_name}"
 
         # Log the path being used
-        logger.info(f"Generating presigned URL for path: {key}")
+        logger.info(f"Generating presigned URL for path: {key} with client UUID: {client_uuid}")
 
         # Create S3 client
         s3_client = create_s3_client()
@@ -57,13 +64,20 @@ async def get_presigned_url(request: Request):
                 'Bucket': INPUT_AUDIO_BUCKET,
                 'Key': key,
                 'ContentType': 'audio/webm',
-                'ACL': 'private'
+                'ACL': 'private',
+                'Metadata': {
+                    'client-uuid': client_uuid
+                }
             },
             ExpiresIn=EXPIRATION_SECONDS
         )
 
         logger.info(f"Generated presigned URL for key: {key}")
-        return JSONResponse(content={"url": presigned_url, "key": key})
+        return JSONResponse(content={
+            "url": presigned_url, 
+            "key": key,
+            "taskId": client_uuid  # Include task ID in response
+        })
     
     except ClientError as e:
         logger.error(f"Failed to generate presigned URL: {e}")
@@ -71,4 +85,5 @@ async def get_presigned_url(request: Request):
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
 
