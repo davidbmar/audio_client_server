@@ -1,5 +1,15 @@
 // socket_manager.js
-import { v4 as uuidv4 } from 'uuid';  // Proper import statement for uuid
+// Remove the UUID import since it's causing issues
+// Instead, we'll use a simple UUID function implementation
+
+// Simple UUID generator function for client-side use
+function generateUUID() {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = Math.random() * 16 | 0,
+            v = c == 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+    });
+}
 
 class SocketManager {
     constructor() {
@@ -137,4 +147,3 @@ class SocketManager {
 window.socketManager = new SocketManager();
 
 export default SocketManager;
-
