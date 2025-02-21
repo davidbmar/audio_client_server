@@ -33,6 +33,8 @@ class SocketManager {
             }
         });
 
+        this.clientUUID = localStorage.getItem('clientUUID') || null;
+
         this.setupEventHandlers();
     }
 
@@ -43,17 +45,23 @@ class SocketManager {
             window.statusManager.setStatus('success', 'Real-time updates connected');
             window.debugManager.info('WebSocket connected');
         });
-    
-        // Listen for the connection response from the server (includes UUID)
+   
+        // Update the connection_response handler
         this.socket.on('connection_response', (data) => {
             console.log("Connection response received:", data);
             if (data.uuid) {
-                // Store the received UUID in localStorage for later use
+                // Store the received UUID in both the instance and localStorage
+                this.clientUUID = data.uuid;
                 localStorage.setItem('clientUUID', data.uuid);
                 console.log("UUID stored locally:", data.uuid);
+                window.debugManager.info('Client UUID received and stored', { uuid: data.uuid });
+                
+                // Trigger an event so other components know the UUID is available
+                const event = new CustomEvent('client-uuid-updated', { detail: { uuid: data.uuid } });
+                window.dispatchEvent(event);
             }
         });
-
+        
         this.socket.on('connect_error', (error) => {
             document.getElementById('socketStatus').textContent = 'WebSocket: Connection Error';
             window.statusManager.setStatus('error', 'Connection failed', {
@@ -121,6 +129,11 @@ class SocketManager {
         window.debugManager.info('Registering for updates', { taskId });
         this.taskCallbacks.set(taskId, callback);
         this.socket.emit('register_for_updates', { task_id: taskId });
+    }
+
+    // Method to retrieve the client UUID
+    getClientUUID() {
+        return this.clientUUID;
     }
 
     testConnection() {

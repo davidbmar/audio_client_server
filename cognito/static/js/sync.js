@@ -15,20 +15,40 @@ class SyncService {
             protocol: window.location.protocol,
             host: window.location.host
         });
+
+        // Listen for UUID updates
+        window.addEventListener('client-uuid-updated', () => {
+            window.debugManager.info('UUID updated, processing sync queue');
+            if (this.syncQueue.size > 0) {
+                this.processSyncQueue();
+            }
+        });
+
     }
 
 
     async getPresignedUrl() {
         const url = '/auth/audio-upload';  
-        console.log(`🔑 Requesting presigned URL from: ${url}`);
+        const clientUUID = window.socketManager?.getClientUUID() || localStorage.getItem('clientUUID');
+        
+        console.log(`🔑 Requesting presigned URL from: ${url} with client UUID: ${clientUUID}`);
     
         try {
+            // Check for missing UUID first
+            if (!clientUUID) {
+                window.debugManager.warn('No client UUID available for presigned URL request');
+                window.statusManager.setStatus('warning', 'Waiting for client ID assignment...');
+                // Return a special error that can be handled in the upload process
+                throw new Error('NO_CLIENT_UUID');
+            }
+            
             const response = await fetch(url, {
                 method: 'GET',
                 credentials: 'include',
                 headers: {
                     'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Client-UUID': clientUUID
                 }
             });
     
@@ -42,10 +62,7 @@ class SyncService {
             }
     
             if (!response.ok) {
-                window.statusManager.setStatus('error', 'Failed to get upload permission', {
-                    label: 'Retry',
-                    action: () => this.syncChunk(chunkId)  // Add retry capability
-                });
+                window.statusManager.setStatus('error', 'Failed to get upload permission');
                 throw new Error(`HTTP Error: ${response.status}`);
             }
     
@@ -54,16 +71,24 @@ class SyncService {
     
         } catch (error) {
             console.error('Presigned URL Error:', error);
+            
+            // Special case for missing UUID - don't change the status, just pass it up
+            if (error.message === 'NO_CLIENT_UUID') {
+                throw error; // Re-throw so it can be handled by the upload function
+            }
+            
+            // Don't override authentication error messages
             if (!error.message.includes('Authentication failed')) {
                 window.statusManager.setStatus('error', 'Network error - check your connection', {
                     label: 'Retry',
                     action: () => window.location.reload()
                 });
             }
-            throw error;
+            
+            throw error; // Re-throw to allow handling in the caller
         }
     }
-
+    
     async syncChunk(chunkId) {
         console.group(`📤 Syncing Chunk ${chunkId}`);
         
@@ -94,7 +119,8 @@ class SyncService {
                 method: 'PUT',
                 body: chunk.blob,
                 headers: {
-                    'Content-Type': 'audio/webm'
+                    'Content-Type': 'audio/webm',
+                    'x-amz-meta-client-uuid': window.socketManager.getClientUUID() || ''  // Add UUID as metadata
                     }
             });
     
@@ -110,6 +136,10 @@ class SyncService {
             await this.dbStorage.updateChunkSyncStatus(chunkId, 'synced');
             window.statusManager.setStatus('success', 'Upload completed successfully');
             console.log('✅ Sync completed successfully');
+
+            // After successful upload, store task information
+            const taskId = uploadResponse.headers.get('X-Task-ID') || presignedData.taskId || presignedData.key;
+            await this.dbStorage.updateChunkSyncStatus(chunkId, 'synced', taskId);
             
             return true;
     

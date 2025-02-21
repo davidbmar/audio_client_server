@@ -1,11 +1,3 @@
-import SocketManager from './socket_manager.js';
-import AudioController from './audio_controller.js';  // Add this import
-import SyncService from './sync_service.js';          // Add this if needed
-import UIController from './ui_controller.js';        // Add this if needed
-
-// Rest of your main.js file...
-
-
 // main.js
 // Initialize UI elements
 // In main.js, fix the UI object

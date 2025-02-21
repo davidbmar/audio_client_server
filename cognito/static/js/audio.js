@@ -162,7 +162,7 @@ class AudioController {
 
     async uploadChunk(id, blob) {
         try {
-            // First update status to syncing
+            // First update status to syncing in DB and UI
             await this.dbStorage.updateChunkSyncStatus(id, 'syncing');
             const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
             if (chunkIndex !== -1) {
@@ -172,54 +172,83 @@ class AudioController {
     
             // Get presigned URL and attempt upload
             window.statusManager.setStatus('warning', 'Getting upload permission...');
-            const presignedData = await window.syncService.getPresignedUrl();
-            if (!presignedData?.url) {
-                throw new Error('Failed to get presigned URL');
-            }
-    
-            window.statusManager.setStatus('warning', 'Uploading audio...');
-            const uploadResponse = await fetch(presignedData.url, {
-                method: 'PUT',
-                body: blob,
-                headers: {
-                    'Content-Type': 'audio/webm',
-                    'x-amz-acl': 'private'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
-    
-            if (uploadResponse.ok) {
-
-                const taskId = uploadResponse.headers.get('X-Task-ID');
+            
+            try {
+                const presignedData = await window.syncService.getPresignedUrl();
+                if (!presignedData?.url) {
+                    throw new Error('Failed to get presigned URL');
+                }
                 
-                // Register for WebSocket updates
-                window.socketManager.registerForUpdates(taskId, (transcription) => {
-                    const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
-                    if (chunkIndex !== -1) {
-                        this.recordedChunks[chunkIndex].transcription = transcription;
-                        UIController.updateChunksList(this.recordedChunks, UI);
-                    }
+                // Store task information with the chunk
+                await this.dbStorage.updateChunkMetadata(id, {
+                    taskKey: presignedData.key,
+                    clientUUID: window.socketManager.getClientUUID()
                 });
     
-                await this.dbStorage.updateChunkSyncStatus(id, 'synced');
-                // Update in-memory status
-                if (chunkIndex !== -1) {
-                    this.recordedChunks[chunkIndex].syncStatus = 'synced';
-                }
-                // Check if there are still any failed uploads
-                if (this.hasFailedUploads()) {
-                    window.statusManager.setStatus('warning', 'Upload successful - some uploads still pending', {
-                        label: 'Retry All Failed',
-                        action: () => this.retryAllFailedUploads()
-                    });
+                window.statusManager.setStatus('warning', 'Uploading audio...');
+                const uploadResponse = await fetch(presignedData.url, {
+                    method: 'PUT',
+                    body: blob,
+                    headers: {
+                        'Content-Type': 'audio/webm',
+                        'x-amz-acl': 'private',
+                        'x-amz-meta-client-uuid': window.socketManager.getClientUUID() || ''
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
+                });
+    
+                if (uploadResponse.ok) {
+                    // Get task ID from response header or presigned data
+                    const taskId = uploadResponse.headers.get('X-Task-ID') || presignedData.taskId || presignedData.key;
+                    
+                    // Register for WebSocket updates
+                    if (taskId) {
+                        window.socketManager.registerForUpdates(taskId, (transcription) => {
+                            const chunkIndex = this.recordedChunks.findIndex(c => c.id === id);
+                            if (chunkIndex !== -1) {
+                                this.recordedChunks[chunkIndex].transcription = transcription;
+                                UIController.updateChunksList(this.recordedChunks, UI);
+                            }
+                        });
+                    }
+            
+                    await this.dbStorage.updateChunkSyncStatus(id, 'synced', taskId);
+                    
+                    // Update in-memory status
+                    if (chunkIndex !== -1) {
+                        this.recordedChunks[chunkIndex].syncStatus = 'synced';
+                        this.recordedChunks[chunkIndex].taskId = taskId;
+                    }
+                    
+                    // Check if there are still any failed uploads
+                    if (this.hasFailedUploads()) {
+                        window.statusManager.setStatus('warning', 'Upload successful - some uploads still pending', {
+                            label: 'Retry All Failed',
+                            action: () => this.retryAllFailedUploads()
+                        });
+                    } else {
+                        window.statusManager.setStatus('success', 'All uploads completed');
+                    }
+                    UIController.updateChunksList(this.recordedChunks, UI);
+                    return true;
                 } else {
-                    window.statusManager.setStatus('success', 'All uploads completed');
+                    throw new Error(`Upload failed: ${uploadResponse.status}`);
                 }
-                UIController.updateChunksList(this.recordedChunks, UI);
-            } else {
-                throw new Error(`Upload failed: ${uploadResponse.status}`);
+                
+            } catch (error) {
+                // Special handling for missing UUID
+                if (error.message === 'NO_CLIENT_UUID') {
+                    console.log('No client UUID available yet, queuing chunk for later upload');
+                    window.statusManager.setStatus('warning', 'Waiting for client ID assignment...');
+                    window.syncService.queueChunkForSync(id);
+                    return false; // Exit without marking as failed - not a complete failure
+                }
+                
+                // For other errors, throw to be handled by the outer catch
+                throw error;
             }
+    
         } catch (err) {
             // Update status to failed in both DB and memory
             await this.dbStorage.updateChunkSyncStatus(id, 'failed');
@@ -253,6 +282,7 @@ class AudioController {
     
             console.error('Upload failed:', err);
             UIController.updateChunksList(this.recordedChunks, UI);
+            return false;
         }
     }
 
