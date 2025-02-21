@@ -1,4 +1,5 @@
-import SocketManager from './js/socket_manager.js';
+import SocketManager from './socket_manager.js';
+
 
 // main.js
 // Initialize UI elements
