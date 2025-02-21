@@ -26,19 +26,18 @@ class SyncService {
 
     }
 
-
     async getPresignedUrl() {
-        const url = '/auth/audio-upload';  
+        // Change to match the endpoint in presigned_url_gen.py
+        const url = '/api/get-presigned-url';  // Instead of '/auth/audio-upload'
+        
         const clientUUID = window.socketManager?.getClientUUID() || localStorage.getItem('clientUUID');
         
         console.log(`🔑 Requesting presigned URL from: ${url} with client UUID: ${clientUUID}`);
     
         try {
-            // Check for missing UUID first
             if (!clientUUID) {
                 window.debugManager.warn('No client UUID available for presigned URL request');
                 window.statusManager.setStatus('warning', 'Waiting for client ID assignment...');
-                // Return a special error that can be handled in the upload process
                 throw new Error('NO_CLIENT_UUID');
             }
             
@@ -48,7 +47,9 @@ class SyncService {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-Client-UUID': clientUUID
+                    'X-Client-UUID': clientUUID,
+                    'X-User-Id': 'anonymous', // Provide a fallback user ID
+                    'X-User-Type': 'client'
                 }
             });
     
