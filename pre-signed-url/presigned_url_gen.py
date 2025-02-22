@@ -36,10 +36,6 @@ async def get_presigned_url(request: Request):
         user_type = request.headers.get('X-User-Type', 'customer')
         provider = request.headers.get('X-Provider', 'cognito')
         
-        if not user_id:
-            logger.error("Missing user information in request")
-            raise HTTPException(status_code=400, detail="Missing user information")
-
         # Get client UUID from header or generate one
         client_uuid = request.headers.get('X-Client-UUID')
         if not client_uuid:
@@ -48,8 +44,6 @@ async def get_presigned_url(request: Request):
 
         # Create user-specific path
         user_path = f"users/{user_type}/{provider}/{user_id}"
-        
-        # Generate timestamp for filename
         timestamp = datetime.now(pytz.timezone("UTC")).strftime("%Y-%m-%d-%H-%M-%S")
         
         # Include client UUID in filename
@@ -67,11 +61,7 @@ async def get_presigned_url(request: Request):
             Params={
                 'Bucket': INPUT_AUDIO_BUCKET,
                 'Key': key,
-                'ContentType': 'audio/webm',
-                'ACL': 'private',
-                'Metadata': {
-                    'client-uuid': client_uuid
-                }
+                'ContentType': 'audio/webm'
             },
             ExpiresIn=EXPIRATION_SECONDS
         )
@@ -83,9 +73,7 @@ async def get_presigned_url(request: Request):
             "clientUUID": client_uuid  # Return the UUID to the client
         })
     
-    except ClientError as e:
+    except Exception as e:
         logger.error(f"Failed to generate presigned URL: {e}")
         raise HTTPException(status_code=500, detail="Error generating presigned URL")
-    except Exception as e:
-        logger.error(f"Unexpected error: {e}")
-        raise HTTPException(status_code=500, detail="Internal server error")
+

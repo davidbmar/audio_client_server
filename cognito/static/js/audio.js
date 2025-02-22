@@ -199,8 +199,6 @@ class AudioController {
                     headers: {
                         'Content-Type': 'audio/webm'
                     },
-                    mode: 'cors',
-                    credentials: 'omit'
                 });
 
                 if (uploadResponse.ok) {

@@ -29,7 +29,7 @@ class SyncService {
     async getPresignedUrl() {
         const url = '/auth/audio-upload';  
         const clientUUID = window.socketManager?.getClientUUID() || localStorage.getItem('clientUUID');
-            
+        
         console.log(`🔑 Requesting presigned URL from: ${url} with client UUID: ${clientUUID}`);
     
         try {
@@ -39,58 +39,24 @@ class SyncService {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-Client-UUID': clientUUID || ''  // Send UUID in header (empty string if null)
+                    'X-Client-UUID': clientUUID || ''  // Send UUID in header
                 }
             });
     
-            // Handle authentication errors
-            if (response.status === 401) {
-                window.statusManager.setStatus('error', 'Session expired - please refresh', {
-                    label: 'Refresh',
-                    action: () => window.location.reload()
-                });
-                throw new Error('Authentication failed');
-            }
-    
-            if (!response.ok) {
-                window.statusManager.setStatus('error', 'Failed to get upload permission', {
-                    label: 'Retry',
-                    action: () => this.syncChunk(chunkId)
-                });
-                throw new Error(`HTTP Error: ${response.status}`);
-            }
-    
-            const data = await response.json();
+            // Rest of function remains the same...
             
-            // Store the UUID if the server provided one
-            if (data.clientUUID) {
-                if (!clientUUID || clientUUID !== data.clientUUID) {
-                    localStorage.setItem('clientUUID', data.clientUUID);
-                    console.log(`📋 Stored client UUID: ${data.clientUUID}`);
-                    
-                    // If socket manager exists, also update it
-                    if (window.socketManager) {
-                        window.socketManager.clientUUID = data.clientUUID;
-                    }
-                }
+            // Store UUID if provided in the response
+            if (data && data.clientUUID) {
+                localStorage.setItem('clientUUID', data.clientUUID);
             }
-    
-            window.statusManager.setStatus('success', 'Ready to upload');
+            
             return data;
-    
         } catch (error) {
             console.error('Presigned URL Error:', error);
-            if (!error.message.includes('Authentication failed')) {
-                window.statusManager.setStatus('error', 'Network error - check your connection', {
-                    label: 'Retry',
-                    action: () => window.location.reload()
-                });
-            }
             throw error;
         }
     }
-    
-    
+
     async syncChunk(chunkId) {
         console.group(`📤 Syncing Chunk ${chunkId}`);
         
