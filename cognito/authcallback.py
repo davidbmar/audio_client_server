@@ -295,13 +295,13 @@ def callback():
 def audio_upload():
     try:
         logger.info("Received request for audio upload presigned URL")
-        
+
         # Get user info from session
         user = session.get('user')
         if not user:
             return jsonify({"error": "User not found in session"}), 401
 
-        # Get client UUID from request header
+        # Get client UUID from request header and forward it
         client_uuid = request.headers.get('X-Client-UUID')
         logger.info(f"Client UUID from request: {client_uuid}")
 
@@ -312,18 +312,33 @@ def audio_upload():
             'X-User-Type': user.get('user_type', 'customer'),
             'X-Provider': user.get('provider', 'cognito'),
         }
-        
+
         # Add client UUID to the forwarded headers if available
         if client_uuid:
             headers['X-Client-UUID'] = client_uuid
 
-        response = requests.get(presigned_url_service, headers=headers)
-        response.raise_for_status()  # Raise error if response is not 2xx
+        # Log the outgoing request details
+        logger.info(f"Forwarding request to: {presigned_url_service}")
+        logger.info(f"With headers: {headers}")
 
-        return response.json(), response.status_code
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Error fetching presigned URL: {e}")
-        return jsonify({"error": f"Failed to fetch presigned URL: {str(e)}"}), response.status_code if 'response' in locals() else 503
+        response = requests.get(presigned_url_service, headers=headers)
+
+        # Log the response details
+        logger.info(f"Received response: status={response.status_code}")
+
+        if not response.ok:
+            logger.error(f"Error from presigned URL service: {response.text}")
+            return jsonify({"error": "Failed to get presigned URL"}), response.status_code
+
+        # Log what we're returning to the client
+        data = response.json()
+        logger.info(f"Returning presigned URL for key: {data.get('key', 'unknown')}")
+
+        return data, response.status_code
+    except Exception as e:
+        logger.error(f"Error in audio_upload endpoint: {str(e)}")
+        return jsonify({"error": f"Failed to fetch presigned URL: {str(e)}"}), 500
+
 
 @app.route('/auth/check-status', methods=['GET'])
 def check_auth_status():

@@ -26,6 +26,7 @@ class SyncService {
 
     }
 
+    // Add detailed error logging in sync.js - getPresignedUrl method
     async getPresignedUrl() {
         const url = '/auth/audio-upload';  
         const clientUUID = window.socketManager?.getClientUUID() || localStorage.getItem('clientUUID');
@@ -39,23 +40,42 @@ class SyncService {
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json',
-                    'X-Client-UUID': clientUUID || ''  // Send UUID in header
+                    'X-Client-UUID': clientUUID || ''
                 }
             });
+        
+            // Add detailed error logging
+            if (!response.ok) {
+                let errorText = '';
+                try {
+                    errorText = await response.text();
+                } catch (e) {
+                    errorText = 'Could not read error text';
+                }
+                console.error('Presigned URL Error Response:', {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: errorText
+                });
+                throw new Error(`HTTP Error: ${response.status} - ${errorText}`);
+            }
     
-            // Rest of function remains the same...
+            const data = await response.json();
+            console.log('Presigned URL data received:', data);
             
-            // Store UUID if provided in the response
-            if (data && data.clientUUID) {
-                localStorage.setItem('clientUUID', data.clientUUID);
+            // Verify the presigned URL is in the response
+            if (!data.url) {
+                console.error('Response missing URL:', data);
+                throw new Error('Presigned URL response missing URL field');
             }
             
             return data;
         } catch (error) {
-            console.error('Presigned URL Error:', error);
+            console.error('Detailed presigned URL error:', error);
             throw error;
         }
     }
+
 
     async syncChunk(chunkId) {
         console.group(`📤 Syncing Chunk ${chunkId}`);
