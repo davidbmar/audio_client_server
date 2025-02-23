@@ -9,7 +9,15 @@ const UIController = {
         ui.thresholdValue.textContent = `${CONFIG.SILENCE_THRESHOLD} dB`;
         ui.durationSlider.value = CONFIG.DEFAULT_CHUNK_DURATION;
         ui.durationValue.textContent = `${CONFIG.DEFAULT_CHUNK_DURATION}s`;
-        
+
+        // Add Clear Data button to control panel
+        const controlPanel = document.querySelector('.control-panel');
+        const clearButton = document.createElement('button');
+        clearButton.className = 'preset-button';
+        clearButton.textContent = 'Clear All Data';
+        clearButton.onclick = this.handleClearData;
+        controlPanel.appendChild(clearButton);
+
         // Set initial status
         this.updateStatusText('Ready to record', ui);
     },
@@ -118,6 +126,23 @@ const UIController = {
         }
     },
 
+    handleClearData() {
+        if (confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
+            const dbStorage = window.audioController?.dbStorage;
+            if (dbStorage) {
+                dbStorage.clearAll()
+                    .then(() => {
+                        window.audioController.recordedChunks = [];
+                        UIController.updateChunksList([], UI);
+                        window.statusManager.setStatus('success', 'All data cleared');
+                    })
+                    .catch(err => {
+                        console.error('Error clearing data:', err);
+                        window.statusManager.setStatus('error', 'Failed to clear data');
+                    });
+            }
+        }
+    },
 
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
