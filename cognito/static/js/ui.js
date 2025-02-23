@@ -126,12 +126,10 @@ const UIController = {
         }
     },
 
-
-    // Add the enhanced handler
     handleClearData() {
         if (confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
             window.debugManager.info('Starting complete data cleanup');
-            
+    
             // 1. Stop any ongoing recording
             if (window.audioController.isRecording) {
                 window.audioController.stopRecording();
@@ -148,7 +146,6 @@ const UIController = {
             if (window.audioController.recordedChunks) {
                 window.audioController.recordedChunks.forEach(chunk => {
                     if (chunk.blob) {
-                        // Revoke any existing URLs for this blob
                         URL.revokeObjectURL(chunk.blob);
                     }
                 });
@@ -159,33 +156,26 @@ const UIController = {
             window.audioController.chunkCounter = 0;
             window.audioController.currentChunkDuration = CONFIG.DEFAULT_CHUNK_DURATION;
     
-            // 5. Clear IndexedDB
-            const dbStorage = window.audioController?.dbStorage;
-            if (dbStorage) {
-                dbStorage.clearAll()
-                    .then(() => {
-                        // 6. Reset UI completely
-                        UIController.updateChunksList([], UI);
-                        
-                        // Reset any active meters or visualizers
-                        if (UI.meterFill) UI.meterFill.style.width = '0%';
-                        if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
-                        
-                        // Reset recording state
-                        UIController.updateRecordingState(false, UI);
-                        
-                        window.statusManager.setStatus('success', 'All data cleared successfully');
-                        window.debugManager.info('Data cleanup completed successfully');
-                    })
-                    .catch(err => {
-                        console.error('Error during data cleanup:', err);
-                        window.debugManager.error('Failed to clear data', {
-                            error: err.message,
-                            stack: err.stack
-                        });
-                        window.statusManager.setStatus('error', 'Failed to clear data completely');
-                    });
-            }
+            // 5. Completely delete the IndexedDB database
+            const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
+            deleteRequest.onsuccess = () => {
+                window.debugManager.info('Database deleted successfully');
+                window.statusManager.setStatus('success', 'All data and database cleared');
+            };
+            deleteRequest.onerror = () => {
+                window.debugManager.error('Error deleting database', { error: deleteRequest.error });
+                window.statusManager.setStatus('error', 'Failed to clear database');
+            };
+    
+            // 6. Reset UI completely
+            UIController.updateChunksList([], UI);
+    
+            if (UI.meterFill) UI.meterFill.style.width = '0%';
+            if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
+            UIController.updateRecordingState(false, UI);
+    
+            // 7. Reinitialize storage
+            window.audioController.initializeStorage();
         }
     },
 
