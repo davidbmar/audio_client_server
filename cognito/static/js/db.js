@@ -190,4 +190,17 @@ class DBStorage {
             request.onerror = () => reject(request.error);
         });
     }
+
+    async clearAllChunks() {
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([this.storeName], 'readwrite');
+            const store = transaction.objectStore(this.storeName);
+            const request = store.clear();
+    
+            request.onsuccess = () => resolve();
+            request.onerror = () => reject(request.error);
+        });
+    }
+    
+
 }

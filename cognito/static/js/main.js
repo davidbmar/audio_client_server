@@ -17,6 +17,7 @@ const UI = {
     chunksList: document.getElementById('chunksList'),
     testSocket: document.getElementById('testSocket'),  // Added comma here
     transcriptionContainer: document.getElementById('transcriptionContainer'),
+    clearAllButton: document.getElementById('clearAllButton'),
     testTranscriptionBtn: document.getElementById('testTranscriptionBtn')
 };
 
@@ -220,6 +221,14 @@ function setupEventListeners() {
             UIController.updatePresetButtons(value, UI);
         });
     });
+
+    // Event listener for clearing all data
+    UI.clearAllButton.addEventListener('click', async () => {
+        if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
+            await audioController.clearAllData();
+        }
+    });
+
 }
 
 // Initialize the application

@@ -43,6 +43,17 @@ h1 {
     transition: all 0.3s ease;
 }
 
+.button-clear {
+    background-color: #ef4444;
+    color: white;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.button-clear:hover {
+    background-color: #dc2626;
+}
+
 .button-record {
     position: relative;
     background-color: #3b82f6;

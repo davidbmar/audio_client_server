@@ -15,7 +15,6 @@ class AudioController {
         this.recordedChunks = [];
         this.dbStorage = new DBStorage();
 
-
         // Listen for transcription updates
         window.addEventListener('transcription-updated', (event) => {
             this.handleTranscriptionUpdate(event.detail.chunkId, event.detail.transcription);
@@ -49,20 +48,17 @@ class AudioController {
         try {
             window.statusManager.setStatus('warning', 'Requesting microphone access...');
             this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            
+
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.analyser = this.audioContext.createAnalyser();
             const source = this.audioContext.createMediaStreamSource(this.audioStream);
             source.connect(this.analyser);
-    
+
             this.isRecording = true;
             this.recordingStartTime = Date.now();
-    
+
             this.startNewChunk();
             this.startChunkTimer();
-    
-            window.statusManager.setStatus('success', 'Recording in progress');
-            UIController.updateRecordingState(true, UI);
             return true;
         } catch (err) {
             console.error('Error accessing microphone:', err);
@@ -95,7 +91,7 @@ class AudioController {
                 const chunkData = {
                     number: this.chunkCounter,
                     blob: blob,
-                    timestamp: new Date().toLocaleTimeString(),
+                    timestamp: this.getFormattedUTCTimestamp(), // Use UTC timestamp
                     duration: this.currentChunkDuration
                 };
                 await this.addChunkToList(chunkData);
@@ -141,7 +137,18 @@ class AudioController {
         UIController.updateRecordingState(false, UI);
         window.statusManager.setStatus('success', 'Recording stopped');
     }
-    
+   
+    // Generate UTC timestamp in YYYYMMDD-HHMMSS format
+    getFormattedUTCTimestamp() {
+        const now = new Date();
+        const year = now.getUTCFullYear();
+        const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(now.getUTCDate()).padStart(2, '0');
+        const hours = String(now.getUTCHours()).padStart(2, '0');
+        const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+        const seconds = String(now.getUTCSeconds()).padStart(2, '0');
+        return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+    }
 
     async addChunkToList(chunkData) {
         try {
@@ -257,24 +264,25 @@ class AudioController {
         }
     }
 
+
+    // Use UTC timestamp for download filename
     downloadChunk(blob, chunkNumber) {
         // Create a download URL from the blob
         const url = URL.createObjectURL(blob);
-        
+
         // Create a temporary link element
         const a = document.createElement('a');
         a.href = url;
-        a.download = `audio-chunk-${chunkNumber}.webm`; // Using .webm since that's our recording format
-        
+        a.download = `audio-chunk-${this.getFormattedUTCTimestamp()}.webm`;
+
         // Trigger the download
         document.body.appendChild(a);
         a.click();
-        
+
         // Clean up
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
-        window.debugManager.info('Download initiated', { chunkNumber });
+
     }
 
     playChunk(blob) {
@@ -336,6 +344,28 @@ class AudioController {
         }
     }
     
+    async clearAllData() {
+        try {
+            window.debugManager.info('Clearing all data');
+    
+            // Clear from IndexedDB
+            await this.dbStorage.clearAllChunks();
+    
+            // Clear from memory
+            this.recordedChunks = [];
+    
+            // Update UI
+            UIController.clearChunksList(UI);
+    
+            window.statusManager.setStatus('success', 'All data cleared successfully');
+        } catch (err) {
+            window.debugManager.error('Error clearing all data', {
+                error: err.message
+            });
+            window.statusManager.setStatus('error', 'Failed to clear all data');
+            console.error('Error clearing all data:', err);
+        }
+    }
 
 
 

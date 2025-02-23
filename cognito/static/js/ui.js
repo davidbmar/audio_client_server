@@ -387,9 +387,15 @@ const UIController = {
                 }
             });
         }, 0);
+    },
 
-
+    clearChunksList(ui) {
+        if (ui.chunksList) {
+            ui.chunksList.innerHTML = ''; // Clear all displayed chunks
+        }
     }
+
+
 
     
 };
