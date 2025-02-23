@@ -130,7 +130,7 @@ const UIController = {
         if (confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
             window.debugManager.info('Starting full system cleanup');
     
-            // 1. Stop any ongoing recording
+                // 1. Stop any ongoing recording
             if (window.audioController.isRecording) {
                 window.audioController.stopRecording();
             }
@@ -152,18 +152,17 @@ const UIController = {
                 window.audioController.recordedChunks = [];
             }
     
-            // 4. Reset chunk counter
+            // 4. Reset chunk counter and clear all storage
             window.audioController.chunkCounter = 0;
+            localStorage.clear(); // Clear all localStorage entries
+            sessionStorage.clear(); // Clear all sessionStorage entries
     
-            // 5. Clear localStorage (in case the counter or data persists there)
-            localStorage.clear();
-    
-            // 6. Close all IndexedDB connections before deletion
+            // 5. Close all IndexedDB connections before deletion
             if (window.audioController.dbStorage.db) {
                 window.audioController.dbStorage.db.close();
             }
-
-            // 7. Delete the IndexedDB database
+    
+            // 6. Delete the IndexedDB database
             const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
             deleteRequest.onsuccess = () => {
                 console.log('Database deleted successfully.');
@@ -177,23 +176,24 @@ const UIController = {
                 UIController.updateChunksList([], UI);
                 window.statusManager.setStatus('success', 'All data and database fully cleared');
     
-                // Force a page refresh to ensure full reset
+                // Force a hard page refresh to clear any cache
                 setTimeout(() => {
-                    window.location.reload();
+                location.reload(true); // Hard reload to ensure full reset
                 }, 1000);
             };
-        
+    
             deleteRequest.onerror = () => {
                 console.error('Failed to delete database.');
                 window.debugManager.error('Failed to delete database', { error: deleteRequest.error });
                 window.statusManager.setStatus('error', 'Failed to reset database');
             };
     
-            // 8. Reset UI and clear visual indicators
+            // 7. Reset UI and clear visual indicators
             if (UI.meterFill) UI.meterFill.style.width = '0%';
             if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
             UIController.updateRecordingState(false, UI);
         }
+
     },
     
 
