@@ -152,33 +152,41 @@ const UIController = {
                 window.audioController.recordedChunks = [];
             }
     
-            // 4. Reset audio controller state
+            // 4. Reset chunk counter
             window.audioController.chunkCounter = 0;
-            window.audioController.currentChunkDuration = CONFIG.DEFAULT_CHUNK_DURATION;
     
-            // 5. Completely delete the IndexedDB database
+            // 5. Close all IndexedDB connections before deletion
+            if (window.audioController.dbStorage.db) {
+                window.audioController.dbStorage.db.close();
+            }
+    
+            // 6. Delete the IndexedDB database
             const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
             deleteRequest.onsuccess = () => {
+                console.log('Database deleted successfully.');
                 window.debugManager.info('Database deleted successfully');
-                window.statusManager.setStatus('success', 'All data and database cleared');
+    
+                // Reinitialize database and storage after deletion
+                window.audioController.dbStorage = new DBStorage();
+                window.audioController.initializeStorage();
+    
+                // Update UI to reflect cleared state
+                UIController.updateChunksList([], UI);
+                window.statusManager.setStatus('success', 'All data cleared and database reset');
             };
             deleteRequest.onerror = () => {
-                window.debugManager.error('Error deleting database', { error: deleteRequest.error });
-                window.statusManager.setStatus('error', 'Failed to clear database');
+                console.error('Failed to delete database.');
+                window.debugManager.error('Failed to delete database', { error: deleteRequest.error });
+                window.statusManager.setStatus('error', 'Failed to reset database');
             };
-    
-            // 6. Reset UI completely
-            UIController.updateChunksList([], UI);
-    
+
+            // 7. Reset UI
             if (UI.meterFill) UI.meterFill.style.width = '0%';
             if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
             UIController.updateRecordingState(false, UI);
-    
-            // 7. Reinitialize storage
-            window.audioController.initializeStorage();
         }
     },
-
+    
 
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
