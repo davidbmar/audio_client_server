@@ -126,94 +126,93 @@ const UIController = {
         }
     },
 
-    handleClearData() {
-        if (confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
-            window.debugManager.info('🚨 Starting FULL RESET: Attempting to clear all application data');
-    
-            // 1. Stop any ongoing recording
-            if (window.audioController.isRecording) {
-                window.debugManager.info('🔴 Stopping active recording');
-                window.audioController.stopRecording();
-            }
-    
-            // 2. Stop and remove all audio elements
-            const audioElements = document.getElementsByTagName('audio');
-            Array.from(audioElements).forEach(audio => {
-                audio.pause();
-                audio.remove();
-            });
-    
-            // 3. Clear memory and revoke object URLs
-            if (window.audioController.recordedChunks) {
-                window.debugManager.info(`🗑️ Clearing ${window.audioController.recordedChunks.length} recorded chunks`);
-                window.audioController.recordedChunks.forEach(chunk => {
-                    if (chunk.blob) {
-                        URL.revokeObjectURL(chunk.blob);
-                    }
-                });
-                window.audioController.recordedChunks = [];
-            }
-    
-            // 4. Reset chunk counter and clear localStorage/sessionStorage
-            window.debugManager.info('🔄 Resetting chunk counter and clearing storage');
-            window.audioController.chunkCounter = 0;
-            localStorage.clear();
-            sessionStorage.clear();
-    
-            // 5. Close all IndexedDB connections before deletion
-            if (window.audioController.dbStorage.db) {
-                window.debugManager.info('🔒 Closing IndexedDB connection');
-                window.audioController.dbStorage.db.close();
-            }
-    
-            // 6. Delete IndexedDB and confirm deletion
-            window.debugManager.info('🚀 Attempting to delete IndexedDB database');
-            const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
-    
-            deleteRequest.onsuccess = async () => {
-                window.debugManager.info('✅ Database deleted successfully');
-    
-                // Verify deletion
-                const databases = await indexedDB.databases();
-                const dbExists = databases.some(db => db.name === 'AudioChunksDB');
-                if (!dbExists) {
-                    window.debugManager.info('✅ Verified: Database no longer exists');
-                } else {
-                    window.debugManager.error('❌ Database still exists after deletion');
-                }
-    
-                // Reset and reinitialize storage
-                window.debugManager.info('🔄 Reinitializing database storage');
-                window.audioController.dbStorage = new DBStorage();
-                await window.audioController.initializeStorage();
-    
-                // Reset UI state
-                UIController.updateChunksList([], UI);
-                window.statusManager.setStatus('success', '✅ All data fully cleared');
-    
-                // Force hard reload to reset all caches
-                setTimeout(() => {
-                    window.debugManager.info('🔄 Forcing full application reload');
-                    location.reload(true);
-                }, 1000);
-            };
-    
-            deleteRequest.onerror = (event) => {
-                window.debugManager.error('❌ Database deletion failed', { error: event.target.error });
-                window.statusManager.setStatus('error', '❌ Database reset failed');
-            };
-    
-            deleteRequest.onblocked = () => {
-                window.debugManager.error('❌ Database deletion blocked by open connections');
-            };
-    
-            // 7. Reset UI elements and clear visual indicators
-            if (UI.meterFill) UI.meterFill.style.width = '0%';
-            if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
-            UIController.updateRecordingState(false, UI);
+    async function handleClearData() {
+        if (!confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
+            return;
         }
-    },
+    
+        window.debugManager.info('🚨 Starting FULL RESET: Attempting to clear all application data');
+    
+        // 1. Stop any ongoing recording
+        if (window.audioController?.isRecording) {
+            window.debugManager.info('🔴 Stopping active recording');
+            window.audioController.stopRecording();
+        }
+    
+        // 2. Stop and remove all audio elements
+        const audioElements = document.getElementsByTagName('audio');
+        Array.from(audioElements).forEach(audio => {
+            audio.pause();
+            audio.remove();
+        });
+    
+        // 3. Clear memory references and revoke Object URLs
+        if (window.audioController?.recordedChunks) {
+            window.audioController.recordedChunks.forEach(chunk => {
+                if (chunk?.blob) {
+                    URL.revokeObjectURL(chunk.blob);
+                }
+            });
+            window.audioController.recordedChunks = [];
+        }
+    
+        // 4. Reset chunk counter
+        //    (Optional: If your code sets chunkCounter from localStorage on load,
+        //     ensure that logic is removed or confirm it's re-set to 1 here)
+        window.audioController.chunkCounter = 0;
+    
+        // 5. Clear localStorage and sessionStorage
+        localStorage.clear();
+        sessionStorage.clear();
+    
+        // 6. Close all IndexedDB connections
+        if (window.audioController?.dbStorage?.db) {
+            window.audioController.dbStorage.db.close();
+        }
+    
+        // 7. Delete IndexedDB
+        const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
+    
+        deleteRequest.onsuccess = async () => {
+            window.debugManager.info('✅ Database deleted successfully');
 
+            // Double-check that the DB is gone
+            const databases = await indexedDB.databases();
+            const dbExists = databases.some(db => db.name === 'AudioChunksDB');
+            if (!dbExists) {
+                window.debugManager.info('✅ Verified: Database no longer exists');
+            } else {
+                window.debugManager.error('❌ Database still exists after deletion');
+            }
+    
+            // 8. Reinitialize storage
+            window.audioController.dbStorage = new DBStorage();
+            await window.audioController.initializeStorage();
+    
+            // 9. Update UI to reflect cleared state
+            UIController.updateChunksList([], window.UI);
+            window.statusManager.setStatus('success', '✅ All data fully cleared');
+    
+            // 10. Reload to ensure a clean state
+            setTimeout(() => {
+                location.reload(true);
+            }, 1000);
+        };
+
+        deleteRequest.onerror = (event) => {
+            window.debugManager.error('❌ Database deletion failed', { error: event.target.error });
+        };
+    
+        deleteRequest.onblocked = () => {
+            window.debugManager.error('❌ Database deletion blocked by open connections');
+        };
+    
+        // Reset any volume-meter UI elements
+        if (window.UI?.meterFill) window.UI.meterFill.style.width = '0%';
+        if (window.UI?.volumeValue) window.UI.volumeValue.textContent = '-∞ dB';
+        UIController.updateRecordingState(false, window.UI);
+    },
+    
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
         const button = ui.recordButton;
