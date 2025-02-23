@@ -17,7 +17,7 @@ const UIController = {
         clearButton.textContent = 'Clear All Data';
         clearButton.onclick = this.handleClearData;
         controlPanel.appendChild(clearButton);
-
+        
         // Set initial status
         this.updateStatusText('Ready to record', ui);
     },
@@ -126,23 +126,69 @@ const UIController = {
         }
     },
 
+
+    // Add the enhanced handler
     handleClearData() {
         if (confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
+            window.debugManager.info('Starting complete data cleanup');
+            
+            // 1. Stop any ongoing recording
+            if (window.audioController.isRecording) {
+                window.audioController.stopRecording();
+            }
+    
+            // 2. Stop any playing audio
+            const audioElements = document.getElementsByTagName('audio');
+            Array.from(audioElements).forEach(audio => {
+                audio.pause();
+                audio.remove();
+            });
+    
+            // 3. Clear memory and revoke object URLs
+            if (window.audioController.recordedChunks) {
+                window.audioController.recordedChunks.forEach(chunk => {
+                    if (chunk.blob) {
+                        // Revoke any existing URLs for this blob
+                        URL.revokeObjectURL(chunk.blob);
+                    }
+                });
+                window.audioController.recordedChunks = [];
+            }
+    
+            // 4. Reset audio controller state
+            window.audioController.chunkCounter = 0;
+            window.audioController.currentChunkDuration = CONFIG.DEFAULT_CHUNK_DURATION;
+    
+            // 5. Clear IndexedDB
             const dbStorage = window.audioController?.dbStorage;
             if (dbStorage) {
                 dbStorage.clearAll()
                     .then(() => {
-                        window.audioController.recordedChunks = [];
+                        // 6. Reset UI completely
                         UIController.updateChunksList([], UI);
-                        window.statusManager.setStatus('success', 'All data cleared');
+                        
+                        // Reset any active meters or visualizers
+                        if (UI.meterFill) UI.meterFill.style.width = '0%';
+                        if (UI.volumeValue) UI.volumeValue.textContent = '-∞ dB';
+                        
+                        // Reset recording state
+                        UIController.updateRecordingState(false, UI);
+                        
+                        window.statusManager.setStatus('success', 'All data cleared successfully');
+                        window.debugManager.info('Data cleanup completed successfully');
                     })
                     .catch(err => {
-                        console.error('Error clearing data:', err);
-                        window.statusManager.setStatus('error', 'Failed to clear data');
+                        console.error('Error during data cleanup:', err);
+                        window.debugManager.error('Failed to clear data', {
+                            error: err.message,
+                            stack: err.stack
+                        });
+                        window.statusManager.setStatus('error', 'Failed to clear data completely');
                     });
             }
         }
     },
+
 
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
