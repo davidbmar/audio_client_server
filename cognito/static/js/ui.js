@@ -10,14 +10,6 @@ const UIController = {
         ui.durationSlider.value = CONFIG.DEFAULT_CHUNK_DURATION;
         ui.durationValue.textContent = `${CONFIG.DEFAULT_CHUNK_DURATION}s`;
 
-        // Add Clear Data button to control panel
-        const controlPanel = document.querySelector('.control-panel');
-        const clearButton = document.createElement('button');
-        clearButton.className = 'preset-button';
-        clearButton.textContent = 'Clear All Data';
-        clearButton.onclick = this.handleClearData;
-        controlPanel.appendChild(clearButton);
-        
         // Set initial status
         this.updateStatusText('Ready to record', ui);
     },
@@ -126,93 +118,136 @@ const UIController = {
         }
     },
 
-    async function handleClearData() {
-        if (!confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
-            return;
-        }
-    
-        window.debugManager.info('🚨 Starting FULL RESET: Attempting to clear all application data');
-    
-        // 1. Stop any ongoing recording
-        if (window.audioController?.isRecording) {
-            window.debugManager.info('🔴 Stopping active recording');
-            window.audioController.stopRecording();
-        }
-    
-        // 2. Stop and remove all audio elements
-        const audioElements = document.getElementsByTagName('audio');
-        Array.from(audioElements).forEach(audio => {
-            audio.pause();
-            audio.remove();
-        });
-    
-        // 3. Clear memory references and revoke Object URLs
-        if (window.audioController?.recordedChunks) {
-            window.audioController.recordedChunks.forEach(chunk => {
-                if (chunk?.blob) {
-                    URL.revokeObjectURL(chunk.blob);
-                }
-            });
-            window.audioController.recordedChunks = [];
-        }
-    
-        // 4. Reset chunk counter
-        //    (Optional: If your code sets chunkCounter from localStorage on load,
-        //     ensure that logic is removed or confirm it's re-set to 1 here)
-        window.audioController.chunkCounter = 0;
-    
-        // 5. Clear localStorage and sessionStorage
-        localStorage.clear();
-        sessionStorage.clear();
-    
-        // 6. Close all IndexedDB connections
-        if (window.audioController?.dbStorage?.db) {
-            window.audioController.dbStorage.db.close();
-        }
-    
-        // 7. Delete IndexedDB
-        const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
-    
-        deleteRequest.onsuccess = async () => {
-            window.debugManager.info('✅ Database deleted successfully');
+    // In ui.js, find the handleClearData method in the UIController object
+    // and replace it with this implementation:
 
-            // Double-check that the DB is gone
-            const databases = await indexedDB.databases();
-            const dbExists = databases.some(db => db.name === 'AudioChunksDB');
-            if (!dbExists) {
-                window.debugManager.info('✅ Verified: Database no longer exists');
-            } else {
-                window.debugManager.error('❌ Database still exists after deletion');
-            }
-    
-            // 8. Reinitialize storage
-            window.audioController.dbStorage = new DBStorage();
-            await window.audioController.initializeStorage();
-    
-            // 9. Update UI to reflect cleared state
-            UIController.updateChunksList([], window.UI);
-            window.statusManager.setStatus('success', '✅ All data fully cleared');
-    
-            // 10. Reload to ensure a clean state
-            setTimeout(() => {
-                location.reload(true);
-            }, 1000);
-        };
+    handleClearData() {
+	console.group('🚨 CLEAR DATA OPERATION');
+	console.log('Clear data operation started');
+	
+	if (!confirm('Are you sure you want to delete all recorded data? This cannot be undone.')) {
+	    console.log('User cancelled clear data operation');
+	    console.groupEnd();
+	    return;
+	}
 
-        deleteRequest.onerror = (event) => {
-            window.debugManager.error('❌ Database deletion failed', { error: event.target.error });
-        };
-    
-        deleteRequest.onblocked = () => {
-            window.debugManager.error('❌ Database deletion blocked by open connections');
-        };
-    
-        // Reset any volume-meter UI elements
-        if (window.UI?.meterFill) window.UI.meterFill.style.width = '0%';
-        if (window.UI?.volumeValue) window.UI.volumeValue.textContent = '-∞ dB';
-        UIController.updateRecordingState(false, window.UI);
+	window.debugManager.info('🚨 Starting FULL RESET: Attempting to clear all application data');
+	console.log('Current chunkCounter value before reset:', window.audioController?.chunkCounter);
+
+	// 1. Stop any ongoing recording
+	if (window.audioController?.isRecording) {
+	    window.debugManager.info('🔴 Stopping active recording');
+	    console.log('Stopping active recording');
+	    window.audioController.stopRecording();
+	}
+
+	// 2. Stop and remove all audio elements
+	const audioElements = document.getElementsByTagName('audio');
+	console.log(`Removing ${audioElements.length} audio elements`);
+	Array.from(audioElements).forEach(audio => {
+	    audio.pause();
+	    audio.remove();
+	});
+
+	// 3. Clear memory references and revoke Object URLs
+	if (window.audioController?.recordedChunks) {
+	    console.log(`Revoking ${window.audioController.recordedChunks.length} object URLs`);
+	    window.audioController.recordedChunks.forEach(chunk => {
+		if (chunk?.blob) {
+		    URL.revokeObjectURL(chunk.blob);
+		}
+	    });
+	    window.audioController.recordedChunks = [];
+	}
+
+	// 4. CRITICAL: Reset chunk counter to 0 and persist in localStorage
+	console.log('Explicitly setting chunkCounter to 0');
+	window.audioController.chunkCounter = 0;
+	localStorage.setItem('lastChunkCounter', '0');
+	console.log('Chunk counter reset to:', window.audioController.chunkCounter);
+	console.log('localStorage lastChunkCounter set to:', localStorage.getItem('lastChunkCounter'));
+
+	// 5. Clear localStorage and sessionStorage (except our new counter reset)
+	const savedLastCounter = localStorage.getItem('lastChunkCounter');
+	console.log('Clearing localStorage and sessionStorage');
+	localStorage.clear();
+	sessionStorage.clear();
+	// Restore our counter reset
+	localStorage.setItem('lastChunkCounter', savedLastCounter);
+
+	// 6. Close all IndexedDB connections
+	if (window.audioController?.dbStorage?.db) {
+	    console.log('Closing database connection');
+	    window.audioController.dbStorage.db.close();
+	}
+
+	// 7. Delete IndexedDB
+	console.log('Requesting database deletion');
+	const deleteRequest = indexedDB.deleteDatabase('AudioChunksDB');
+
+	deleteRequest.onsuccess = async () => {
+	    window.debugManager.info('✅ Database deleted successfully');
+	    console.log('Database deleted successfully');
+
+	    // Double-check that the DB is gone
+	    const databases = await indexedDB.databases();
+	    const dbExists = databases.some(db => db.name === 'AudioChunksDB');
+	    if (!dbExists) {
+		window.debugManager.info('✅ Verified: Database no longer exists');
+		console.log('Verified: Database no longer exists');
+	    } else {
+		window.debugManager.error('❌ Database still exists after deletion');
+		console.log('ERROR: Database still exists after deletion');
+	    }
+
+	    // 8. Reinitialize storage with explicit counter reset
+	    console.log('Reinitializing storage...');
+	    window.audioController.dbStorage = new DBStorage();
+	    
+	    console.log('Ensuring chunkCounter remains at 0 before storage initialization');
+	    window.audioController.chunkCounter = 0;
+
+	    await window.audioController.initializeStorage(true); // Pass true to force reset
+	    
+	    console.log('After storage reinitialization, chunkCounter =', window.audioController.chunkCounter);
+
+	    // 9. Update UI to reflect cleared state
+	    console.log('Updating UI');
+	    window.UIController.updateChunksList([], window.UI);
+	    window.statusManager.setStatus('success', '✅ All data fully cleared');
+
+	    // 10. Verify counter is still 0 before reload
+	    console.log('Final check - chunkCounter =', window.audioController.chunkCounter);
+	    console.log('Final check - localStorage lastChunkCounter =', localStorage.getItem('lastChunkCounter'));
+
+	    // 11. Force reload to ensure a clean state
+	    console.log('Reloading page in 1 second');
+	    setTimeout(() => {
+		console.log('Executing page reload...');
+		location.reload(true);
+	    }, 1000);
+	};
+
+	deleteRequest.onerror = (event) => {
+	    window.debugManager.error('❌ Database deletion failed', { error: event.target.error });
+	    console.error('Database deletion failed:', event.target.error);
+	    console.groupEnd();
+	};
+
+	deleteRequest.onblocked = () => {
+	    window.debugManager.error('❌ Database deletion blocked by open connections');
+	    console.error('Database deletion blocked by open connections');
+	    console.groupEnd();
+	};
+
+	// Reset any volume-meter UI elements
+	if (window.UI?.meterFill) window.UI.meterFill.style.width = '0%';
+	if (window.UI?.volumeValue) window.UI.volumeValue.textContent = '-∞ dB';
+	window.UIController.updateRecordingState(false, window.UI);
+	
+	console.groupEnd();
     },
-    
+
     updateRecordingState(isRecording, ui) {
         console.log('Updating recording state:', isRecording);
         const button = ui.recordButton;

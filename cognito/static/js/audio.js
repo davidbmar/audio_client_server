@@ -21,28 +21,88 @@ class AudioController {
         });
     }
 
-    async initializeStorage() {
-        try {
-            window.debugManager.info('Initializing storage');
-            await this.dbStorage.initialize();
-            const savedChunks = await this.dbStorage.getAllChunks();
-            this.recordedChunks = savedChunks.sort((a, b) => b.number - a.number);
-            this.chunkCounter = this.recordedChunks.length > 0 
-                ? Math.max(...this.recordedChunks.map(chunk => chunk.number))
-                : 0;
-            window.debugManager.info('Storage initialized', {
-                savedChunks: this.recordedChunks.length,
-                lastChunkNumber: this.chunkCounter
-            });
-            UIController.updateChunksList(this.recordedChunks, UI);
-        } catch (err) {
-            window.debugManager.error('Error initializing storage', {
-                error: err.message,
-                stack: err.stack
-            });
-            console.error('Error initializing storage:', err);
-        }
+    async initializeStorage(forceReset = false) {
+	try {
+	    console.group('📂 Storage Initialization');
+	    console.log('Initializing storage, forceReset =', forceReset);
+	    
+	    window.debugManager.info('Initializing storage', { forceReset });
+	    
+	    // If we're forcing a reset, ensure the counter is 0 before proceeding
+	    if (forceReset) {
+		console.log('Force reset requested, setting counter to 0');
+		this.chunkCounter = 0;
+		localStorage.setItem('lastChunkCounter', '0');
+	    }
+	    
+	    // Log the current counter state
+	    console.log('Counter before DB initialization:', this.chunkCounter);
+	    console.log('localStorage lastChunkCounter:', localStorage.getItem('lastChunkCounter'));
+	    
+	    await this.dbStorage.initialize();
+	    
+	    // Get chunks from database
+	    const savedChunks = await this.dbStorage.getAllChunks();
+	    console.log(`Retrieved ${savedChunks.length} chunks from database`);
+	    
+	    // Only update recordedChunks if we're not forcing a reset
+	    if (!forceReset) {
+		this.recordedChunks = savedChunks.sort((a, b) => b.number - a.number);
+		
+		// Check if we have a saved counter in localStorage
+		const savedCounter = localStorage.getItem('lastChunkCounter');
+		console.log('Saved counter from localStorage:', savedCounter);
+		
+		if (savedCounter !== null && forceReset) {
+		    // If we're forcing a reset, ignore the saved chunks
+		    console.log('Force reset active, ignoring saved chunks for counter calculation');
+		    this.chunkCounter = 0;
+		} else if (savedCounter !== null) {
+		    // Use the saved counter if available
+		    console.log('Using counter from localStorage:', savedCounter);
+		    this.chunkCounter = parseInt(savedCounter, 10);
+		} else if (this.recordedChunks.length > 0) {
+		    // Otherwise calculate from chunks
+		    console.log('Calculating counter from chunks');
+		    this.chunkCounter = Math.max(...this.recordedChunks.map(chunk => chunk.number));
+		    // Save the calculated counter
+		    localStorage.setItem('lastChunkCounter', this.chunkCounter.toString());
+		} else {
+		    // No chunks and no saved counter
+		    console.log('No chunks or saved counter found, using 0');
+		    this.chunkCounter = 0;
+		    localStorage.setItem('lastChunkCounter', '0');
+		}
+	    } else {
+		// Force reset is active, use empty array
+		console.log('Force reset active, using empty recordedChunks array');
+		this.recordedChunks = [];
+		this.chunkCounter = 0;
+		localStorage.setItem('lastChunkCounter', '0');
+	    }
+	    
+	    // Log the final counter state
+	    console.log('Final chunkCounter after initialization:', this.chunkCounter);
+	    window.debugManager.info('Storage initialized', {
+		savedChunks: this.recordedChunks.length,
+		chunkCounter: this.chunkCounter,
+		forceReset: forceReset
+	    });
+	    
+	    // Update UI with our chunks (which may be empty if force reset)
+	    // Use window.UIController to ensure global reference
+	    window.UIController.updateChunksList(this.recordedChunks, window.UI);
+	    console.groupEnd();
+	} catch (err) {
+	    console.error('Error initializing storage:', err);
+	    window.debugManager.error('Error initializing storage', {
+		error: err.message,
+		stack: err.stack
+	    });
+	    console.groupEnd();
+	}
     }
+
 
     async startRecording() {
         try {
@@ -151,26 +211,41 @@ class AudioController {
     }
 
     async addChunkToList(chunkData) {
-        try {
-            // Part 1: Save the chunk to storage
-            const id = await this.dbStorage.saveChunk(chunkData);
-            chunkData.id = id;
-            this.recordedChunks.unshift(chunkData);
-            UIController.updateChunksList(this.recordedChunks, UI);
-    
-            // Part 2: Upload the chunk
-            await this.uploadChunk(id, chunkData.blob);
-        } catch (err) {
-            window.debugManager.error('Error saving chunk', {
-                error: err.message,
-                stack: err.stack
-            });
-            window.statusManager.setStatus('error', 'Failed to save audio chunk', {
-                label: 'Retry',
-                action: () => this.uploadChunk(chunkData.id, chunkData.blob)  // Note: changed to uploadChunk
-            });
-            console.error('Error saving chunk:', err);
-        }
+	try {
+	    console.group('➕ Adding new chunk');
+	    console.log('Current chunkCounter:', this.chunkCounter);
+	    console.log('New chunk data:', {
+		number: chunkData.number,
+		timestamp: chunkData.timestamp,
+		duration: chunkData.duration
+	    });
+	    
+	    // Part 1: Save the chunk to storage
+	    const id = await this.dbStorage.saveChunk(chunkData);
+	    chunkData.id = id;
+	    this.recordedChunks.unshift(chunkData);
+	    
+	    // Save current counter to localStorage to persist it
+	    localStorage.setItem('lastChunkCounter', this.chunkCounter.toString());
+	    console.log('Saved counter to localStorage:', this.chunkCounter);
+	    
+	    window.UIController.updateChunksList(this.recordedChunks, window.UI);
+	
+	    // Part 2: Upload the chunk
+	    await this.uploadChunk(id, chunkData.blob);
+	    console.groupEnd();
+	} catch (err) {
+	    window.debugManager.error('Error saving chunk', {
+		error: err.message,
+		stack: err.stack
+	    });
+	    window.statusManager.setStatus('error', 'Failed to save audio chunk', {
+		label: 'Retry',
+		action: () => this.uploadChunk(chunkData.id, chunkData.blob)
+	    });
+	    console.error('Error saving chunk:', err);
+	    console.groupEnd();
+	}
     }
 
     // Add detailed logging in audio.js - uploadChunk method

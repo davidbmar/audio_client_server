@@ -1,4 +1,21 @@
 // main.js
+
+
+// Add this at the top of your main.js file
+console.log('main.js loaded');
+window.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded');
+    // Try direct manipulation of a known element
+    const recordBtn = document.getElementById('recordButton');
+    console.log('Record button found by ID:', !!recordBtn);
+    if (recordBtn) {
+        console.log('Adding direct event listener to record button');
+        recordBtn.addEventListener('click', () => {
+            console.log('Record button clicked directly!');
+        });
+    }
+});
+
 // Initialize UI elements
 // In main.js, fix the UI object
 const UI = {
@@ -26,6 +43,8 @@ window.UI = UI;
 
 // Initialize audio controller
 const audioController = new AudioController();
+// Make sure audioController is available globally
+window.audioController = audioController;
 let syncService; // Will be initialized after DB is ready
 
 // Initialize everything
@@ -103,6 +122,9 @@ async function initialize() {
         // Set up event listeners
         setupEventListeners();
 
+        // Add counter monitoring
+        setTimeout(monitorCounter, 1000);
+
         // Check for failed uploads after everything is initialized
         if (audioController.hasFailedUploads()) {
             window.statusManager.setStatus('warning', 'There are failed uploads', {
@@ -122,6 +144,50 @@ async function initialize() {
         console.error('Failed to initialize:', error);
     }
 }
+
+function monitorCounter() {
+    console.group('🔢 Counter Monitor');
+    
+    // Check if audioController is available on window
+    if (!window.audioController) {
+        console.log('AudioController not yet available on window object');
+        console.groupEnd();
+        
+        // Try again in 1 second
+        setTimeout(monitorCounter, 1000);
+        return;
+    }
+    
+    console.log('Initial chunkCounter value:', window.audioController.chunkCounter);
+    console.log('localStorage lastChunkCounter:', localStorage.getItem('lastChunkCounter'));
+    
+    // Check for new chunks being added
+    const originalStartNewChunk = window.audioController.startNewChunk;
+    window.audioController.startNewChunk = function() {
+        console.log('Starting new chunk, counter before:', this.chunkCounter);
+        const result = originalStartNewChunk.apply(this, arguments);
+        console.log('New chunk started, counter after:', this.chunkCounter);
+        return result;
+    };
+    
+    // Add a counter status log to the status bar
+    setInterval(() => {
+        if (window.audioController) {
+            const counterValue = window.audioController.chunkCounter;
+            const savedValue = localStorage.getItem('lastChunkCounter');
+            
+            if (window.debugManager) {
+                window.debugManager.info('Counter status check', {
+                    memory: counterValue,
+                    localStorage: savedValue
+                });
+            }
+        }
+    }, 30000); // Check every 30 seconds
+    
+    console.groupEnd();
+}
+
 
 // Combined setupEventListeners function with all event handlers
 function setupEventListeners() {
@@ -222,11 +288,11 @@ function setupEventListeners() {
         });
     });
 
-    // Event listener for clearing all data
+    // Event listener for clearing all data - modify this to use UIController's method
     UI.clearAllButton.addEventListener('click', async () => {
-        if (confirm('Are you sure you want to clear all data? This action cannot be undone.')) {
-            await audioController.clearAllData();
-        }
+	// Instead of calling audioController.clearAllData(), call UIController.handleClearData()
+	window.UIController.handleClearData();
+	// No need for confirm dialog here as it's already part of handleClearData
     });
 
 }
