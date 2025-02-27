@@ -1,15 +1,40 @@
 # s3_manager.py
 import boto3
 from datetime import datetime
-import pytz
-import logging
 import json
+import logging
+import pytz
+import re
+import uuid
+
 from typing import Dict, Any, Optional
 from auth import TokenData  # Add this import at the top
 
-
 logger = logging.getLogger('s3_manager')
 logger.setLevel(logging.INFO)
+
+# Define a regex for the expected timestamp format: YYYYMMDD-HHMMSS
+TIMESTAMP_REGEX = r'^\d{8}-\d{6}$'
+
+
+def generate_secure_file_name(client_timestamp: str = None) -> str:
+    """
+    Generate a secure file name using an optional client-supplied timestamp.
+    If the client timestamp is provided, validate it and combine it with a
+    server-generated UUID. Otherwise, use the current UTC timestamp.
+    Returns a filename in the format:
+        <timestamp>_<serverUUID>.webm
+    """
+    if client_timestamp:
+        if not re.match(TIMESTAMP_REGEX, client_timestamp):
+            raise ValueError("Invalid client timestamp format. Expected YYYYMMDD-HHMMSS.")
+        base = client_timestamp
+    else:
+        # Use server timestamp as fallback
+        base = datetime.now(pytz.timezone("UTC")).strftime("%Y%m%d-%H%M%S")
+    
+    secure_part = str(uuid.uuid4())
+    return f"{base}_{secure_part}.webm"
 
 def get_secrets():
     secret_name = "dev/audioclientserver/frontend/pre_signed_url_gen"
