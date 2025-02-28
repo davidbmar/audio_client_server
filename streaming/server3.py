@@ -111,15 +111,19 @@ async def transcript_stream():
                             async for line in resp.aiter_lines():
                                 if line:
                                     new_transcript += line + "\n"
-                                    print("Streamed line:", line)  # Debug print on server
+                                    print("Streamed line:", line)  # Debug print
                     except Exception as e:
                         new_transcript = f"Error during transcription: {str(e)}"
                         print(new_transcript)
-                # Compute the difference between new_transcript and the previous one
-                if new_transcript and new_transcript != prev_transcript:
+                # Determine only the new portion that hasn't been sent yet.
+                if new_transcript.startswith(prev_transcript):
                     diff = new_transcript[len(prev_transcript):]
-                    prev_transcript = new_transcript
-                    yield f"data: {diff}\n\n"
+                else:
+                    diff = new_transcript
+                # Update prev_transcript for next iteration.
+                prev_transcript = new_transcript
+                if diff.strip():
+                    yield f"data: {diff.strip()}\n\n"
             await asyncio.sleep(1)
     return StreamingResponse(event_generator(), headers=headers, media_type="text/event-stream")
 
